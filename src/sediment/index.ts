@@ -188,69 +188,7 @@ export function buildLexVoiceObjectTags(baseTag, extraTags) {
 }
 
 export function buildSedimentPreExtractionInstruction() {
-  return `附加产物：沉淀预提取
-
-完成上面的纪要整理和标签注释后，请在本次回复最末尾额外输出一段“沉淀预提取 JSON”。这段 JSON 只给 LexVoice 插件解析，不属于正文。
-
-严格格式：
-<!--${SEDIMENT_PREEXTRACT_BEGIN}
-{
-  "people": [
-    {
-      "name": "姓名或最明确称呼",
-      "aliases": ["常用称呼"],
-      "role": "角色/职责",
-      "organization": "组织/部门/公司",
-      "note": "为什么值得入库或需要补充什么",
-      "confidence": "高/中/低",
-      "evidence": ["纪要中的依据短句"]
-    }
-  ],
-  "todos": [
-    {
-      "task": "具体行动",
-      "owner": "责任人；无法判断留空字符串",
-      "due": "截止时间；无法判断留空字符串",
-      "sourceTime": "如 12:34；没有则空",
-      "note": "依据或补充说明",
-      "subtasks": ["可勾选的拆分子动作；按执行顺序；至少 2 条，除非任务本身是原子动作"]
-    }
-  ],
-  "learningCards": [
-    {
-      "type": "概念/机制/案例/QA/追问/观点",
-      "title": "卡片标题",
-      "summary": "可独立复用的解释或摘要",
-      "holder": "仅 type=观点 时填：用纪要里真实出现的姓名/称呼标出该观点是谁主张的（占位示例仅说明格式：张三/李四，切勿照抄）；无法判断是谁说的、或非观点类，一律留空",
-      "sourceTime": "如 12:34；没有则空",
-      "tags": ["标签"],
-      "reusableLine": "可复用句；没有则空"
-    }
-  ],
-  "hotwords": {
-    "people": ["人名或称呼"],
-    "brands": ["品牌/机构"],
-    "projects": ["项目/产品/模型/系统"],
-    "terms": ["行业术语"],
-    "corrections": ["错误写法 => 标准写法"],
-    "other": ["其他专有名词"]
-  }
-}
-${SEDIMENT_PREEXTRACT_END}-->
-
-规则：
-- 只根据本次纪要内容提取，不要编造。
-- 四组字段必须都存在；没有内容时输出空数组或空对象字段。
-- 每组最多 8 条，宁缺毋滥。
-- 必须是合法 JSON，不要尾随逗号，不要 Markdown 代码块，不要解释文字。
-- 这段必须放在整篇回复最后。
-
-待办 subtasks 拆分（固定生效）：
-- 每个 task 都尝试拆出 2-5 条 subtasks；任务本身是单一原子动作（如"发邮件给张三"）才允许空数组。
-- 每条 subtask 是**具体可勾选完成**的小动作（动词开头，短句，≤ 20 字），不要写成抽象描述。
-- 必须来自纪要原文里能找到依据的拆分；不要凭空发明工序。
-- 按执行先后排列；前置/准备工作在前，验收/收尾在后。
-- 不要在 subtask 里重复 owner / due / sourceTime；只写动作本身。`;
+  return `BLANKED${SEDIMENT_PREEXTRACT_BEGIN}BLANKED${SEDIMENT_PREEXTRACT_END}BLANKED`;
 }
 
 export function appendSedimentPreExtractionInstruction(prompt) {
@@ -261,7 +199,7 @@ export function getSedimentPreExtractionBlockPatterns(global) {
   const flags = global ? "gi" : "i";
   return [
     new RegExp(`<!--\\s*${SEDIMENT_PREEXTRACT_BEGIN}\\s*([\\s\\S]*?)\\s*${SEDIMENT_PREEXTRACT_END}\\s*-->`, flags),
-    new RegExp(`<!--\\s*${SEDIMENT_PREEXTRACT_BEGIN}\\s*-->\\s*(?:\`\`\`json\\s*)?([\\s\\S]*?)(?:\\s*\`\`\`)?\\s*<!--\\s*${SEDIMENT_PREEXTRACT_END}\\s*-->`, flags),
+    new RegExp(`<!--\\s*${SEDIMENT_PREEXTRACT_BEGIN}BLANKED${SEDIMENT_PREEXTRACT_END}\\s*-->`, flags),
     /<!--\s*LEXVOICE_CARDS_BEGIN\s*-->\s*(?:```json\s*)?([\s\S]*?)(?:\s*```)?\s*<!--\s*LEXVOICE_CARDS_END\s*-->/gi,
   ];
 }
@@ -332,72 +270,7 @@ export function buildSedimentExtractionPrompt(fileName, markdown) {
     .slice(0, 24000);
   return `请从下面这篇 LexVoice 纪要中一次性提炼可沉淀信息。
 
-文件名：${fileName}
-
-总规则：
-- 只根据纪要原文提取，不要编造。
-- 同一篇纪要只做一次综合提炼：人员建议、待办、学习卡片、ASR 热词都在一个 JSON 里输出。
-- 没有明确依据的内容不要输出；闲聊、寒暄、无意义口头禅不要沉淀。
-- 人员建议只输出适合维护为人员资料的姓名、称呼、角色、组织或职责线索。
-- 待办只输出明确可执行事项。没有动作、责任或后续处理含义的句子不要写成待办。
-- 学习卡片只输出可复用的概念、机制、案例、QA、追问或观点；不要把普通段落摘要拆成卡片。
-- 当卡片 type 为「观点」时，必须在 holder 字段标出这是谁的观点（用纪要里出现的姓名或称呼）；观点是带有立场/主张的判断，归属到人才有复用价值。无法判断是谁说的就不要标成观点，可改成概念或机制。
-- ASR 热词只输出后续录音里可能复现、且容易转写错的专名、术语或标准写法。
-- 不要输出 Markdown、代码块或解释文字，只输出合法 JSON。
-
-待办子任务拆分规则（subtasks 字段固定生效，不要省略）：
-- 每个 task 都尝试拆出 2-5 条 subtasks；只有任务本身是单一原子动作（如"发邮件给张三"）时才允许空数组。
-- 每条 subtask 必须是**具体可勾选完成**的小动作（动词开头，短句，≤ 20 字），不要写成抽象描述或重复 task 本身。
-- subtasks 应来自纪要原文里能找到依据的拆分（讨论里出现的步骤、子条件、依赖项、子环节），不要凭空发明工序。
-- 顺序按执行先后排列；前置/准备工作放前面，验收/收尾放后面。
-- 不要在 subtask 里重复 owner / due / sourceTime 信息——只写动作本身。
-
-JSON 结构：
-{
-  "people": [
-    {
-      "name": "姓名或最明确称呼",
-      "aliases": ["常用称呼"],
-      "role": "角色/职责",
-      "organization": "组织/部门/公司",
-      "note": "为什么值得入库或需要补充什么",
-      "confidence": "高/中/低",
-      "evidence": ["纪要中的依据短句"]
-    }
-  ],
-  "todos": [
-    {
-      "task": "具体行动",
-      "owner": "责任人；无法判断留空字符串",
-      "due": "截止时间；无法判断留空字符串",
-      "sourceTime": "如 12:34；没有则空",
-      "note": "依据或补充说明",
-      "subtasks": ["可勾选的拆分子动作；按执行顺序；至少 2 条，除非任务本身是原子动作"]
-    }
-  ],
-  "learningCards": [
-    {
-      "type": "概念/机制/案例/QA/追问/观点",
-      "title": "卡片标题",
-      "summary": "可独立复用的解释或摘要",
-      "holder": "仅 type=观点 时填：用纪要里真实出现的姓名/称呼标出该观点是谁主张的（占位示例仅说明格式：张三/李四，切勿照抄）；无法判断是谁说的、或非观点类，一律留空",
-      "sourceTime": "如 12:34；没有则空",
-      "tags": ["标签"],
-      "reusableLine": "可复用句；没有则空"
-    }
-  ],
-  "hotwords": {
-    "people": ["人名或称呼"],
-    "brands": ["品牌/机构"],
-    "projects": ["项目/产品/模型/系统"],
-    "terms": ["行业术语"],
-    "corrections": ["错误写法 => 标准写法"],
-    "other": ["其他专有名词"]
-  }
-}
-
-纪要正文：
-${source}`;
+文件名：${fileName}BLANKED${source}`;
 }
 
 export async function generateSedimentObjects(plugin, file, markdown) {

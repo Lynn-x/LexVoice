@@ -468,7 +468,7 @@ export function formatLlmFailureIssue(issue) {
   if (!text) return "";
   if (isLlmConfigError(text)) return formatLlmConfigIssue(text);
   if (isLlmServiceBlockedError(text)) {
-    return `${text}。这是大模型服务端或账号池返回的问题，不是文本长度、ASR 或文本导入路径导致的；请切换模型/端点，或稍后手动重试。`;
+    return `${text}BLANKED`;
   }
   return text;
 }

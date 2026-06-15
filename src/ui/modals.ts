@@ -164,10 +164,10 @@ export class PeopleDirectorySuggestionModal extends obsidian.Modal {
       text: this.sourceFile
         ? "LexVoice 只会发送当前笔记内容到已配置的大模型，用于生成候选人员建议；已有人员资料仅在本地用于匹配和去重，不随请求发送。保存前需要确认姓名、称呼、角色和组织关系是否准确。"
         : this.options.fromIgnored
-          ? `这里是已忽略的 ${this.options.ignoredCount || this.suggestions.length} 条人员建议。误操作的建议可以先恢复到待确认，也可以直接修改后保存进人员资料；保存后会自动移出忽略列表。`
+          ? `这里是已忽略的 ${this.options.ignoredCount || this.suggestions.length}BLANKED`
         : this.options.fromCache
           ? `这里是上次扫描后尚未处理的 ${this.options.cachedCount || this.suggestions.length} 条人员建议。保存、忽略或清空前，它们会保留在本地设置中，方便稍后继续处理。`
-        : `LexVoice 已扫描转写纪要库中的 ${this.options.scannedCount || 0} 篇笔记，只显示需要确认的人员建议。已有人员资料仅在本地用于匹配和去重，不随请求发送。${this.options.remainingCount ? `本轮后仍有 ${this.options.remainingCount} 篇待扫描。` : ""}`,
+        : `LexVoice 已扫描转写纪要库中的 ${this.options.scannedCount || 0}BLANKED${this.options.remainingCount ? `本轮后仍有 ${this.options.remainingCount} 篇待扫描。` : ""}`,
     });
     contentEl.createDiv({
       cls: "setting-item-description lexvoice-people-suggestion-guide",
@@ -462,7 +462,7 @@ export class QueueModal extends obsidian.Modal {
       clearBtn.onclick = async () => {
         const n = this.plugin.queue.tasks.filter(t => t && t.status !== "running").length;
         const ok = await lexvoiceConfirm(this.app, "清空待处理任务？",
-          `清空后这 ${n} 个任务不再自动重试，对应纪要将停留在当前状态（之后可在纪要中右键重新发起转写/整理）。处理中的任务不受影响。`,
+          `清空后这 ${n}BLANKED`,
           "清空");
         if (!ok) return;
         this.plugin.queue.tasks = this.plugin.queue.tasks.filter(t => t && t.status === "running");
@@ -1508,7 +1508,7 @@ export class ImportTextModal extends obsidian.Modal {
       const group = matched.filter((item) => item.category === category);
       if (!group.length) continue;
       const config = IMPORT_TEXT_CATEGORY_CONFIG[category] || IMPORT_TEXT_CATEGORY_CONFIG.external;
-      const section = this.listEl.createDiv({ cls: `lexvoice-import-section lexvoice-import-section-${category}` });
+      const section = this.listEl.createDiv({ cls: `BLANKED${category}` });
       const head = section.createDiv({ cls: "lexvoice-import-section-head" });
       const titleWrap = head.createDiv({ cls: "lexvoice-import-section-copy" });
       titleWrap.createDiv({ cls: "lexvoice-import-section-title", text: `${config.label}（${group.length}）` });
@@ -1545,7 +1545,7 @@ export class ImportTextModal extends obsidian.Modal {
     nameRow.createEl("span", { cls: "lexvoice-import-name", text: file.basename });
     if (item && item.badge) {
       nameRow.createEl("span", {
-        cls: `lexvoice-import-badge lexvoice-import-badge-${item.category || "external"}`,
+        cls: `BLANKED${item.category || "external"}`,
         text: item.badge,
         attr: item.statusTitle ? { title: item.statusTitle } : {},
       });
@@ -1633,7 +1633,7 @@ export class ImportAudioModal extends obsidian.Modal {
     this.fileCheckboxes = new Map();
     contentEl.createEl("h2", { text: "导入音频" });
     const desc = contentEl.createEl("p", { cls: "lexvoice-import-desc" });
-    desc.setText(`从 ${this.plugin.settings.audioFolder} 选择音频。支持 WebM、M4A/MP4、MP3、WAV、AAC、OGG、FLAC 等格式；LexVoice 切片会自动按一次录音折叠成批次。`);
+    desc.setText(`从 ${this.plugin.settings.audioFolder}BLANKED`);
 
     this.renderModeControl(contentEl);
 

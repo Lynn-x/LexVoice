@@ -25,15 +25,7 @@ export function sanitizeGeneratedHtmlReport(html) {
     .replace(/\son\w+\s*=\s*[^\s>]+/gi, "")
     .replace(/javascript:/gi, "");
   if (!/<html[\s>]/i.test(s)) {
-    s = `<!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LexVoice HTML 报告</title>
-</head>
-<body>
-${s}
+    s = `BLANKED${s}
 </body>
 </html>`;
   }
@@ -45,108 +37,7 @@ ${s}
 }
 
 export function injectHtmlReportExportScript(html) {
-  const script = `<script>
-(function () {
-  const button = document.getElementById("lexvoice-save-report-image");
-  const status = document.getElementById("lexvoice-export-status");
-  const setStatus = (text) => { if (status) status.textContent = text || ""; };
-  const safeName = (document.title || "LexVoice-HTML报告")
-    .replace(/[\\\\/:*?"<>|]+/g, "-")
-    .replace(/\\s+/g, " ")
-    .trim()
-    .slice(0, 80) || "LexVoice-HTML报告";
-  const downloadBlob = (blob, name) => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1200);
-  };
-  async function exportReportAsPng() {
-    const target = document.querySelector(".lv-panorama") || document.querySelector(".lv-page");
-    if (!target) throw new Error("未找到可导出的报告画布");
-    const width = Math.ceil(target.scrollWidth);
-    const height = Math.ceil(target.scrollHeight);
-    if (!width || !height) throw new Error("报告尺寸异常");
-    const clone = target.cloneNode(true);
-    clone.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
-    clone.style.margin = "0";
-    clone.style.width = width + "px";
-    clone.style.minHeight = height + "px";
-    clone.style.boxShadow = "none";
-    const styleText = Array.from(document.querySelectorAll("style"))
-      .map((style) => style.textContent || "")
-      .join("\\n");
-    const serialized = new XMLSerializer().serializeToString(clone);
-    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '" viewBox="0 0 ' + width + ' ' + height + '">' +
-      '<foreignObject width="100%" height="100%">' +
-      '<div xmlns="http://www.w3.org/1999/xhtml" style="background:#f4f6f7;width:' + width + 'px;min-height:' + height + 'px;">' +
-      '<style>' + styleText + '\\n.lv-report-tools{display:none!important}.lv-panorama{margin:0!important}</style>' +
-      serialized +
-      '</div></foreignObject></svg>';
-    const svgBlob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
-    const svgUrl = URL.createObjectURL(svgBlob);
-    try {
-      const img = await new Promise((resolve, reject) => {
-        const image = new Image();
-        image.onload = () => resolve(image);
-        image.onerror = () => reject(new Error("浏览器无法渲染报告图片"));
-        image.src = svgUrl;
-      });
-      const maxPixels = 90000000;
-      const nativeScale = Math.max(1, Math.min(2, window.devicePixelRatio || 1.5));
-      const scale = Math.min(nativeScale, Math.sqrt(maxPixels / Math.max(1, width * height)));
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.max(1, Math.floor(width * scale));
-      canvas.height = Math.max(1, Math.floor(height * scale));
-      const ctx = canvas.getContext("2d");
-      ctx.setTransform(scale, 0, 0, scale, 0, 0);
-      ctx.fillStyle = "#f4f6f7";
-      ctx.fillRect(0, 0, width, height);
-      ctx.drawImage(img, 0, 0);
-      let pngBlob = null;
-      try {
-        pngBlob = await new Promise((resolve, reject) => {
-          try {
-            canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("PNG 生成失败")), "image/png", 0.95);
-          } catch (error) {
-            reject(error);
-          }
-        });
-      } catch (error) {
-        console.warn("[LexVoice] PNG export blocked, falling back to SVG", error);
-        downloadBlob(svgBlob, safeName + ".svg");
-        return "SVG";
-      }
-      downloadBlob(pngBlob, safeName + ".png");
-      return "PNG";
-    } finally {
-      URL.revokeObjectURL(svgUrl);
-    }
-  }
-  if (button) {
-    button.addEventListener("click", async () => {
-      button.disabled = true;
-      setStatus("正在生成图片...");
-      try {
-        const format = await exportReportAsPng();
-        setStatus(format === "SVG" ? "PNG 受浏览器限制，已保存 SVG" : "已保存 PNG");
-      } catch (error) {
-        console.error("[LexVoice] export report image failed", error);
-        setStatus((error && error.message) || "保存失败");
-      } finally {
-        window.setTimeout(() => {
-          button.disabled = false;
-          setStatus("");
-        }, 1800);
-      }
-    });
-  }
-})();
-</script>`;
+  const script = `BLANKED`;
   if (/<\/body>/i.test(html)) return html.replace(/<\/body>/i, `${script}\n</body>`);
   return html + "\n" + script + "\n";
 }
@@ -241,251 +132,27 @@ export function renderReportChips(items) {
 
 export function renderHtmlReport(model) {
   const now = window.moment ? window.moment().format("YYYY-MM-DD HH:mm") : new Date().toISOString().slice(0, 16).replace("T", " ");
-  const sectionHtml = model.sections.map(section => `
-      <section class="lv-section lv-narrative-section">
-        <div class="lv-section-rule"></div>
-        <h2>${escapeHtmlText(section.title)}</h2>
+  const sectionHtml = model.sections.map(section => `BLANKED${escapeHtmlText(section.title)}</h2>
         ${renderReportParagraphs(section.body)}
         ${section.bullets && section.bullets.length ? renderReportList(section.bullets) : ""}
       </section>`).join("\n");
-  return `<!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${escapeHtmlText(model.title)}</title>
-  <style>
-    :root {
-      color-scheme: light;
-      --lv-bg: #f4f6f7;
-      --lv-paper: #ffffff;
-      --lv-ink: #1f2732;
-      --lv-muted: #667085;
-      --lv-line: #dde4ea;
-      --lv-accent: #2f766d;
-      --lv-accent-2: #b05c3b;
-      --lv-accent-3: #315f9d;
-      --lv-soft: #edf4f2;
-      --lv-soft-2: #f6eee9;
-      --lv-warn: #fff4df;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-    }
-    * { box-sizing: border-box; }
-    body { margin: 0; background: var(--lv-bg); color: var(--lv-ink); line-height: 1.62; }
-    .lv-page { max-width: 1160px; margin: 0 auto; padding: 36px 24px 64px; }
-    .lv-panorama { background: var(--lv-paper); border: 1px solid var(--lv-line); border-radius: 8px; padding: 38px; box-shadow: 0 18px 50px rgba(31, 39, 50, .08); }
-    .lv-hero { border-bottom: 2px solid var(--lv-ink); padding-bottom: 28px; margin-bottom: 24px; }
-    .lv-kicker { color: var(--lv-accent); font-weight: 700; letter-spacing: .08em; font-size: 12px; text-transform: uppercase; }
-    h1 { margin: 10px 0 12px; font-size: clamp(34px, 5vw, 58px); line-height: 1.04; letter-spacing: 0; max-width: 900px; }
-    .lv-subtitle { max-width: 760px; color: var(--lv-muted); font-size: 17px; margin: 0; }
-    .lv-brief { max-width: 920px; font-size: 18px; line-height: 1.62; margin-top: 18px; }
-    .lv-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; color: var(--lv-muted); font-size: 13px; }
-    .lv-pill { border: 1px solid var(--lv-line); background: #f9fbfc; border-radius: 999px; padding: 4px 10px; }
-    .lv-card, .lv-section { background: transparent; border: 0; border-radius: 0; padding: 0; box-shadow: none; }
-    .lv-card + .lv-card, .lv-section + .lv-section { margin-top: 18px; }
-    .lv-editorial { padding: 0 0 20px; border-bottom: 1px solid var(--lv-line); margin-bottom: 22px; color: var(--lv-muted); }
-    .lv-section-rule { width: 38px; height: 3px; border-radius: 999px; background: var(--lv-accent); margin-bottom: 16px; }
-    .lv-narrative-section { padding: 22px 0; border-top: 1px solid var(--lv-line); }
-    h2 { margin: 0 0 14px; font-size: 20px; line-height: 1.3; }
-    h3 { margin: 0 0 10px; font-size: 15px; color: var(--lv-muted); }
-    p { margin: 0 0 12px; }
-    ul { margin: 0; padding-left: 20px; }
-    li + li { margin-top: 8px; }
-    .lv-highlight-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 0; list-style: none; }
-    .lv-highlight-list li { margin: 0; padding: 13px 0; border-top: 3px solid var(--lv-accent); font-weight: 650; }
-    .lv-signal-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--lv-line); border-bottom: 1px solid var(--lv-line); margin: 24px 0; }
-    .lv-signal { min-height: 128px; padding: 18px 18px 18px 0; border-right: 1px solid var(--lv-line); }
-    .lv-signal:last-child { border-right: 0; }
-    .lv-visual-label { color: var(--lv-accent); font-size: 12px; font-weight: 800; letter-spacing: .06em; margin-bottom: 8px; }
-    .lv-visual-value { font-size: clamp(22px, 3vw, 34px); line-height: 1.08; font-weight: 850; }
-    .lv-visual-note { color: var(--lv-muted); font-size: 13px; margin-top: 10px; }
-    .lv-flow { border-top: 1px solid var(--lv-line); border-bottom: 1px solid var(--lv-line); padding: 22px 0; margin-bottom: 22px; }
-    .lv-flow-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
-    .lv-flow-head h2 { margin: 0; }
-    .lv-flow-track { display: grid; grid-template-columns: repeat(auto-fit, minmax(154px, 1fr)); gap: 0; }
-    .lv-flow-node { position: relative; padding: 8px 18px 8px 0; border-top: 3px solid var(--lv-accent); }
-    .lv-flow-node + .lv-flow-node { padding-left: 18px; border-left: 1px solid var(--lv-line); }
-    .lv-flow-index { width: 28px; height: 28px; border-radius: 50%; background: var(--lv-accent); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 800; margin: -17px 0 12px; }
-    .lv-flow-node h3 { color: var(--lv-ink); font-size: 16px; margin-bottom: 8px; }
-    .lv-flow-node p { color: var(--lv-muted); font-size: 13px; margin: 0; }
-    .lv-thesis { border-left: 5px solid var(--lv-accent-2); background: var(--lv-soft-2); padding: 18px 22px; font-size: 20px; font-weight: 750; }
-    .lv-label { display: inline-block; color: var(--lv-accent); font-weight: 700; font-size: 12px; letter-spacing: .08em; margin-bottom: 8px; text-transform: uppercase; }
-    .lv-muted { color: var(--lv-muted); }
-    .lv-priority { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 22px; margin: 26px 0; align-items: stretch; }
-    .lv-priority-panel { padding: 22px; border-radius: 8px; min-height: 220px; }
-    .lv-priority-panel h2 { font-size: 24px; margin-bottom: 18px; }
-    .lv-priority-decision { background: #eaf4f1; border-left: 6px solid var(--lv-accent); }
-    .lv-priority-action { background: #fff3df; border-left: 6px solid var(--lv-accent-2); }
-    .lv-decision-list { counter-reset: item; list-style: none; margin: 0; padding: 0; }
-    .lv-decision-list li { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; margin: 0; padding: 10px 0; border-top: 1px solid rgba(31,39,50,.1); }
-    .lv-decision-list li:first-child { border-top: 0; }
-    .lv-decision-no { width: 24px; height: 24px; border-radius: 50%; background: var(--lv-accent); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 800; }
-    .lv-action-list { display: grid; gap: 10px; }
-    .lv-action-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 12px 0; border-top: 1px solid rgba(31,39,50,.1); }
-    .lv-action-row:first-child { border-top: 0; }
-    .lv-action-main { font-weight: 760; }
-    .lv-action-meta { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; color: var(--lv-muted); font-size: 12px; white-space: nowrap; }
-    .lv-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(270px, .65fr); gap: 28px; align-items: start; margin-top: 22px; }
-    .lv-terms { display: flex; flex-wrap: wrap; gap: 8px; }
-    .lv-term { padding: 5px 9px; border-radius: 999px; background: var(--lv-soft); color: var(--lv-muted); font-size: 13px; }
-    .lv-chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
-    .lv-chip { display: inline-flex; align-items: center; min-height: 28px; padding: 5px 9px; border-radius: 999px; background: var(--lv-soft); color: var(--lv-muted); font-size: 13px; }
-    .lv-footer { margin-top: 24px; color: var(--lv-muted); font-size: 12px; text-align: center; }
-    .lv-report-tools { position: fixed; top: 18px; right: 18px; z-index: 20; display: flex; align-items: center; gap: 10px; padding: 8px; border: 1px solid var(--lv-line); border-radius: 999px; background: rgba(255,255,255,.88); box-shadow: 0 10px 28px rgba(31,39,50,.12); backdrop-filter: blur(12px); }
-    .lv-report-tools button { border: 0; border-radius: 999px; background: var(--lv-ink); color: #fff; font: inherit; font-size: 13px; font-weight: 700; padding: 8px 13px; cursor: pointer; }
-    .lv-report-tools button:disabled { opacity: .58; cursor: default; }
-    .lv-report-tools span { color: var(--lv-muted); font-size: 12px; padding-right: 4px; }
-    @media (max-width: 820px) {
-      .lv-page { padding: 18px 12px 42px; }
-      .lv-panorama { padding: 24px 18px; }
-      .lv-grid, .lv-priority, .lv-highlight-list, .lv-signal-strip { grid-template-columns: 1fr; }
-      .lv-signal { border-right: 0; border-bottom: 1px solid var(--lv-line); padding-right: 0; }
-      .lv-signal:last-child { border-bottom: 0; }
-      .lv-action-row { grid-template-columns: 1fr; }
-      .lv-action-meta { align-items: flex-start; }
-      .lv-report-tools { left: 12px; right: 12px; top: auto; bottom: 12px; justify-content: center; }
-    }
-    @media print {
-      body { background: #fff; }
-      .lv-page { max-width: none; padding: 0; }
-      .lv-panorama { box-shadow: none; border: 0; }
-      .lv-section, .lv-priority-panel, .lv-flow { break-inside: avoid; }
-      .lv-report-tools { display: none !important; }
-    }
-  </style>
-</head>
-<body>
-  <div class="lv-report-tools">
-    <button id="lexvoice-save-report-image" type="button">保存为图片</button>
-    <span id="lexvoice-export-status"></span>
-  </div>
-  <main class="lv-page">
-    <div class="lv-panorama">
-    <header class="lv-hero">
-      <div class="lv-kicker">LexVoice Report</div>
-      <h1>${escapeHtmlText(model.title)}</h1>
+  return `BLANKED${escapeHtmlText(model.title)}BLANKED${escapeHtmlText(model.title)}</h1>
       <p class="lv-subtitle">${escapeHtmlText(model.subtitle)}</p>
-      ${model.summary ? `<p class="lv-brief">${escapeHtmlText(model.summary)}</p>` : ""}
-      <div class="lv-meta">
-        <span class="lv-pill">生成时间：${escapeHtmlText(now)}</span>
+      ${model.summary ? `<p class="lv-brief">${escapeHtmlText(model.summary)}</p>` : ""}BLANKED${escapeHtmlText(now)}</span>
         ${model.theme ? `<span class="lv-pill">主题：${escapeHtmlText(model.theme)}</span>` : ""}
-        ${model.audience ? `<span class="lv-pill">面向：${escapeHtmlText(model.audience)}</span>` : ""}
-        <span class="lv-pill">来源：LexVoice 纪要</span>
-      </div>
-    </header>
-
-    ${model.editorialNote ? `<section class="lv-card lv-editorial"><span class="lv-label">Editorial Focus</span>${renderReportParagraphs(model.editorialNote)}</section>` : ""}
+        ${model.audience ? `<span class="lv-pill">面向：${escapeHtmlText(model.audience)}</span>` : ""}BLANKED${model.editorialNote ? `<section class="lv-card lv-editorial"><span class="lv-label">Editorial Focus</span>${renderReportParagraphs(model.editorialNote)}</section>` : ""}
     ${model.thesis ? `<section class="lv-card"><span class="lv-label">Main Takeaway</span><div class="lv-thesis">${escapeHtmlText(model.thesis)}</div></section>` : ""}
-    ${renderVisualCards(model.visualCards)}
-
-    <section class="lv-priority">
-      <div class="lv-priority-panel lv-priority-decision">
-        <span class="lv-label">Decisions</span>
-        <h2>决议与结论</h2>
-        ${renderDecisionPanel(model.decisions)}
-      </div>
-      <div class="lv-priority-panel lv-priority-action">
-        <span class="lv-label">Actions</span>
-        <h2>待办推进</h2>
-        ${renderTodoPanel(model.todos)}
+    ${renderVisualCards(model.visualCards)}BLANKED${renderDecisionPanel(model.decisions)}BLANKED${renderTodoPanel(model.todos)}
       </div>
     </section>
 
-    ${renderLogicFlow(model.logicFlow)}
-
-    <div class="lv-grid">
-      <div class="lv-main">
-        <section class="lv-card">
-          <span class="lv-label">Highlights</span>
-          <h2>重点信息</h2>
-          ${model.highlights.length ? `<ul class="lv-highlight-list">${model.highlights.map(item => `<li>${escapeHtmlText(item)}</li>`).join("")}</ul>` : `<p class="lv-muted">未提及</p>`}
+    ${renderLogicFlow(model.logicFlow)}BLANKED${model.highlights.length ? `<ul class="lv-highlight-list">${model.highlights.map(item => `<li>${escapeHtmlText(item)}</li>`).join("")}</ul>` : `<p class="lv-muted">未提及</p>`}
         </section>
-        ${sectionHtml}
-      </div>
-      <aside class="lv-side">
-        <section class="lv-card">
-          <h2>风险与待确认</h2>
-          ${renderReportList(model.risks)}
-        </section>
-        <section class="lv-card">
-          <h2>已过滤噪声</h2>
-          ${renderReportChips(model.omitted)}
-        </section>
-        <section class="lv-card">
-          <h2>关键词</h2>
-          ${model.terms.length ? `<div class="lv-terms">${model.terms.map(term => `<span class="lv-term">${escapeHtmlText(term)}</span>`).join("")}</div>` : `<p class="lv-muted">未提及</p>`}
-        </section>
-      </aside>
-    </div>
-
-    <div class="lv-footer">Generated by LexVoice. Please verify important facts before sharing.</div>
-    </div>
-  </main>
-</body>
-</html>
-`;
+        ${sectionHtml}BLANKED${renderReportList(model.risks)}BLANKED${renderReportChips(model.omitted)}BLANKED${model.terms.length ? `<div class="lv-terms">${model.terms.map(term => `<span class="lv-term">${escapeHtmlText(term)}</span>`).join("")}</div>` : `<p class="lv-muted">未提及</p>`}BLANKED`;
 }
 
 export function buildHtmlReportPrompt(fileName, markdown) {
-  return `请把下面这份 LexVoice 会议纪要，重构成一份适合生成 HTML 长图/报告的结构化内容。
-
-文件名：${fileName}
-
-你的任务不是复述会议纪要，也不是把 Markdown 换成网页皮肤。
-你的任务是像专业编辑/咨询顾问/产品策略分析师一样，对会议内容做二次加工：
-1. 判断会议真正讨论的主题是什么。
-2. 过滤闲聊、口头禅、重复确认、跑题内容、无意义寒暄、调试语气、低价值细节。
-3. 保留对理解主题、推进项目、形成判断有价值的信息。
-4. 围绕会议主题重构逻辑链：背景/问题 → 关键观察 → 分析判断 → 结论/方案 → 风险 → 下一步。
-5. 把内容写成可以让没参加会议的人也快速理解的报告。
-
-内容取舍原则：
-- 内容优先，但表达方式要可视化；不要写成长篇文章。
-- 不要逐段照搬原纪要，不要保留“某人说了什么”的流水账，除非这句话本身构成关键判断或证据。
-- 不要为了填字段而硬写；没有明确依据就留空数组。
-- 可以进行合理概括、归纳、归并同类项，但不能编造事实、数据、结论、责任人或截止时间。
-- 对会议中明显只是闲聊、测试、玩笑、卡顿、语音识别错误、重复铺垫的内容，应列入 omitted，而不是进入正文。
-- 如果会议主题很散，请主动归并成 2-4 条主线，而不是机械按照原始顺序输出。
-- 如果材料偏学习/视频内容，报告应像学习长图：核心观点、概念关系、方法论、可复用结论。
-- 如果材料偏项目/产品/会议，报告应像项目报告：问题定义、关键判断、方案路径、行动项、风险。
-
-输出要求：
-- 只输出 JSON，不要 Markdown，不要代码块标记，不要解释。
-- 字段必须使用下面的结构；没有信息时用空数组或空字符串。
-- todos 中无法判断责任人或截止时间时写“未提及”。
-- visualCards 用于页面顶部的视觉卡片，优先写数字、判断、状态、结论标签；没有数字也可以写“核心矛盾 / 推荐方案 / 当前状态”等短语。
-- logicFlow 是可视化流程主线，3-5 个节点，每个节点 desc 不超过 35 字。
-- sections 是报告主体，必须经过重构，不能照抄原文标题；每节 body 控制在 60-120 字，bullets 最多 3 条。
-- 每条 highlights 不超过 32 字；每个 bullet 不超过 36 字。
-- summary 是面向读者的摘要，不是会议开场白。
-- thesis 是这份报告最重要的一句话结论。
-- editorialNote 说明你如何筛选和重构本次会议内容，语气简短克制。
-
-JSON 结构：
-{
-  "title": "报告标题",
-  "subtitle": "一句话说明这份报告的背景和阅读价值",
-  "theme": "本次会议真正围绕的主题",
-  "audience": "这份报告适合谁读",
-  "editorialNote": "说明过滤了什么、如何重构，不超过 80 字",
-  "summary": "150-260 字核心摘要",
-  "thesis": "最重要的一句话结论",
-  "highlights": ["最重要的洞察、判断或信息"],
-  "visualCards": [{"label": "卡片标签", "value": "短结论或关键数字", "note": "一句补充说明"}],
-  "logicFlow": [{"step": "1", "title": "节点标题", "desc": "不超过 35 字的说明"}],
-  "decisions": ["已经形成的结论或决策"],
-  "todos": [{"owner": "责任人", "task": "事项", "due": "截止时间"}],
-  "risks": ["风险、阻塞或待确认问题"],
-  "omitted": ["被过滤的闲聊或低价值细节类别"],
-  "terms": ["关键词或术语"],
-  "sections": [
-    {"title": "重构后的小节标题", "body": "围绕主题重写后的分析段落", "bullets": ["关键证据或落地要点"]}
-  ]
-}
-
-会议纪要 Markdown：
-
-${markdown}`;
+  return `BLANKED${fileName}BLANKED${markdown}`;
 }
 
 export async function generateHtmlReportFromMarkdown(plugin, fileName, markdown) {
@@ -779,9 +446,7 @@ export function renderDeckBars(items) {
 
 export function renderDeckTree(slide, items) {
   const root = escapeHtmlText(slide.keyMessage || slide.actionTitle || "核心结论");
-  return `<div class="lv-slide-tree">
-    <div class="lv-slide-tree-root">${root}</div>
-    <div class="lv-slide-tree-branches">${items.map((item, idx) => `
+  return `BLANKED${root}BLANKED${items.map((item, idx) => `
       <div class="lv-slide-tree-node" style="--delay:${idx * 90}ms">
         <strong>${escapeHtmlText(item.label || item.value || `分支 ${idx + 1}`)}</strong>
         ${item.note || (item.label && item.value) ? `<p>${escapeHtmlText(item.note || item.value)}</p>` : ""}
@@ -800,8 +465,7 @@ export function renderDeckMatrix(items) {
 
 export function renderDeckQuote(slide, items) {
   const first = items[0] || {};
-  return `<figure class="lv-slide-quote">
-    <blockquote>${escapeHtmlText(first.value || slide.keyMessage || slide.actionTitle)}</blockquote>
+  return `BLANKED${escapeHtmlText(first.value || slide.keyMessage || slide.actionTitle)}</blockquote>
     ${first.label || first.note ? `<figcaption>${escapeHtmlText([first.label, first.note].filter(Boolean).join(" · "))}</figcaption>` : ""}
   </figure>`;
 }
@@ -905,15 +569,8 @@ export function renderHtmlDeck(deck) {
     const visualClass = `is-${String(slide.visualType || "cards").toLowerCase().replace(/[^a-z0-9_-]+/g, "-")}`;
     const layoutClass = `layout-${layoutPreset.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
     const topLabel = [slide.section || deck.theme || "LexVoice Slides", layoutInfo.label].filter(Boolean).join(" / ");
-    return `<section class="lv-slide ${isCover ? "is-cover" : ""} ${visualClass} ${layoutClass} ${idx === 0 ? "is-active" : ""}" data-slide="${idx + 1}" data-layout="${escapeHtmlText(layoutPreset)}">
-      <div class="lv-slide-aura one"></div>
-      <div class="lv-slide-aura two"></div>
-      <div class="lv-slide-top">
-        <span>${escapeHtmlText(topLabel)}</span>
-        <span>${escapeHtmlText(slide.page || `Page ${idx + 1}/${deck.slides.length}`)}</span>
-      </div>
-      <div class="lv-slide-body">
-        ${isCover ? `
+    return `<section class="lv-slide ${isCover ? "is-cover" : ""} ${visualClass} ${layoutClass} ${idx === 0 ? "is-active" : ""}" data-slide="${idx + 1}" data-layout="${escapeHtmlText(layoutPreset)}BLANKED${escapeHtmlText(topLabel)}</span>
+        <span>${escapeHtmlText(slide.page || `Page ${idx + 1}/${deck.slides.length}`)}BLANKED${isCover ? `
           <div class="lv-cover-mark">LexVoice Visual Deck</div>
           <h1>${escapeHtmlText(deck.title)}</h1>
           <p class="lv-cover-subtitle">${escapeHtmlText(deck.subtitle)}</p>
@@ -938,355 +595,11 @@ export function renderHtmlDeck(deck) {
     </section>`;
   }).join("\n");
 
-  return `<!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${escapeHtmlText(deck.title)} - HTML PPT</title>
-  <style>
-    :root {
-      color-scheme: light;
-      --stage-w: 1920px;
-      --stage-h: 1080px;
-      ${themeVars};
-      --shadow: 0 30px 90px rgba(var(--orange-deep-rgb), .18);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-    }
-    * { box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; }
-    body {
-      margin: 0;
-      color: var(--ink);
-      line-height: 1.42;
-      background:
-        radial-gradient(circle at 16% 18%, rgba(var(--orange-rgb), .30), transparent 28%),
-        radial-gradient(circle at 84% 10%, rgba(var(--amber-rgb), .34), transparent 30%),
-        radial-gradient(circle at 72% 82%, rgba(var(--orange-rgb), .18), transparent 34%),
-        linear-gradient(135deg, var(--soft) 0%, var(--cream) 46%, var(--paper) 100%);
-    }
-    .lv-deck-shell { position: fixed; inset: 0; overflow: hidden; background:
-      radial-gradient(circle at 10% 84%, rgba(255,255,255,.72), transparent 26%),
-      radial-gradient(circle at 88% 72%, rgba(var(--amber-rgb),.18), transparent 32%);
-    }
-    .lv-deck-stage { position: absolute; left: 0; top: 0; width: var(--stage-w); height: var(--stage-h); transform-origin: 0 0; overflow: hidden; }
-    .lv-slide {
-      position: absolute; inset: 0; width: var(--stage-w); height: var(--stage-h); padding: 86px 104px 82px;
-      background:
-        radial-gradient(circle at 12% 18%, rgba(255,255,255,.86), transparent 30%),
-        radial-gradient(circle at 88% 12%, rgba(var(--amber-rgb),.24), transparent 26%),
-        radial-gradient(circle at 76% 86%, rgba(var(--orange-rgb),.15), transparent 34%),
-        linear-gradient(135deg, rgba(255,255,255,.64), rgba(var(--paper-rgb),.94) 48%, rgba(255,255,255,.74));
-      border: 1px solid rgba(255,255,255,.72); box-shadow: var(--shadow); overflow: hidden; opacity: 0;
-      transform: translateY(28px) scale(.985); pointer-events: none; transition: opacity .42s ease, transform .55s cubic-bezier(.2,.72,.16,1);
-    }
-    .lv-slide.is-active { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
-    .lv-slide:before { content: ""; position: absolute; inset: 24px; border: 1px solid rgba(var(--orange-deep-rgb), .12); pointer-events: none; }
-    .lv-slide:after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 16px; background: linear-gradient(90deg, var(--orange), rgba(var(--amber-rgb), .22), transparent); }
-    .lv-slide-aura { position: absolute; border-radius: 999px; filter: blur(16px); opacity: .7; pointer-events: none; }
-    .lv-slide-aura.one { width: 360px; height: 360px; right: 96px; top: 70px; background: rgba(var(--amber-rgb), .24); }
-    .lv-slide-aura.two { width: 420px; height: 420px; left: -120px; bottom: -120px; background: rgba(var(--orange-rgb), .13); }
-    .lv-slide-top { position: relative; z-index: 2; display: flex; justify-content: space-between; gap: 32px; color: var(--muted); font-size: 22px; font-weight: 760; letter-spacing: .03em; }
-    .lv-slide-body { position: relative; z-index: 2; height: calc(100% - 42px); display: flex; flex-direction: column; }
-    .lv-cover-mark { color: var(--orange-deep); font-size: 24px; font-weight: 850; letter-spacing: .12em; text-transform: uppercase; margin-top: 154px; }
-    .is-cover h1 { font-size: 104px; line-height: .98; max-width: 1320px; margin: 28px 0; letter-spacing: 0; }
-    .lv-cover-subtitle { font-size: 38px; line-height: 1.35; color: var(--muted); max-width: 1180px; }
-    .lv-cover-meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: auto; }
-    .lv-cover-meta span { border: 1px solid var(--line); border-radius: 999px; padding: 12px 20px; color: var(--muted); background: rgba(255,255,255,.58); backdrop-filter: blur(10px); font-size: 22px; }
-    .lv-slide-title-block { padding-bottom: 26px; margin-top: 44px; max-width: 1460px; }
-    .lv-slide-section { display: inline-flex; align-items: center; gap: 12px; color: var(--orange-deep); font-weight: 860; font-size: 22px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 18px; }
-    .lv-slide-section:before { content: ""; width: 54px; height: 4px; border-radius: 999px; background: var(--orange); }
-    .lv-slide h2 { font-size: 68px; line-height: 1.04; margin: 0; letter-spacing: 0; max-width: 1480px; }
-    .lv-slide-message { font-size: 30px; line-height: 1.38; color: var(--muted); max-width: 1280px; margin: 22px 0 0; }
-    .lv-slide-content { display: grid; grid-template-columns: minmax(0, 1fr); gap: 48px; align-items: stretch; margin-top: 48px; min-height: 0; flex: 1; }
-    .lv-slide-main { min-width: 0; display: flex; flex-direction: column; justify-content: center; }
-    .lv-slide-side { border-left: 1px solid var(--line); padding-left: 34px; display: flex; flex-direction: column; justify-content: center; }
-    .lv-slide-side h3 { margin: 0 0 22px; color: var(--orange-deep); font-size: 20px; letter-spacing: .08em; text-transform: uppercase; }
-    .lv-slide-points { margin: 0; padding-left: 22px; font-size: 24px; line-height: 1.52; }
-    .lv-slide-points li { margin: 0 0 16px; }
-    .lv-chart-note { margin: 18px 0 0; color: var(--muted); font-size: 18px; }
-    .lv-slide-metric-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 24px; }
-    .lv-slide-metric, .lv-slide-flow-node, .lv-slide-compare-col, .lv-slide-tree-node, .lv-slide-matrix-cell, .lv-slide-pillar {
-      border: 1px solid var(--line); background: rgba(255,255,255,.56); box-shadow: 0 18px 50px rgba(var(--orange-deep-rgb), .09); animation: lvRise .58s ease both; animation-delay: var(--delay);
-    }
-    .lv-slide-metric { min-height: 190px; padding: 30px; }
-    .lv-slide-card-label { color: var(--orange-deep); font-size: 18px; font-weight: 850; letter-spacing: .06em; margin-bottom: 16px; }
-    .lv-slide-card-value { font-size: 44px; line-height: 1.08; font-weight: 900; }
-    .lv-slide-card-note { color: var(--muted); font-size: 20px; margin-top: 16px; }
-    .lv-slide-bars { display: grid; gap: 24px; }
-    .lv-slide-bar-row { animation: lvRise .56s ease both; animation-delay: var(--delay); }
-    .lv-slide-bar-head { display: flex; justify-content: space-between; gap: 20px; font-size: 23px; font-weight: 780; }
-    .lv-slide-bar-head strong { color: var(--orange-deep); }
-    .lv-slide-bar-track { height: 18px; background: rgba(var(--orange-deep-rgb), .10); margin-top: 12px; overflow: hidden; }
-    .lv-slide-bar-track i { display: block; height: 100%; width: var(--bar); background: linear-gradient(90deg, var(--orange), var(--amber)); animation: lvBar .8s ease both; }
-    .lv-slide-bar-row p { margin: 10px 0 0; color: var(--muted); font-size: 18px; }
-    .lv-slide-flow, .lv-slide-compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 18px; }
-    .lv-slide-flow-node, .lv-slide-compare-col { position: relative; padding: 30px 26px; min-height: 230px; }
-    .lv-slide-flow-no { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: var(--orange); color: #fff; font-weight: 900; margin-bottom: 20px; }
-    .lv-slide-flow-node strong, .lv-slide-compare-col h3 { font-size: 28px; line-height: 1.15; }
-    .lv-slide-flow-node p, .lv-slide-compare-col p, .lv-slide-compare-col div { color: var(--muted); font-size: 20px; margin: 14px 0 0; }
-    .lv-slide-rowline { display: grid; gap: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-    .lv-slide-rowline-item { display: grid; grid-template-columns: 210px minmax(0,1fr) 160px; gap: 28px; align-items: start; padding: 22px 0; border-top: 1px solid var(--line); animation: lvRise .58s ease both; animation-delay: var(--delay); }
-    .lv-slide-rowline-item:first-child { border-top: 0; }
-    .lv-slide-rowline-k { font-size: 30px; line-height: 1.1; font-weight: 920; color: var(--orange-deep); }
-    .lv-slide-rowline-v { font-size: 27px; line-height: 1.3; font-weight: 780; }
-    .lv-slide-rowline-m { justify-self: end; max-width: 160px; color: var(--muted); font-size: 15px; line-height: 1.3; text-align: right; text-transform: uppercase; letter-spacing: .06em; }
-    .lv-slide-pillars { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 24px; }
-    .lv-slide-pillar { min-height: 360px; padding: 34px 30px; display: flex; flex-direction: column; justify-content: space-between; }
-    .lv-slide-pillar-no { font-size: 22px; font-weight: 900; color: var(--orange-deep); letter-spacing: .08em; }
-    .lv-slide-pillar strong { font-size: 34px; line-height: 1.12; }
-    .lv-slide-pillar p { color: var(--muted); font-size: 20px; line-height: 1.42; margin: 20px 0 0; }
-    .lv-slide-tree { display: grid; grid-template-columns: 390px 1fr; gap: 32px; align-items: center; }
-    .lv-slide-tree-root { min-height: 330px; padding: 36px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 34px; line-height: 1.18; font-weight: 900; color: #fff; background: linear-gradient(135deg, var(--orange-deep), var(--orange)); box-shadow: 0 22px 70px rgba(var(--orange-deep-rgb), .24); }
-    .lv-slide-tree-branches, .lv-slide-matrix { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; }
-    .lv-slide-tree-node { padding: 26px; }
-    .lv-slide-tree-node strong { font-size: 25px; }
-    .lv-slide-tree-node p { font-size: 18px; color: var(--muted); }
-    .lv-slide-matrix-cell { min-height: 210px; padding: 26px; }
-    .lv-slide-matrix-cell span { color: var(--orange-deep); font-size: 18px; font-weight: 850; }
-    .lv-slide-matrix-cell strong { display: block; font-size: 30px; line-height: 1.16; margin-top: 14px; }
-    .lv-slide-matrix-cell p { color: var(--muted); font-size: 18px; }
-    .lv-slide-quote { margin: 0; padding: 72px 76px; background: rgba(255,255,255,.58); border-left: 12px solid var(--orange); box-shadow: 0 22px 70px rgba(var(--orange-deep-rgb), .11); }
-    .layout-lv02-bigstatement .lv-slide-quote, .layout-lv12-closingmanifesto .lv-slide-quote { background: transparent; border-left: 0; box-shadow: none; padding: 42px 0; }
-    .layout-lv02-bigstatement .lv-slide-quote blockquote, .layout-lv12-closingmanifesto .lv-slide-quote blockquote { font-size: 76px; max-width: 1060px; }
-    .lv-slide-quote blockquote { margin: 0; font-size: 54px; line-height: 1.18; font-weight: 900; }
-    .lv-slide-quote figcaption { margin-top: 28px; color: var(--muted); font-size: 22px; }
-    .lv-slide-decisions { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
-    .lv-slide-decisions li { display: grid; grid-template-columns: 54px 1fr; gap: 18px; padding: 24px; background: rgba(255,255,255,.58); border-left: 8px solid var(--orange); font-weight: 820; font-size: 26px; box-shadow: 0 16px 44px rgba(var(--orange-deep-rgb), .09); }
-    .lv-slide-decisions span { width: 42px; height: 42px; border-radius: 50%; background: var(--orange); color: #fff; display: grid; place-items: center; font-size: 18px; }
-    .lv-slide-actions { display: grid; gap: 18px; }
-    .lv-slide-action { padding: 26px; background: rgba(255,255,255,.60); border-left: 8px solid var(--orange); box-shadow: 0 16px 44px rgba(var(--orange-deep-rgb), .09); }
-    .lv-slide-action-task { font-weight: 860; font-size: 30px; }
-    .lv-slide-action-meta { color: var(--muted); font-size: 20px; margin-top: 10px; }
-    .lv-slide-risk-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; }
-    .lv-slide-risk { padding: 28px; background: rgba(255,255,255,.58); border-top: 8px solid var(--orange-deep); font-weight: 820; font-size: 25px; box-shadow: 0 16px 44px rgba(var(--orange-deep-rgb), .09); }
-    .lv-deck-toolbar { position: fixed; left: 50%; bottom: 24px; z-index: 50; display: flex; gap: 10px; align-items: center; padding: 10px; border: 1px solid rgba(255,255,255,.68); border-radius: 999px; background: rgba(255,255,255,.72); box-shadow: 0 16px 42px rgba(var(--orange-deep-rgb), .16); backdrop-filter: blur(18px); transform: translateX(-50%); }
-    .lv-deck-toolbar button { border: 0; border-radius: 999px; background: var(--ink); color: #fff; font: inherit; font-size: 14px; font-weight: 780; padding: 9px 14px; cursor: pointer; }
-    .lv-deck-toolbar button.secondary { background: rgba(255,255,255,.82); color: var(--ink); border: 1px solid var(--line); }
-    .lv-deck-toolbar button:disabled { opacity: .55; cursor: default; }
-    .lv-deck-shell.is-fullscreen .lv-deck-toolbar,
-    :fullscreen .lv-deck-toolbar { opacity: 0; visibility: hidden; pointer-events: none; transform: translateX(-50%) translateY(18px); }
-    .lv-deck-status { color: var(--muted); font-size: 12px; padding: 0 4px; min-width: 86px; }
-    .lv-deck-progress { position: fixed; left: 0; right: 0; bottom: 0; height: 5px; background: rgba(var(--orange-deep-rgb), .10); z-index: 55; }
-    .lv-deck-progress i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--orange-deep), var(--orange), var(--amber)); transition: width .28s ease; }
-    .lv-export-stack { width: 1920px; background: var(--paper); }
-    .lv-export-stack .lv-slide { position: relative!important; display: block!important; opacity: 1!important; transform: none!important; pointer-events: auto!important; margin: 0!important; box-shadow: none!important; break-after: page; }
-    @keyframes lvRise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes lvBar { from { width: 0; } to { width: var(--bar); } }
-    @media (prefers-reduced-motion: reduce) { .lv-slide, .lv-slide * { animation: none!important; transition: none!important; } }
-    @media print {
-      html, body { overflow: visible; background: #fff; }
-      .lv-deck-shell { position: static; overflow: visible; background: #fff; }
-      .lv-deck-stage { position: static; transform: none!important; width: var(--stage-w); height: auto; }
-      .lv-slide { position: relative; opacity: 1; transform: none; break-after: page; box-shadow: none; }
-      .lv-deck-toolbar, .lv-deck-progress { display: none!important; }
-    }
-  </style>
-</head>
-<body>
-  <div class="lv-deck-shell">
-    <div class="lv-deck-toolbar">
-      <button class="secondary" id="lexvoice-slide-prev" type="button">上一页</button>
-      <button class="secondary" id="lexvoice-slide-next" type="button">下一页</button>
-      <button class="secondary" id="lexvoice-slide-fullscreen" type="button">全屏</button>
-      <button id="lexvoice-save-current-slide" type="button">保存当前页</button>
-      <button id="lexvoice-save-all-slides" type="button">保存长图</button>
-      <span class="lv-deck-status" id="lexvoice-deck-status"></span>
-    </div>
-    <main class="lv-deck-stage" id="lexvoice-deck-stage">
-      ${slides}
-    </main>
-    <div class="lv-deck-progress"><i id="lexvoice-deck-progress"></i></div>
-  </div>
-</body>
-</html>`;
+  return `BLANKED${escapeHtmlText(deck.title)}BLANKED${themeVars}BLANKED${slides}BLANKED`;
 }
 
 export function injectHtmlDeckExportScript(html) {
-  const script = `<script>
-(function () {
-  const slides = Array.from(document.querySelectorAll(".lv-slide"));
-  const stage = document.getElementById("lexvoice-deck-stage");
-  const shell = document.querySelector(".lv-deck-shell");
-  const progress = document.getElementById("lexvoice-deck-progress");
-  const status = document.getElementById("lexvoice-deck-status");
-  const setStatus = (text) => { if (status) status.textContent = text || ""; };
-  const safeName = (document.title || "LexVoice-HTML-PPT").replace(/[\\\\/:*?"<>|]+/g, "-").replace(/\\s+/g, " ").trim().slice(0, 80) || "LexVoice-HTML-PPT";
-  const downloadBlob = (blob, name) => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1200);
-  };
-  let current = 0;
-  const visibleIndex = () => current;
-  const updateScale = () => {
-    if (!stage) return;
-    const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
-    const x = Math.max(0, (window.innerWidth - 1920 * scale) / 2);
-    const y = Math.max(0, (window.innerHeight - 1080 * scale) / 2);
-    stage.style.transform = "translate(" + x + "px," + y + "px) scale(" + scale + ")";
-  };
-  const update = () => {
-    slides.forEach((slide, index) => slide.classList.toggle("is-active", index === current));
-    if (progress) progress.style.width = ((current + 1) / Math.max(1, slides.length) * 100) + "%";
-    if (location.hash !== "#slide-" + (current + 1)) {
-      try { history.replaceState(null, "", "#slide-" + (current + 1)); } catch (error) {}
-    }
-    setStatus((current + 1) + " / " + slides.length);
-  };
-  const updateFullscreenState = () => {
-    const isFullscreen = !!document.fullscreenElement;
-    shell && shell.classList.toggle("is-fullscreen", isFullscreen);
-    document.body.classList.toggle("is-lexvoice-fullscreen", isFullscreen);
-  };
-  const go = (index) => {
-    current = Math.max(0, Math.min(slides.length - 1, index));
-    update();
-  };
-  async function captureElement(target, name) {
-    const width = Math.ceil(target.scrollWidth);
-    const height = Math.ceil(target.scrollHeight);
-    const clone = target.cloneNode(true);
-    clone.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
-    clone.style.margin = "0";
-    clone.style.boxShadow = "none";
-    clone.style.position = "relative";
-    clone.style.opacity = "1";
-    clone.style.transform = "none";
-    clone.classList && clone.classList.add("is-active");
-    const styleText = Array.from(document.querySelectorAll("style")).map((style) => style.textContent || "").join("\\n");
-    const serialized = new XMLSerializer().serializeToString(clone);
-    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '" viewBox="0 0 ' + width + ' ' + height + '">' +
-      '<foreignObject width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml" style="background:#fff3e2;width:' + width + 'px;min-height:' + height + 'px;">' +
-      '<style>' + styleText + '\\n.lv-deck-toolbar,.lv-deck-progress{display:none!important}.lv-slide{position:relative!important;display:block!important;opacity:1!important;transform:none!important;margin:0!important;box-shadow:none!important}</style>' +
-      serialized + '</div></foreignObject></svg>';
-    const svgBlob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
-    const svgUrl = URL.createObjectURL(svgBlob);
-    try {
-      const img = await new Promise((resolve, reject) => {
-        const image = new Image();
-        image.onload = () => resolve(image);
-        image.onerror = () => reject(new Error("浏览器无法渲染幻灯片图片"));
-        image.src = svgUrl;
-      });
-      const maxPixels = 90000000;
-      const nativeScale = Math.max(1, Math.min(2, window.devicePixelRatio || 1.5));
-      const scale = Math.min(nativeScale, Math.sqrt(maxPixels / Math.max(1, width * height)));
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.max(1, Math.floor(width * scale));
-      canvas.height = Math.max(1, Math.floor(height * scale));
-      const ctx = canvas.getContext("2d");
-      ctx.setTransform(scale, 0, 0, scale, 0, 0);
-      ctx.fillStyle = "#fff3e2";
-      ctx.fillRect(0, 0, width, height);
-      ctx.drawImage(img, 0, 0);
-      let blob = null;
-      try {
-        blob = await new Promise((resolve, reject) => {
-          try {
-            canvas.toBlob((pngBlob) => pngBlob ? resolve(pngBlob) : reject(new Error("PNG 生成失败")), "image/png", 0.95);
-          } catch (error) {
-            reject(error);
-          }
-        });
-      } catch (error) {
-        console.warn("[LexVoice] PNG export blocked, falling back to SVG", error);
-        downloadBlob(svgBlob, name.replace(/\\.png$/i, ".svg"));
-        return "SVG";
-      }
-      downloadBlob(blob, name);
-      return "PNG";
-    } finally {
-      URL.revokeObjectURL(svgUrl);
-    }
-  }
-  function makeExportStack() {
-    const stack = document.createElement("div");
-    stack.className = "lv-export-stack";
-    slides.forEach((slide) => {
-      const cloned = slide.cloneNode(true);
-      cloned.classList.add("is-active");
-      cloned.style.position = "relative";
-      cloned.style.opacity = "1";
-      cloned.style.transform = "none";
-      stack.appendChild(cloned);
-    });
-    stack.style.position = "fixed";
-    stack.style.left = "-99999px";
-    stack.style.top = "0";
-    document.body.appendChild(stack);
-    return stack;
-  }
-  document.getElementById("lexvoice-slide-prev")?.addEventListener("click", () => go(visibleIndex() - 1));
-  document.getElementById("lexvoice-slide-next")?.addEventListener("click", () => go(visibleIndex() + 1));
-  document.getElementById("lexvoice-slide-fullscreen")?.addEventListener("click", async () => {
-    try {
-      if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
-      else await document.exitFullscreen();
-      updateFullscreenState();
-    } catch (error) {
-      setStatus("无法进入全屏");
-      window.setTimeout(() => setStatus(""), 1500);
-    }
-  });
-  document.getElementById("lexvoice-save-current-slide")?.addEventListener("click", async (event) => {
-    const button = event.currentTarget;
-    button.disabled = true;
-    setStatus("正在保存当前页...");
-    try {
-      const index = visibleIndex();
-      const format = await captureElement(slides[index], safeName + "-Page-" + String(index + 1).padStart(2, "0") + ".png");
-      setStatus(format === "SVG" ? "PNG 受浏览器限制，已保存 SVG" : "已保存当前页");
-    } catch (error) {
-      console.error("[LexVoice] export slide failed", error);
-      setStatus((error && error.message) || "保存失败");
-    } finally {
-      window.setTimeout(() => { button.disabled = false; setStatus(""); }, 1600);
-    }
-  });
-  document.getElementById("lexvoice-save-all-slides")?.addEventListener("click", async (event) => {
-    const button = event.currentTarget;
-    button.disabled = true;
-    setStatus("正在保存长图...");
-    let stack = null;
-    try {
-      stack = makeExportStack();
-      const format = await captureElement(stack, safeName + "-长图.png");
-      setStatus(format === "SVG" ? "PNG 受浏览器限制，已保存 SVG" : "已保存长图");
-    } catch (error) {
-      console.error("[LexVoice] export deck failed", error);
-      setStatus((error && error.message) || "保存失败");
-    } finally {
-      if (stack) stack.remove();
-      window.setTimeout(() => { button.disabled = false; setStatus(""); }, 1600);
-    }
-  });
-  window.addEventListener("keydown", (event) => {
-    if (event.key === "ArrowRight" || event.key === "PageDown") go(visibleIndex() + 1);
-    if (event.key === "ArrowLeft" || event.key === "PageUp") go(visibleIndex() - 1);
-    if (event.key === "Home") go(0);
-    if (event.key === "End") go(slides.length - 1);
-  });
-  document.addEventListener("fullscreenchange", updateFullscreenState);
-  window.addEventListener("resize", updateScale);
-  window.addEventListener("hashchange", () => {
-    const match = location.hash.match(/^#slide-(\\d+)$/);
-    if (match) go(Number(match[1]) - 1);
-  });
-  try {
-    const hash = location.hash.match(/^#slide-(\\d+)$/);
-    if (hash) current = Math.max(0, Math.min(slides.length - 1, Number(hash[1]) - 1));
-  } catch (error) {}
-  updateScale();
-  updateFullscreenState();
-  update();
-})();
-</script>`;
+  const script = `BLANKED`;
   if (/<\/body>/i.test(html)) return html.replace(/<\/body>/i, `${script}\n</body>`);
   return html + "\n" + script + "\n";
 }
@@ -1309,102 +622,7 @@ export function buildHtmlDeckPrompt(fileName, markdown, settings = {}) {
   const forcedTheme = LEXVOICE_DECK_THEMES[themeSetting] ? themeSetting : "";
   const slideRange = normalizePptSlideRange(settings.pptSlideRange);
   const promptAddendum = String(settings.pptPromptAddendum || "").trim();
-  return `请把下面这份 LexVoice 纪要重构成一份 HTML/PPTX 共用的 slides JSON。
-
-文件名：${fileName}
-
-角色设定：
-你是 PPT 架构师、内容策划专家和可视化编辑。你的目标不是复述纪要，而是先重构观点，再把内容做成适合全屏演示和可编辑 PPTX 导出的结构化幻灯片。
-
-核心要求：
-1. 严格基于原文，不编造数据、事实、人物、案例、结论或截止时间。
-2. 使用金字塔原理：先结论，后论据；先主线，后细节。
-3. 一页一重点。每页 actionTitle 必须是一句有判断的标题，不要写“背景介绍”“问题分析”这种空标题。
-4. 自动判断页数，用户偏好的页数范围是 ${slideRange} 页；材料很短可以更少，材料复杂最多 12 页。
-5. 忽略闲聊、口头禅、重复确认、跑题内容和低价值细节。
-6. 采用“初级设计师工作流”：先在脑中写 design brief，明确任务假设、受众、核心矛盾、内容占位、视觉理由，再生成最终稿。不要输出过程草稿。
-7. 在生成 JSON 前，必须先在脑中完成“主题节奏表”：封面、核心判断、证据/逻辑展开、决议/行动、风险/下一步。不要把这个思考过程输出。
-8. 先选整份 deck 的 themePreset，只能从这些值里选：${themeIds}。${forcedTheme ? `本次必须使用 ${forcedTheme}。` : "如果用户没有固定主题，请根据内容自动选择。"}一份 deck 只能用一个主题，不要每页换色。
-9. 每页必须先选 layoutPreset，只能从这些登记版式里选：${layoutIds}。不要发明未登记的版式名。
-10. 每页必须填写 component，并与 layoutPreset 对应：hero_statement、stat_matrix、timeline、decision_spine、todo_roadmap、risk_matrix、pillar、rowline、system_diagram。
-11. layoutReason 用一句话说明为什么本页适合这个版式，例如“这页是阶段推进，所以用横向时间线”。
-12. 优先可视化：数据条形图、指标墙、流程、时间线、MECE 树、对比、矩阵、待办路线图、风险地图。没有明确数据时不要伪造图表数据。
-13. 只有真正适合图表的信息才使用 bars/metric；没有数据但有结构时使用 tree/flow/matrix/comparison/rowline/pillar。
-14. 决议页使用 LV06_DecisionSpine，并把结论放入 decisions；行动页使用 LV07_TodoRoadmap，并把事项放入 todos；风险页使用 LV08_RiskMatrix，并把风险放入 risks。
-15. 不要连续 3 页使用同一种 layoutPreset；8 页以上至少要有一个 hero_statement 类页面作为呼吸页。
-16. 语言专业、简练、适合演讲展示；每页应像一张可被单独截图传播的全屏视觉页。
-17. 借鉴“杂志式叙事 + 瑞士网格 + 登记版式锁定”的思路：用大标题、强层级、留白、少量高信号视觉对象推进，不要把内容做成旧式 PPT 的标题加三块文本框。
-18. 视觉渲染器会负责 HTML/CSS 和 PPTX 形状；你只输出 JSON，不要输出 HTML、CSS、SVG、图片链接或脚本。
-19. PPT 是给听众看的理解工具，不是讲者提词器。不要输出“讲述重点”“如何演讲”“收束时强调”“本页集中呈现”等讲者提示语。
-20. points 是页面上可见的关键依据，只能写支撑本页判断的事实、证据、数据或逻辑节点，不要写演讲动作。
-21. 每页必须有一个清晰视觉主对象：一句大判断、一组指标、一个结构图、一条时间线、一个风险矩阵或一条行动路线；不要把所有页面做成等宽卡片堆叠。
-22. 执行五维设计审稿：philosophicalCoherence、visualHierarchy、executionCraft、functionality、innovation 各 0-10 分。最终输出前，任一维度低于 8 分必须先修正页面结构、标题或 visualItems，再输出最终 JSON。
-23. 品牌资产协议：如果原文涉及具体品牌、公司、产品或项目，不要凭空生成 logo、截图、产品图、品牌色或字体。没有用户提供资产时，只用文字标识和通用视觉语言，并在 designBrief.assetNeeds 里列出需要补充的资产类型。
-24. 不确定内容只能写“未提及”“待确认”或省略，不要用设计感掩盖事实空洞。
-${promptAddendum ? `25. 用户设置的自定义 PPT 生成提示词：${promptAddendum}\n注意：自定义提示词只能影响风格、结构和输出偏好，不能覆盖“不编造、只输出 JSON、保护隐私、不输出脚本、不做提词器”的硬规则。` : ""}
-
-输出要求：
-- 只输出 JSON，不要 Markdown，不要代码块标记，不要解释。
-- points 每页最多 4 条，每条不超过 28 字，必须是给观众看的“关键依据”，不是演讲提示。
-- keyMessage 不超过 60 字。
-- visualItems 用于生成图形区，必须写成短标签和短结论；能拆成 3-6 个视觉节点就不要写长段落。
-- chartSpec 必须说明“为什么用这个逻辑框架/图形”，不要超过 50 字。
-- layoutIntent 写本页版式意图，例如“封面海报”“大字报”“证据行”“三支柱”“时间线”“决策脊柱”“行动路线图”“风险矩阵”，不要超过 20 字。
-- layoutReason 写版式选择理由，不要超过 36 字。
-- 如果原文有数字、数量、比例、阶段、时间、优先级，请尽量把它们放进 visualItems。
-- 决议页把结论放入 decisions；行动页把事项放入 todos；风险页把风险放入 risks。
-- designBrief 用于记录最终成稿采用的任务假设、占位策略、资产需求，不要超过 6 条短句。
-- designReview 必须包含五维分数、keep、fix、quickWins。fix 只能写已经在最终稿里修正过的问题，不要暴露推理过程。
-
-JSON 结构：
-{
-  "title": "PPT 标题",
-  "subtitle": "副标题",
-  "theme": "主题",
-  "themePreset": "warm | ink | indigo | forest | dune",
-  "audience": "适合听众",
-  "designBrief": {
-    "assumptions": ["任务假设"],
-    "placeholders": ["占位策略"],
-    "assetNeeds": ["缺失资产类型，如 logo / 产品图 / UI截图 / 品牌色 / 字体 / 品牌规范"]
-  },
-  "designReview": {
-    "scores": {
-      "philosophicalCoherence": 8,
-      "visualHierarchy": 8,
-      "executionCraft": 8,
-      "functionality": 8,
-      "innovation": 8
-    },
-    "keep": ["保留的设计判断"],
-    "fix": ["已经修正的问题"],
-    "quickWins": ["后续可快速优化点"]
-  },
-  "sections": ["板块一", "板块二"],
-  "slides": [
-    {
-      "type": "cover | insight | flow | decision | action | risk | closing",
-      "section": "所属板块",
-      "actionTitle": "一句话概括本页核心观点",
-      "keyMessage": "本页最重要结论",
-      "points": ["关键依据"],
-      "visualType": "metric | bars | flow | timeline | comparison | tree | matrix | actions | risks | quote",
-      "layoutPreset": "LV01_CoverPoster | LV02_BigStatement | LV03_StatMatrix | LV04_VerticalTimeline | LV05_HorizontalTimeline | LV06_DecisionSpine | LV07_TodoRoadmap | LV08_RiskMatrix | LV09_ThreePillars | LV10_EvidenceRowline | LV11_SystemDiagram | LV12_ClosingManifesto",
-      "component": "hero_statement | stat_matrix | timeline | decision_spine | todo_roadmap | risk_matrix | pillar | rowline | system_diagram",
-      "layoutIntent": "版式意图",
-      "layoutReason": "为什么使用这个版式",
-      "visualItems": [{"label": "短标签", "value": "关键数字或结论", "note": "补充说明"}],
-      "chartSpec": "图表建议",
-      "decisions": ["本页涉及的决议"],
-      "todos": [{"owner": "责任人", "task": "事项", "due": "截止时间"}],
-      "risks": ["风险或待确认"]
-    }
-  ]
-}
-
-纪要 Markdown：
-
-${markdown}`;
+  return `BLANKED${fileName}BLANKED${slideRange}BLANKED${themeIds}。${forcedTheme ? `本次必须使用 ${forcedTheme}。` : "如果用户没有固定主题，请根据内容自动选择。"}BLANKED${layoutIds}BLANKED${promptAddendum ? `25. 用户设置的自定义 PPT 生成提示词：${promptAddendum}\n注意：自定义提示词只能影响风格、结构和输出偏好，不能覆盖“不编造、只输出 JSON、保护隐私、不输出脚本、不做提词器”的硬规则。` : ""}BLANKED${markdown}`;
 }
 
 export async function generateDeckModelFromMarkdown(plugin, fileName, markdown) {
@@ -1485,7 +703,7 @@ export function pptxTextParagraphs(text, opt = {}) {
   const bullet = opt.bullet ? '<a:buChar char="•"/>' : "";
   const lineSpacing = Math.round((opt.lineSpacing || 105000));
   const font = pptxXml(opt.font || (opt.bold || (opt.size || 18) >= 24 ? "Microsoft YaHei UI" : "Microsoft YaHei"));
-  return lines.map(line => `<a:p><a:pPr${algn}>${bullet}<a:lnSpc><a:spcPct val="${lineSpacing}"/></a:lnSpc></a:pPr><a:r><a:rPr lang="zh-CN" sz="${size}"${bold}><a:solidFill><a:srgbClr val="${color}"/></a:solidFill><a:latin typeface="${font}"/><a:ea typeface="${font}"/><a:cs typeface="${font}"/></a:rPr><a:t>${pptxXml(line)}</a:t></a:r><a:endParaRPr lang="zh-CN" sz="${size}"/></a:p>`).join("");
+  return lines.map(line => `<a:p><a:pPr${algn}>${bullet}<a:lnSpc><a:spcPct val="${lineSpacing}BLANKED${size}"${bold}><a:solidFill><a:srgbClr val="${color}"/></a:solidFill><a:latin typeface="${font}"/><a:ea typeface="${font}"/><a:cs typeface="${font}"/></a:rPr><a:t>${pptxXml(line)}BLANKED${size}"/></a:p>`).join("");
 }
 
 export function pptxTextBox(id, name, x, y, w, h, text, opt = {}) {
@@ -1495,9 +713,7 @@ export function pptxTextBox(id, name, x, y, w, h, text, opt = {}) {
   const valign = opt.valign ? ` anchor="${pptxXml(opt.valign)}"` : "";
   const shape = opt.shape || (opt.radius ? "roundRect" : "rect");
   return `<p:sp>
-    <p:nvSpPr><p:cNvPr id="${id}" name="${pptxXml(name || `Text ${id}`)}"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>
-    <p:spPr><a:xfrm><a:off x="${x}" y="${y}"/><a:ext cx="${w}" cy="${h}"/></a:xfrm><a:prstGeom prst="${shape}"><a:avLst/></a:prstGeom>${fill}${line}</p:spPr>
-    <p:txBody><a:bodyPr wrap="square"${valign} lIns="${margin}" tIns="${margin}" rIns="${margin}" bIns="${margin}"/><a:lstStyle/>${pptxTextParagraphs(text, opt)}</p:txBody>
+    <p:nvSpPr><p:cNvPr id="${id}" name="${pptxXml(name || `Text ${id}`)}BLANKED${x}" y="${y}"/><a:ext cx="${w}" cy="${h}"/></a:xfrm><a:prstGeom prst="${shape}"><a:avLst/></a:prstGeom>${fill}${line}BLANKED${valign} lIns="${margin}" tIns="${margin}" rIns="${margin}" bIns="${margin}"/><a:lstStyle/>${pptxTextParagraphs(text, opt)}</p:txBody>
   </p:sp>`;
 }
 
@@ -1505,8 +721,7 @@ export function pptxShape(id, name, x, y, w, h, fill, opt = {}) {
   const geom = opt.shape || "rect";
   const rot = opt.rot ? ` rot="${Math.round(opt.rot * 60000)}"` : "";
   return `<p:sp>
-    <p:nvSpPr><p:cNvPr id="${id}" name="${pptxXml(name || `Shape ${id}`)}"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
-    <p:spPr><a:xfrm${rot}><a:off x="${x}" y="${y}"/><a:ext cx="${w}" cy="${h}"/></a:xfrm><a:prstGeom prst="${geom}"><a:avLst/></a:prstGeom>${pptxSolidFill(fill, opt.fillAlpha)}${pptxLineFill(opt.line, opt.lineWidth || 1, opt.lineAlpha)}</p:spPr>
+    <p:nvSpPr><p:cNvPr id="${id}" name="${pptxXml(name || `Shape ${id}`)}BLANKED${rot}><a:off x="${x}" y="${y}"/><a:ext cx="${w}" cy="${h}"/></a:xfrm><a:prstGeom prst="${geom}"><a:avLst/></a:prstGeom>${pptxSolidFill(fill, opt.fillAlpha)}${pptxLineFill(opt.line, opt.lineWidth || 1, opt.lineAlpha)}</p:spPr>
   </p:sp>`;
 }
 
@@ -1518,24 +733,12 @@ export function pptxLine(id, name, x, y, w, h, color = "E26A2C", width = 1, alph
   const cx = Math.max(1, Math.round(Math.abs(w)));
   const cy = Math.max(1, Math.round(Math.abs(h)));
   return `<p:sp>
-    <p:nvSpPr><p:cNvPr id="${id}" name="${pptxXml(name || `Line ${id}`)}"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>
-    <p:spPr><a:xfrm><a:off x="${x}" y="${y}"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="line"><a:avLst/></a:prstGeom><a:noFill/>${pptxLineFill(color, width, alpha)}</p:spPr>
+    <p:nvSpPr><p:cNvPr id="${id}" name="${pptxXml(name || `Line ${id}`)}BLANKED${x}" y="${y}"/><a:ext cx="${cx}" cy="${cy}BLANKED${pptxLineFill(color, width, alpha)}</p:spPr>
   </p:sp>`;
 }
 
 export function pptxSlideBase(shapes, bg = "FFF4E6") {
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
-  <p:cSld>
-    <p:bg><p:bgPr><a:solidFill><a:srgbClr val="${pptxColor(bg, "FFF4E6")}"/></a:solidFill><a:effectLst/></p:bgPr></p:bg>
-    <p:spTree>
-      <p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>
-      <p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>
-      ${shapes.join("\n")}
-    </p:spTree>
-  </p:cSld>
-  <p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>
-</p:sld>`;
+  return `BLANKED${pptxColor(bg, "FFF4E6")}BLANKED${shapes.join("\n")}BLANKED`;
 }
 
 export function pptxDecorativeBackdrop(shapes, id, cover = false, theme = getDeckTheme()) {
@@ -1712,38 +915,38 @@ export function pptxRenderSlide(slide, idx, total, deck) {
 }
 
 export function pptxRelsXml(rels) {
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${rels.map(r => `<Relationship Id="${r.id}" Type="${r.type}" Target="${r.target}"/>`).join("")}</Relationships>`;
+  return `BLANKED${rels.map(r => `<Relationship Id="${r.id}" Type="${r.type}" Target="${r.target}"/>`).join("")}</Relationships>`;
 }
 
 export function pptxContentTypesXml(count) {
-  const slides = Array.from({ length: count }, (_, i) => `<Override PartName="/ppt/slides/slide${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`).join("");
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/><Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/><Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/><Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/><Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>${slides}</Types>`;
+  const slides = Array.from({ length: count }, (_, i) => `<Override PartName="/ppt/slides/slide${i + 1}BLANKED`).join("");
+  return `BLANKED${slides}</Types>`;
 }
 
 export function pptxPresentationXml(count) {
   const sldIds = Array.from({ length: count }, (_, i) => `<p:sldId id="${256 + i}" r:id="rId${i + 1}"/>`).join("");
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:presentation xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rId${count + 1}"/></p:sldMasterIdLst><p:sldIdLst>${sldIds}</p:sldIdLst><p:sldSz cx="${PPTX_W}" cy="${PPTX_H}" type="wide"/><p:notesSz cx="6858000" cy="9144000"/><p:defaultTextStyle><a:defPPr><a:defRPr lang="zh-CN"/></a:defPPr></p:defaultTextStyle></p:presentation>`;
+  return `BLANKED${count + 1}"/></p:sldMasterIdLst><p:sldIdLst>${sldIds}</p:sldIdLst><p:sldSz cx="${PPTX_W}" cy="${PPTX_H}BLANKED`;
 }
 
 export function pptxMasterXml() {
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:sldMaster xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr></p:spTree></p:cSld><p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/><p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rId1"/></p:sldLayoutIdLst><p:txStyles><p:titleStyle/><p:bodyStyle/><p:otherStyle/></p:txStyles></p:sldMaster>`;
+  return `BLANKED`;
 }
 
 export function pptxLayoutXml() {
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:sldLayout xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" type="blank" preserve="1"><p:cSld name="Blank"><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr></p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sldLayout>`;
+  return `BLANKED`;
 }
 
 export function pptxThemeXml(theme = getDeckTheme()) {
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="LexVoice"><a:themeElements><a:clrScheme name="LexVoice"><a:dk1><a:srgbClr val="${pptxColor(theme.ink)}"/></a:dk1><a:lt1><a:srgbClr val="FFFFFF"/></a:lt1><a:dk2><a:srgbClr val="${pptxColor(theme.muted)}"/></a:dk2><a:lt2><a:srgbClr val="${pptxColor(theme.paper)}"/></a:lt2><a:accent1><a:srgbClr val="${pptxColor(theme.accent)}"/></a:accent1><a:accent2><a:srgbClr val="${pptxColor(theme.accent2)}"/></a:accent2><a:accent3><a:srgbClr val="${pptxColor(theme.accentDeep)}"/></a:accent3><a:accent4><a:srgbClr val="${pptxColor(theme.paperTint)}"/></a:accent4><a:accent5><a:srgbClr val="${pptxColor(theme.soft)}"/></a:accent5><a:accent6><a:srgbClr val="${pptxColor(theme.muted)}"/></a:accent6><a:hlink><a:srgbClr val="${pptxColor(theme.accent)}"/></a:hlink><a:folHlink><a:srgbClr val="${pptxColor(theme.accentDeep)}"/></a:folHlink></a:clrScheme><a:fontScheme name="LexVoice"><a:majorFont><a:latin typeface="Microsoft YaHei"/><a:ea typeface="Microsoft YaHei"/><a:cs typeface="Microsoft YaHei"/></a:majorFont><a:minorFont><a:latin typeface="Microsoft YaHei"/><a:ea typeface="Microsoft YaHei"/><a:cs typeface="Microsoft YaHei"/></a:minorFont></a:fontScheme><a:fmtScheme name="LexVoice"><a:fillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:fillStyleLst><a:lnStyleLst><a:ln w="9525"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln></a:lnStyleLst><a:effectStyleLst><a:effectStyle><a:effectLst/></a:effectStyle></a:effectStyleLst><a:bgFillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:bgFillStyleLst></a:fmtScheme></a:themeElements><a:objectDefaults/><a:extraClrSchemeLst/></a:theme>`;
+  return `BLANKED${pptxColor(theme.ink)}BLANKED${pptxColor(theme.muted)}"/></a:dk2><a:lt2><a:srgbClr val="${pptxColor(theme.paper)}"/></a:lt2><a:accent1><a:srgbClr val="${pptxColor(theme.accent)}BLANKED${pptxColor(theme.accent2)}BLANKED${pptxColor(theme.accentDeep)}BLANKED${pptxColor(theme.paperTint)}BLANKED${pptxColor(theme.soft)}BLANKED${pptxColor(theme.muted)}"/></a:accent6><a:hlink><a:srgbClr val="${pptxColor(theme.accent)}BLANKED${pptxColor(theme.accentDeep)}BLANKED`;
 }
 
 export function pptxCoreXml(title) {
   const now = new Date().toISOString();
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${pptxXml(title || "LexVoice PPT")}</dc:title><dc:creator>LexVoice</dc:creator><cp:lastModifiedBy>LexVoice</cp:lastModifiedBy><dcterms:created xsi:type="dcterms:W3CDTF">${now}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${now}</dcterms:modified></cp:coreProperties>`;
+  return `BLANKED${pptxXml(title || "LexVoice PPT")}BLANKED${now}BLANKED${now}</dcterms:modified></cp:coreProperties>`;
 }
 
 export function pptxAppXml(count) {
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"><Application>LexVoice</Application><PresentationFormat>Widescreen</PresentationFormat><Slides>${count}</Slides><Notes>0</Notes><HiddenSlides>0</HiddenSlides><MMClips>0</MMClips><ScaleCrop>false</ScaleCrop><HeadingPairs><vt:vector size="2" baseType="variant"><vt:variant><vt:lpstr>Slides</vt:lpstr></vt:variant><vt:variant><vt:i4>${count}</vt:i4></vt:variant></vt:vector></HeadingPairs><TitlesOfParts><vt:vector size="${count}" baseType="lpstr">${Array.from({ length: count }, (_, i) => `<vt:lpstr>Slide ${i + 1}</vt:lpstr>`).join("")}</vt:vector></TitlesOfParts></Properties>`;
+  return `BLANKED${count}BLANKED${count}BLANKED${count}" baseType="lpstr">${Array.from({ length: count }, (_, i) => `<vt:lpstr>Slide ${i + 1}</vt:lpstr>`).join("")}BLANKED`;
 }
 
 export function createStoreZip(files) {
@@ -1865,13 +1068,7 @@ export function renderVisualCards(cards) {
 export function renderLogicFlow(flow) {
   const list = Array.isArray(flow) ? flow : [];
   if (!list.length) return "";
-  return `<section class="lv-flow">
-    <div class="lv-flow-head">
-      <span class="lv-label">Logic Flow</span>
-      <h2>报告主线</h2>
-    </div>
-    <div class="lv-flow-track">
-      ${list.map((item, idx) => `
+  return `BLANKED${list.map((item, idx) => `
         <article class="lv-flow-node">
           <div class="lv-flow-index">${escapeHtmlText(item.step || String(idx + 1))}</div>
           <h3>${escapeHtmlText(item.title || `步骤 ${idx + 1}`)}</h3>

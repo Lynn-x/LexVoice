@@ -134,7 +134,7 @@ export class LexVoiceSettingTab extends obsidian.PluginSettingTab {
     box.createDiv({ cls: "lexvoice-risk-title", text: "数据与云端 API 风险提示" });
     box.createDiv({
       cls: "lexvoice-risk-body",
-      text: "LexVoice 没有自有云端存储，也不会把录音上传到 LexVoice 服务器；录音文件保存在用户选择的本地 Obsidian 库路径。转写和 AI 整理时，音频、转写文本和提示词会发送到当前配置的云端 API 或本地模型。敏感内容建议使用本地转写和本地大模型，避免通过云端 API 处理涉密、隐私、客户资料、医疗、法务、人事等信息。",
+      text: "BLANKED",
     });
   }
 
@@ -316,7 +316,7 @@ export class LexVoiceSettingTab extends obsidian.PluginSettingTab {
       if (!oneCardKey) { new obsidian.Notice("请先填写 API Key", 4000); return; }
       const cfg = ONE_CARD_PROVIDERS[oneCardProviderId];
       const ok = await lexvoiceConfirm(this.app, `用一把 ${cfg.label} Key 配好转写 + AI 整理？`,
-        `将把「转写服务」和「大模型服务」都切换为 ${cfg.label}，并填入这把 Key，存成一套「${cfg.label}（一个 Key）」方案。会覆盖当前转写服务和大模型服务的地址/模型/密钥（其它已保存的方案不受影响）。`,
+        `将把「转写服务」和「大模型服务」都切换为 ${cfg.label}，并填入这把 Key，存成一套「${cfg.label}BLANKED`,
         "应用");
       if (!ok) return;
       const done = await this.applyOneCardProvider(oneCardProviderId, oneCardKey);
@@ -673,7 +673,7 @@ export class LexVoiceSettingTab extends obsidian.PluginSettingTab {
 
     const dailyTplSetting = new obsidian.Setting(c)
       .setName("日记写入模板")
-      .setDesc("用于控制每条概要写入日记的格式。可用占位符：{{date}}、{{time}}、{{note_link}}、{{title}}、{{mode}}、{{duration}}、{{segments}}、{{model}}、{{summary}}、{{todos}}、{{todos_block}}、{{todo_count}}。");
+      .setDesc("BLANKED");
     dailyTplSetting.addButton(b => b.setButtonText("恢复默认").onClick(async () => {
       const ok = await lexvoiceConfirm(this.app, "恢复默认日记模板？", "将丢弃当前自定义模板，且无法撤销。", "恢复默认");
       if (!ok) return;
@@ -1465,7 +1465,7 @@ export class LexVoiceSettingTab extends obsidian.PluginSettingTab {
     const vocabScanCount = countKnowledgeExtractionHistory(this.plugin.settings, "vocabulary");
     const peopleScanCount = countKnowledgeExtractionHistory(this.plugin.settings, "people");
     new obsidian.Setting(c).setName("纪要扫描记录")
-      .setDesc(`ASR 热词已扫描 ${vocabScanCount} 篇；人员建议已扫描 ${peopleScanCount} 篇。清空记录后，修改过或已存在的纪要可重新进入扫描。重新扫描会再次调用大模型服务，云端按量产生费用。`)
+      .setDesc(`ASR 热词已扫描 ${vocabScanCount} 篇；人员建议已扫描 ${peopleScanCount}BLANKED`)
       .addButton(b => b.setButtonText("清空热词记录").setDisabled(!vocabScanCount).onClick(async () => {
         const ok = await lexvoiceConfirm(this.app, "清空热词扫描记录？", `${vocabScanCount} 篇纪要将重新进入扫描范围；重新扫描会再次调用大模型服务，云端按量产生费用。`, "清空");
         if (!ok) return;

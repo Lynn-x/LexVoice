@@ -643,7 +643,7 @@ function formatLexVoiceWallMarkdown(title, folder, tag, emptyText) {
     "const targetTag = " + tagQuery + ";",
     "const esc = s => String(s ?? \"\").replace(/[&<>\\\"]/g, c => c === \"&\" ? \"&amp;\" : c === \"<\" ? \"&lt;\" : c === \">\" ? \"&gt;\" : \"&quot;\");",
     "function columnCount(width){ if (width >= 1320) return 4; if (width >= 960) return 3; if (width >= 620) return 2; return 1; }",
-    "function layoutWidth(){ const selectors = [\".workspace-leaf-content\", \".view-content\", \".markdown-preview-view\", \".markdown-reading-view\", \".markdown-source-view\"]; const nodes = selectors.map(sel => root.closest(sel)).filter(Boolean); nodes.push(root.parentElement, root); for (const node of nodes) { const rect = node && node.getBoundingClientRect ? node.getBoundingClientRect() : null; const width = Math.floor(Math.max(node && node.clientWidth || 0, rect && rect.width || 0)); if (width > 120) return width; } return window.innerWidth || 0; }",
+    "BLANKED",
     "function cardWeight(card){ return 10 + card.title.length * 1.5 + card.sum.length * 0.38 + card.src.length * 0.18 + card.tagCount * 3; }",
     "const pages = dv.pages(folderQuery).where(p => (p.file.tags || []).includes(targetTag)).sort(p => p.file.ctime, \"desc\");",
     "const cards = [];",
@@ -656,11 +656,11 @@ function formatLexVoiceWallMarkdown(title, folder, tag, emptyText) {
     "  const rawTags = p.file.tags || [];",
     "  const tags = rawTags.map(t => '<span class=\\\"lvwall-tag\\\">' + esc(String(t).replace(/^#/, \"\")) + '</span>').join(\"\");",
     "  const ct = p.file.ctime ? p.file.ctime.toFormat(\"yyyy-MM-dd HH:mm\") : \"\";",
-    "  const html = '<div class=\\\"lvwall-card\\\" data-path=\\\"' + esc(p.file.path) + '\\\">' + '<div class=\\\"lvwall-head\\\"><span class=\\\"lvwall-type\\\">' + type + '</span><span class=\\\"lvwall-brand\\\">LEXVOICE CARD</span></div>' + '<div class=\\\"lvwall-title\\\">' + title + '</div>' + (sum ? '<div class=\\\"lvwall-k\\\">摘要</div><div class=\\\"lvwall-sum\\\">' + sum + '</div>' : '') + (src ? '<div class=\\\"lvwall-k\\\">来源</div><div class=\\\"lvwall-src\\\">' + src + '</div>' : '') + (tags ? '<div class=\\\"lvwall-tags\\\">' + tags + '</div>' : '') + (ct ? '<div class=\\\"lvwall-time\\\">' + ct + '</div>' : '') + '</div>';",
+    "BLANKED",
     "  cards.push({ html, title, sum, src, tagCount: rawTags.length });",
     "}",
     "let lastCols = 0; let raf = 0;",
-    "function bindCards(){ root.querySelectorAll(\".lvwall-card\").forEach(el => el.addEventListener(\"click\", () => app.workspace.openLinkText(el.dataset.path, \"\", false))); }",
+    "BLANKED",
     "function renderWall(){",
     "  const width = layoutWidth();",
     "  const cols = columnCount(width);",
@@ -691,7 +691,7 @@ function formatLexVoiceWallMarkdown(title, folder, tag, emptyText) {
     "  });",
     "}",
     "renderWall();",
-    "if (typeof ResizeObserver !== \"undefined\") { const ro = new ResizeObserver(scheduleLayout); [root, root.parentElement, root.closest(\".markdown-preview-view\"), root.closest(\".markdown-reading-view\"), root.closest(\".markdown-source-view\"), root.closest(\".view-content\"), root.closest(\".workspace-leaf-content\")].filter(Boolean).forEach(el => ro.observe(el)); }",
+    "BLANKED",
     "window.addEventListener(\"resize\", scheduleLayout, { passive: true });",
     "```", "",
   ].join("\n");
@@ -713,337 +713,41 @@ const LV_BASE_DEFINITIONS = [
   // —— 按模式 ——
   {
     relPath: "按模式/所有会议.base",
-    yaml: `filters:
-  and:
-    - file.hasTag("lexvoice/meeting")
-properties:
-  file.name:
-    displayName: 笔记
-  note.time:
-    displayName: 时间
-  note.主题:
-    displayName: 主题
-  note.参会人:
-    displayName: 参会人
-  note.tags:
-    displayName: 标签
-views:
-  - type: table
-    name: 列表
-    order:
-      - file.name
-      - note.time
-      - note.主题
-      - note.参会人
-      - note.tags
-    sort:
-      - property: note.time
-        direction: DESC
-`,
+    yaml: `BLANKED`,
   },
   {
     relPath: "按模式/内部小会.base",
-    yaml: `filters:
-  and:
-    - file.hasTag("lexvoice/huddle")
-properties:
-  file.name:
-    displayName: 笔记
-  note.time:
-    displayName: 时间
-  note.议题:
-    displayName: 议题
-  note.当事人:
-    displayName: 当事人
-  note.参谋:
-    displayName: 参谋
-views:
-  - type: table
-    name: 列表
-    order:
-      - file.name
-      - note.time
-      - note.议题
-      - note.当事人
-      - note.参谋
-    sort:
-      - property: note.time
-        direction: DESC
-`,
+    yaml: `BLANKED`,
   },
   {
     relPath: "按模式/所有访谈.base",
-    yaml: `filters:
-  and:
-    - file.hasTag("lexvoice/interview")
-properties:
-  file.name:
-    displayName: 笔记
-  note.time:
-    displayName: 时间
-  note.主题:
-    displayName: 主题
-  note.受访者:
-    displayName: 受访者
-  note.访问者:
-    displayName: 访问者
-views:
-  - type: table
-    name: 列表
-    order:
-      - file.name
-      - note.time
-      - note.主题
-      - note.受访者
-      - note.访问者
-    sort:
-      - property: note.time
-        direction: DESC
-`,
+    yaml: `BLANKED`,
   },
   {
     relPath: "按模式/招聘面试.base",
-    yaml: `filters:
-  and:
-    - file.hasTag("lexvoice/recruit")
-properties:
-  file.name:
-    displayName: 笔记
-  note.time:
-    displayName: 时间
-  note.候选人:
-    displayName: 候选人
-  note.应聘岗位:
-    displayName: 岗位
-  note.轮次:
-    displayName: 轮次
-  note.录用建议:
-    displayName: 录用建议
-views:
-  - type: table
-    name: 列表
-    order:
-      - file.name
-      - note.time
-      - note.候选人
-      - note.应聘岗位
-      - note.轮次
-      - note.录用建议
-    sort:
-      - property: note.time
-        direction: DESC
-  - type: table
-    name: 强烈推荐
-    filters:
-      and:
-        - note.录用建议 == "强烈推荐"
-    order:
-      - file.name
-      - note.time
-      - note.候选人
-      - note.应聘岗位
-      - note.轮次
-  - type: table
-    name: 推荐
-    filters:
-      and:
-        - note.录用建议 == "推荐"
-    order:
-      - file.name
-      - note.time
-      - note.候选人
-      - note.应聘岗位
-      - note.轮次
-  - type: table
-    name: 倾向不推荐
-    filters:
-      or:
-        - note.录用建议 == "倾向不推荐"
-        - note.录用建议 == "倾向不推荐（条件性）"
-    order:
-      - file.name
-      - note.time
-      - note.候选人
-      - note.应聘岗位
-      - note.轮次
-`,
+    yaml: `BLANKED`,
   },
   {
     relPath: "按模式/独白手记.base",
-    yaml: `filters:
-  and:
-    - file.hasTag("lexvoice/monologue")
-properties:
-  file.name:
-    displayName: 笔记
-  note.time:
-    displayName: 时间
-  note.主题:
-    displayName: 主题
-views:
-  - type: table
-    name: 列表
-    order:
-      - file.name
-      - note.time
-      - note.主题
-    sort:
-      - property: note.time
-        direction: DESC
-`,
+    yaml: `BLANKED`,
   },
 
   // —— 场景 ——
   {
     relPath: "场景/本周纪要.base",
-    yaml: `filters:
-  and:
-    - file.hasTag("lexvoice")
-    - date(note.time) >= date("today") - "7 days"
-properties:
-  file.name:
-    displayName: 笔记
-  note.time:
-    displayName: 时间
-  note.mode:
-    displayName: 模式
-  note.主题:
-    displayName: 主题
-  note.tags:
-    displayName: 标签
-views:
-  - type: table
-    name: 本周
-    order:
-      - file.name
-      - note.time
-      - note.mode
-      - note.主题
-      - note.tags
-    sort:
-      - property: note.time
-        direction: DESC
-`,
+    yaml: `BLANKED`,
   },
   {
     relPath: "场景/招聘看板.base",
-    yaml: `filters:
-  and:
-    - file.hasTag("lexvoice/recruit")
-properties:
-  file.name:
-    displayName: 笔记
-  note.time:
-    displayName: 时间
-  note.候选人:
-    displayName: 候选人
-  note.应聘岗位:
-    displayName: 岗位
-  note.轮次:
-    displayName: 轮次
-  note.录用建议:
-    displayName: 建议
-  note.tags:
-    displayName: 主题词
-views:
-  - type: table
-    name: 全部候选人
-    order:
-      - file.name
-      - note.time
-      - note.候选人
-      - note.应聘岗位
-      - note.轮次
-      - note.录用建议
-      - note.tags
-    sort:
-      - property: note.time
-        direction: DESC
-  - type: cards
-    name: 卡片视图
-    order:
-      - note.候选人
-      - note.应聘岗位
-      - note.轮次
-      - note.录用建议
-      - note.time
-`,
+    yaml: `BLANKED`,
   },
   {
     relPath: "场景/决策与待办.base",
-    yaml: `filters:
-  or:
-    - file.hasTag("lexvoice/meeting")
-    - file.hasTag("lexvoice/huddle")
-properties:
-  file.name:
-    displayName: 笔记
-  note.time:
-    displayName: 时间
-  note.mode:
-    displayName: 类型
-  note.主题:
-    displayName: 主题
-  note.议题:
-    displayName: 议题
-  note.参会人:
-    displayName: 参会人
-  note.当事人:
-    displayName: 当事人
-  note.tags:
-    displayName: 标签
-views:
-  - type: table
-    name: 列表
-    order:
-      - file.name
-      - note.time
-      - note.mode
-      - note.主题
-      - note.议题
-      - note.参会人
-      - note.当事人
-      - note.tags
-    sort:
-      - property: note.time
-        direction: DESC
-`,
+    yaml: `BLANKED`,
   },
   {
     relPath: "场景/全部纪要总览.base",
-    yaml: `filters:
-  and:
-    - file.hasTag("lexvoice")
-properties:
-  file.name:
-    displayName: 笔记
-  note.time:
-    displayName: 时间
-  note.mode:
-    displayName: 模式
-  note.主题:
-    displayName: 主题
-  note.议题:
-    displayName: 议题
-  note.候选人:
-    displayName: 候选人
-  note.tags:
-    displayName: 主题词
-views:
-  - type: table
-    name: 全部
-    order:
-      - file.name
-      - note.time
-      - note.mode
-      - note.主题
-      - note.议题
-      - note.候选人
-      - note.tags
-    sort:
-      - property: note.time
-        direction: DESC
-`,
+    yaml: `BLANKED`,
   },
 ];
 
@@ -1060,81 +764,13 @@ function buildStructureLevelInstruction(level) {
 
 function buildPrompt(modeBody, isMerged, modeKey) {
   const inputDesc = isMerged
-    ? `分段转写（含 \`===SEG N (MM:SS-MM:SS)===\` 分隔符，请先合并并抹平段切点处的断句）`
+    ? `BLANKED`
     : `原始转写文本`;
   const fmSchema = FRONTMATTER_SCHEMA[modeKey] || "";
   const frontmatterSection = fmSchema
-    ? `**输出文件必须以 YAML frontmatter 开头**，仅包含以下精简字段（不要添加任何其他字段——\`mode\`/\`time\`/\`时长\`/\`状态\`/\`tags\`/\`人物\` 由插件自动注入，**LLM 不要输出**；也不要输出 \`date\`/\`日期\`/\`location\`/\`decision\`/\`decisions\`/\`todos\`/\`type\`/\`status\`/\`people\`）：
-
-\`\`\`yaml
----
-${fmSchema}
----
-\`\`\`
-
-填入真实值；转写未提及的字段写 "未提及"，不要编造。frontmatter 后空一行，再开始 Markdown 内容。
-
-**末尾必须输出两条机器注释**（不会渲染显示，供插件回写 frontmatter）：先输出人员、再输出标签；如果后面还有其它机器块，放在这两条之后：
-
-\`\`\`html
-<!-- lexvoice-people: 张三, 李四 -->
-<!-- lexvoice-tags: 主题/招聘流程, 主题/AI转型, 项目/晋升提名, 公司/示例科技, 行业/HR -->
-\`\`\`
-
-**lexvoice-people**：本纪要中**确实出现或被点名**的关键人名（真实姓名或明确角色称呼），逗号分隔，0–6 个；只写转写里真实出现的，不带任何前缀，会写进独立的 \`人物\` 属性。⚠️**上面示例里的"张三/李四"只是占位格式，绝对不要照抄进结果；转写里没有明确人名时，这条注释整行留空（\`<!-- lexvoice-people: -->\`）或不输出——宁可没有，也不要编造或套用任何示例名。**
-
-**lexvoice-tags**：多维度中文 nested 标签，每个用「中文前缀 + 斜杠 + 具体词」，让 Obsidian 标签面板按维度自动分组。维度只剩 4 个（**人物已单列到 lexvoice-people，这里绝不要再写 \`人物/x\`**）：
-
-- **主题** ✅ 必填（3–5 个）：核心议题或讨论领域。例 \`主题/招聘流程\`、\`主题/AI转型\`、\`主题/组织设计\`、\`主题/晋升机制\`
-- **项目**（按需，0–3 个）：转写中明确出现的专有项目名。例 \`项目/晋升提名\`、\`项目/Q2交付\`
-- **公司**（按需，0–2 个）：公司或组织名（必须明确出现）。例 \`公司/示例科技\`、\`公司/示例集团\`
-- **行业**（可选，0–1 个）：行业或职能领域。例 \`行业/HR\`、\`行业/游戏\`
-
-**硬性要求**：
-
-- lexvoice-tags 总数 4–9 个，主题维度至少 3 个
-- 每个 tag 的"具体词"部分 ≤6 个汉字，避免空格和标点（"AI转型" 而非 "AI 转型"）
-- 不要重复 mode 字段语义（**禁止** 输出 \`主题/招聘面试\`、\`主题/会议\`、\`主题/访谈\` 这类与 mode 重复的词）
-- 转写中**没明确出现**的项目/公司/人物**一律不写**，不要编造
-- 优先具体词（"招聘漏斗指标" 而非 "招聘"；"晋升提名项目" 而非 "项目"）
-- 系统标签 \`lexvoice/<mode>\` 由代码自动注入，**不要在标签建议里重复**
-`
+    ? `BLANKED${fmSchema}BLANKED`
     : "";
-  return `你是录音整理助手。输入是一段${inputDesc}。按下方规则生成纪要。
-
-**【最高优先级 · 忠实还原】**：本工具第一职责是"还原"——把录音里真实说过的信息完整、准确地整理出来。下面所有关于"提炼/概括/精炼/结构化/合并"的要求，都只是让纪要更易读的手段，任何时候都不得凌驾于"还原"之上。当"写得更短/更结构化"与"保留某条具体信息"冲突时，一律保留信息；拿不准某内容是否重要时，保留而非删除。不编造与不缺漏同等重要，二者都是不可逾越的底线。
-
-**篇幅原则**：所有句数、字数、条数都只是常规材料的写作基准，不是上限。请根据录音时长、信息密度和主题数量机动扩展；宁可让主体内容更完整，也不要为了凑短摘要而漏掉关键事实、论证、概念、决策、待办或风险。顶部摘要保持可扫读，主体内容必须覆盖完整材料，不要只整理开头或少数高频片段。
-
-${frontmatterSection}**整体结构原则**：顶部用 callout 做结构化速览（摘要、必要时的决策清单/录用建议），**主体内容贴近原文按实际推进顺序展开**——用三级标题 + 散文段落叙述，不强行套"讨论要点 / 分歧 / 暂行结论"等模板框。关键判断引用用普通 \`> \` blockquote 即可，不要为每个话题再套 callout。
-
-**待办任务语法**：凡是正文中出现待办 / 行动项 / 下一步，请统一使用 Markdown todo 任务列表，不要用表格、普通项目符号或 \`TODO:\` 前缀。格式：\`- [ ] 责任人：<人> 事项：<具体动作> 截止：<时间>\`；如果位于 callout 内，保留引用前缀写成 \`> - [ ] ...\`。无法判断责任人或截止时间时写「未提及」，不要编造。
-
-**回听锚点**：如果输入分段标题中出现形如 \`[[音频文件|时间]]\` 的 Obsidian 音频链接，可以把对应链接复制到主要小节标题或关键原话后面，作为回听入口。只在内容明显来自该分段时添加；不确定就不加。不要编造音频文件名、时间或链接；每个主要小节最多放 1 个锚点，避免满屏链接。
-
-**Callout 使用纪律**（仅以下场景用 callout，其他一律散文叙述）：
-- \`> [!info]\` 仅在具体模式模板已经给出信息卡时使用；工作纪要模式不要新增元数据卡片
-- \`> [!abstract]\` 顶部摘要散文
-- \`> [!success]\` / \`> [!important]\` 顶部决策清单或一句话定调（仅必要时）
-- \`> [!summary]\` 招聘模式专属置顶「面试评价」
-- \`> [!ai-eval]\` 招聘模式专属 AI 评价
-- \`> [!check]\` 招聘模式专属「重点考核项核验」（仅当上下文标注了特殊关注点时）
-- \`> [!tip]\` 模式不匹配的软建议
-- \`> [!question]\` 悬而未决/待澄清（仅在出现时）
-- 其他正文一律不用 callout
-- 连续 callout 之间必须保留两个引用空行：上一块结束后写两行单独的 \`>\`，再写下一个 \`> [!type]\`，避免 Obsidian 把多个 callout 合并成一个块
-
-**主体内容写作要求**（**还原优先，提炼为辅**——结构化是为了让人读懂，不是为了变短）：
-- 把讨论的逻辑层级**结构化**呈现：议题/主论点 → 支撑（事实、案例、数据、异议）→ 关键细节
-- 按讨论实际推进的脉络组织（不预设议程），但每个话题内部要做层级提炼
-- 关键判断或具有信号量的原话用 \`> "<原话>"\` 引用
-- **只做无损整理**：可以去口头禅、去语气词、把同一句话的重复表述合并为一次；但凡承载事实、数字、判断、立场、例子、时间、人名、待办或风险的内容，一律保留，**不得以"概括""提炼""合并"为名删除任何一条具体信息**
-- 拿不准是否重要的内容，**一律保留**而不是删除——宁可让纪要长一点，也不要让用户觉得有遗漏
-- 议题间存在归并关系时，用一句话 cross-reference，不重复叙述
-
-{{STRUCTURE_INSTRUCTION}}
-
-${modeBody}
+  return `你是录音整理助手。输入是一段${inputDesc}BLANKED${frontmatterSection}BLANKED${modeBody}
 
 ${SHARED_DISCIPLINE}
 
@@ -1229,31 +865,13 @@ function buildSourceAwareOutlineInstruction(captureMode, modeKey) {
 `;
   }
   if (mode === "virtualCable") {
-    return `【来源标记】
-当前只录电脑音频。若一级条目明显来自播放的视频、课程、会议远端声音，可在该一级条目前加 \`[电脑音频]\`；不要给二级条目重复标记。
-`;
+    return `BLANKED`;
   }
   // mix-virtual：HR/招聘模式下，麦克风/电脑音频 直接对应 面试官/候选人，应主动打标
   if (modeKey === "recruit") {
-    return `【来源标记 · 线上面试 · 主动标记】
-当前录音同时包含麦克风和电脑音频。在线上面试场景里：
-- \`[麦克风]\` = **面试官端**（本机说话的人，即用户自己）
-- \`[电脑音频]\` = **候选人端**（远端入会的对方）
-
-请尽量给每个一级条目前加上对应的来源标记，方便后续按角色归类。判断依据优先级：
-1. 该条目主要说话角色（提问/陈述自己经历）显然来自哪一端 → 直接标
-2. 内容功能（提问/追问 → 多半是面试官；陈述经历/技能/项目细节 → 多半是候选人）
-3. 实在交织（两端同时说话/打断）才不标，并在条目末尾加一句 \`（双端交织）\`
-
-不要给二级条目重复标记，也不要为了凑标记而改写事实。
-`;
+    return `BLANKED`;
   }
-  return `【来源标记 · 谨慎使用】
-当前录音同时包含麦克风和电脑音频，但转写文本是混合后的结果。请只在内容特征明显时给一级条目前加来源标记：
-- \`[麦克风]\`：用户对着麦克风说的评论、测试、提问、补充说明。
-- \`[电脑音频]\`：视频、课程、播客、会议远端或电脑正在播放的内容。
-无法判断、两路内容交织或只是泛化主题时，不要标记。不要给二级条目重复标记，也不要为了标记而改写事实。
-`;
+  return `BLANKED`;
 }
 
 function getSessionLatestSegmentEndMs(session) {
@@ -1388,8 +1006,8 @@ function buildRollingOutlineContext(previousMemory, previousOutline, windowed) {
       "",
       "【自上次大纲以来的新增转写 · 增量输入】",
       omittedBeforeCount
-        ? `这些是上次大纲之后新转写出来的段落。较早内容已经在【当前可见大纲】里有归属，不要再为它们生成 L1。`
-        : `这些是上次大纲之后新转写出来的段落。请只为这些新段落生成新的一级或子条目，老一级条目原样保留。`,
+        ? `BLANKED`
+        : `BLANKED`,
       "",
       "**输出要求（增量模式）**：",
       "- 完整复制【当前可见大纲】里所有老一级条目（连同时间戳、子条目、顺序）—— 一字不改。",
@@ -1544,66 +1162,14 @@ function renderRealtimeOutlineStateMarkdown(state) {
 }
 
 function buildOutlineAudioAnchorInstruction() {
-  return `【回听锚点 · 极其重要 · 时间戳钉死规则】
-转写内容按段落提供，并在段落信息里带有 Obsidian 音频回听链接，例如 \`[[音频文件.webm|12:34]]\`。
-
-**时间戳来源的唯一合法路径**：
-1. **老一级条目（在【当前可见大纲参考】里已经存在的）→ 100% 原样保留它原有的 \`[[...|HH:MM]]\` 链接**，包括文件名和时间。这是钉死规则：哪怕该段已经滚出最近转写窗口，也不要换、不要删、不要"看着不在窗口里就去窗口里抓一个最近的"。老条目的时间戳是历史事实。
-2. **新一级条目（本轮新提炼出来的）→ 只能用【最近转写窗口】里实际出现的链接**复制 1 个最接近的；窗口里没有就**留空**，不要从老大纲里挪一个、也不要编造。
-3. 子条目通常不重复放链接；除非它是关键原话或独立证据点。
-
-**严禁行为**：
-- 把【最近转写窗口】里的时间戳赋给【当前可见大纲参考】里的老一级条目（这会让用户点击跳转跑到错误位置）。
-- 编造不在输入里的文件名或时间。
-- 一个段落的链接同时复用到多个相邻一级条目（同一个时间戳出现在两个连续 L1 上，几乎一定是 bug）。
-- 因为某条老一级条目的原始段落不在当前窗口而把它的链接换成窗口里的某个近邻时间。
-
-**会中批注**：\`【会中批注】\` 是用户手动补充，不是音频转写原文；不要用它的时间戳作为大纲回听锚点。
-`;
+  return `BLANKED`;
 }
 
 // 招聘需求挖掘 · 会中 coverage-scan prompt（spec §5.2.B）：整场转写 → 14 维覆盖状态 JSON。
 // system 用 JOBPORTRAIT_SYSTEM_PROMPT。languageInstruction 前置（前缀缓存）。
 function buildCoverageScanPrompt(transcript, languageInstruction) {
   const lang = languageInstruction ? String(languageInstruction).trim() + "\n\n" : "";
-  return `${lang}任务：这是一场"招聘需求沟通会"（HRBP 与业务方沟通某岗位招人标准）的**实时进行中**转写。请扫描截至目前的全部转写，判断下面 14 个岗位画像维度各自的"覆盖状态"，输出严格 JSON。这是会中实时进度追踪，不是会后总结——只依据已出现的对话，未谈到就如实标 missing。
-
-【先判断场景】若截至目前的对话明显不是在沟通某岗位招人标准（更像研讨、闲聊或其它会议），所有维度如实标 missing 即可，不要为了凑覆盖率把无关内容硬塞进某一维。
-
-${buildOutlineAudioAnchorInstruction()}
-
-【14 个维度（key 固定，不可增删改）】
-硬性要求(hard)：years（年限）/ education（学历）/ industry（行业）/ must_have（必须经验）/ salary（期望薪酬）
-软能力·冰山下(soft)：business_sense（业务感）/ resilience（抗挫折）/ learning（学习能力）/ values（价值观）/ communication（软技能·沟通协作）
-风险信号(risk)：job_hopping（跳槽频率）/ education_suspicious（学历可疑）
-文化匹配(culture)：dept_style（部门风格）/ supervisor_pref（上级偏好）
-
-【三态判定标准（严格按此，宁缺勿滥）】
-- covered（已覆盖）：业务方对该维度给出**明确标准/具体要求**，且——硬性维度有可执行的数值或硬条件（如"5 年以上""本科起""薪资 30-40K""必须做过 To B"）；软能力维度有业务方**原话证据** + 至少一个具体场景或反例（不能只是"要有责任心"这种空泛标签）。必须能定位到一段转写原话。
-- partial（部分覆盖）：提到了但**不够实——只有模糊词没有量化/场景**（如"经验丰富点""学习能力强""能扛事"），或缺反例/场景，或一句带过。
-- missing（未涉及）：转写里业务方**根本没谈到**。
-
-【evidence_anchor 规则】仅 covered/partial 需要：从转写中复制**最能支撑该判定**那段所带的 \`[[音频文件.webm|HH:MM]]\` 链接，原样照抄（文件名+时间不许改）；没有可用链接或 missing → 留空串 ""。严禁编造。
-
-【missing_what 规则】partial/missing 必填：一句话写"还缺什么、下次该追问什么"（如"只说要 To B 经验，没给年限和行业"）——这是给 HRBP 的行动提示，最有价值。covered 时留空串 ""。
-
-【followup_question 规则】partial/missing 必填：一句"该怎么问"的具体追问话术，针对本场上下文、业务语言、可直接照着问、≤30 字（如"您说的'抗压'，能举一个去年扛住压力的具体例子吗？"）。**不得含双引号或换行**（避免把 JSON 写崩）。covered 留空串 ""。
-
-【vague_hits 规则】若该维转写里出现模糊/对冲词（如"差不多 / 比较强 / 有一定经验 / 看情况 / 视情况 / 挺好的 / 大概 / 综合素质 / 踏实 / 靠谱"等空泛说法），把命中的词原样列进字符串数组 vague_hits（最多 3 个）；没有则空数组 []。注意"优先""最好"这类在给硬性标准时是正常用词，不算模糊。
-
-【输出 · 只输出一个 JSON 对象，无前言无解释无代码围栏】
-{
-  "dims": [
-    { "key": "years", "name": "年限", "status": "covered|partial|missing", "evidence_anchor": "", "missing_what": "", "followup_question": "", "vague_hits": [] },
-    ... 必须**恰好 14 条，key 与上面一一对应，不可遗漏/重复**，顺序不限 ...
-    { "key": "supervisor_pref", "name": "上级偏好", "status": "...", "evidence_anchor": "...", "missing_what": "...", "followup_question": "...", "vague_hits": [] }
-  ]
-}
-
-【克制】转写不完整很正常，未覆盖坦诚标 missing，不要为好看硬判 covered；不引用候选人/简历内容；status 只能是 covered/partial/missing；evidence_anchor/missing_what/followup_question 缺省一律空串、vague_hits 缺省空数组 []，绝不输出 null。
-
-【实时转写】
-${transcript}`;
+  return `${lang}BLANKED${buildOutlineAudioAnchorInstruction()}BLANKED${transcript}`;
 }
 
 // 前缀缓存优化：所有稳定指令（含语种指令）放在前面，变化的「转写上下文」严格放最后。
@@ -1621,38 +1187,7 @@ ${buildSourceAwareOutlineInstruction(captureMode, modeKey)}
 
 ${buildOutlineAudioAnchorInstruction()}
 
-${buildRealtimeOutlineEnvelopeInstruction()}
-
-【结构 · 严格按问题为单位组织】
-在 <lexvoice-outline> 内，对识别到的每个"面试官提问"作为一级节点，下挂候选人回答要点和 AI 评价。
-
-【可见大纲格式】
-\`\`\`
-- ❓ <问题主题，6-12 字> [[音频文件.webm|12:34]]
-  - 💬 <候选人回答的关键点 1>
-  - 💬 <候选人回答的关键点 2>
-  - 🤖 <AI 简评：质量定调 + 一句话评价>
-  - ⛏ <可继续追问的具体方向>
-\`\`\`
-
-【AI 评价行的写作要求】
-- 必须以 \`🤖 \` 开头（让样式可识别为 AI 评价，与候选人内容做视觉区分）
-- 简评要"具体"——不要"回答得不错""逻辑清晰"这种空话
-- 必须能给面试官**实际启发**：例如"用了STAR结构但S和T一笔带过""数据来源未追问就接受""避谈失败案例"等
-
-【追问行的要求】
-- 必须以 \`⛏ \` 开头
-- 追问要"挖到事实层"，不要"能不能再说说"这种泛问
-- 例：候选人说"提升了 20%"，追问写成"⛏ 这 20% 的基线值是多少？参与人员只有他一个吗？"
-
-【克制】
-- 候选人回答还没出现的问题，不要预生成评价
-- 转写不完整就只整理已出现的问答对
-- 没听清楚的问答标注"❓ <主题>（转写不清，待复核）"，不要硬猜
-
-【输出】
-- <lexvoice-outline> 内使用纯 Markdown 列表，每个问题独立成一级节点
-- 不要前言、不要总评（综合评价留给最终整合，不在大纲里出现）${langBlock}
+${buildRealtimeOutlineEnvelopeInstruction()}BLANKED${langBlock}
 
 实时整理上下文：
 ${transcript}`;
@@ -1665,29 +1200,7 @@ ${buildSourceAwareOutlineInstruction(captureMode, modeKey)}
 
 ${buildOutlineAudioAnchorInstruction()}
 
-${buildRealtimeOutlineEnvelopeInstruction()}
-
-【方法 · 归并】
-找到讨论中可以归并的"共同上一级概念"。
-- 通读全部内容，识别零散的具体观点 / 事实 / 任务（叶子）
-- 把可以共用同一个上层概念的叶子聚到一起，写出那个上层概念作为父节点
-- 如果多个父节点又共享更大的母题，再向上归并一层
-- **层级深度由材料决定，不预设**——
-  - 材料同质或简单 → 1 层即可
-  - 材料丰富 → 2 层
-  - 真正多议题、多分支 → 3 层或更多
-- 不要为了凑层级把孤立观点强行嵌套；也不要把本可归类的扁平铺开
-
-【克制】
-- 不堆砌符号 / callout / 模板字段
-- 不预设"决议 / 行动 / 假设 / 缺口"等维度——只有材料里真有，才出现
-- 不复述发言原话，但也别过度抽象成空话；保留能让人回忆起讨论内容的关键词
-- 讨论本身可能没那么深刻，那就让大纲也朴素一点
-
-【输出】
-- <lexvoice-outline> 内使用纯 Markdown 列表，缩进表达层级
-- 每条简短，不解释、不前言、不结语；一级条目可在末尾带一个回听锚点
-- 转写不完整时只整理已出现的内容${langBlock}
+${buildRealtimeOutlineEnvelopeInstruction()}BLANKED${langBlock}
 
 实时整理上下文：
 ${transcript}`;
@@ -2098,7 +1611,7 @@ function buildPlaybackTimelineDetails(session) {
     const state = s.error ? "重试" : `段 ${n}`;
     lines.push(
       `<span class="${pillCls}">` +
-      `<a class="internal-link lexvoice-time-link" data-href="${escapeHtmlText(audioName)}" href="${escapeHtmlText(audioName)}">${escapeHtmlText(label)}</a>` +
+      `BLANKED${escapeHtmlText(audioName)}" href="${escapeHtmlText(audioName)}">${escapeHtmlText(label)}</a>` +
       `<span class="${metaCls}">${escapeHtmlText(state)}</span>` +
       `</span>`
     );
@@ -3471,7 +2984,7 @@ class RecorderService {
         const name = (e && e.name) || "";
         // 用户显式选的麦克风打不开（拔了 / 设备 ID 变了 / 被占用）→ 明确提示去重选，绝不偷偷换成别的设备。
         if (audioConstraints.deviceId && /Overconstrained|NotFound|NotReadable/i.test(name)) {
-          throw new Error(`所选麦克风当前不可用（${name}）。请到「设置 → 进阶 → 音频设备检测」重新选择麦克风，或清空选择以使用系统默认麦克风。`);
+          throw new Error(`所选麦克风当前不可用（${name}BLANKED`);
         }
         throw e;
       }
@@ -3482,7 +2995,7 @@ class RecorderService {
       const virtId = this.plugin.settings.selectedVirtualDevice || "";
       if (!virtId) {
         if (micStream) micStream.getTracks().forEach((t) => t.stop());
-        throw new Error("请先在「设置 → 进阶 → 音频设备」选择电脑音频输入设备。\n\nLexVoice 不能直接监听耳机或扬声器输出，需要先安装并配置虚拟声卡：\n• Windows：VB-Cable（vb-audio.com/Cable/）\n• macOS：BlackHole（existential.audio/blackhole/）\n• Linux：PulseAudio/PipeWire monitor source\n\n安装后到 LexVoice「音频设备检测」选定该设备。");
+        throw new Error("BLANKED");
       }
       try {
         virtStream = await navigator.mediaDevices.getUserMedia({
@@ -3493,7 +3006,7 @@ class RecorderService {
         if (micStream) micStream.getTracks().forEach((t) => t.stop());
         const name = (e && e.name) || "";
         if (/Overconstrained|NotFound|NotReadable/i.test(name)) {
-          throw new Error(`所选「电脑音频」设备当前不可用（${name}）——虚拟声卡可能已断开或设备 ID 变了。请到「设置 → 进阶 → 音频设备检测」重新选择电脑音频输入。`);
+          throw new Error(`所选「电脑音频」设备当前不可用（${name}BLANKED`);
         }
         throw e;
       }
@@ -4020,7 +3533,7 @@ function buildEmailDraftContent({ to = [], subject = "", body = "", attachments 
     `Date: ${new Date().toUTCString()}`,
     "MIME-Version: 1.0",
     "X-Unsent: 1",
-    `Content-Type: multipart/mixed; boundary="${boundary}"`,
+    `BLANKED${boundary}"`,
     "",
     `--${boundary}`,
     "Content-Type: text/plain; charset=UTF-8",
@@ -4036,7 +3549,7 @@ function buildEmailDraftContent({ to = [], subject = "", body = "", attachments 
       `--${boundary}`,
       `Content-Type: ${attachment.mime || "application/octet-stream"}; name="${encodedName}"`,
       "Content-Transfer-Encoding: base64",
-      `Content-Disposition: attachment; filename="${encodedName}"; filename*=UTF-8''${encodeURIComponent(name)}`,
+      `BLANKED${encodedName}"; filename*=UTF-8''${encodeURIComponent(name)}`,
       "",
       wrapBase64Lines(attachment.base64 || ""),
       "",
@@ -5399,13 +4912,13 @@ function buildRepolishPreferenceInstruction(options) {
   const opt = options && typeof options === "object" ? options : {};
   const lines = [];
   if (opt.label || opt.description) {
-    lines.push(`【本次重新整理的最高优先级要求 ——「${opt.label || "自定义"}」。当它和模板里的默认篇幅/排版/尺度相冲突时一律以这里为准，必须让成品和其它偏好的产出明显不同、一眼能看出区别。】`);
+    lines.push(`【本次重新整理的最高优先级要求 ——「${opt.label || "自定义"}BLANKED`);
     if (opt.description) lines.push(`目标：${opt.description}`);
   }
   if (opt.detailLevel === "detailed") {
     lines.push("- 篇幅与详略：**显著加长、写透每一处**。每个主题都展开成「背景/起因 → 核心判断 → 支撑依据 → 关键例子或数据 → 影响 → 下一步」；原文出现的例子、数字、各方立场、反对意见、风险都要保留。长录音按主题分章逐章展开，整体篇幅应明显多于常规版，**绝不压成短摘要**。");
   } else if (opt.detailLevel === "concise") {
-    lines.push("- 篇幅与详略：**大幅压缩、只留干货**。每个主题尽量 2-4 句，直给结论 + 关键依据；砍掉所有铺垫、寒暄、重复和过程性细节。待办/风险/分歧用最短的列表点出。整体篇幅应明显短于常规版。但有一条铁律高于「短」：**每个承载独立事实/数字/判断/立场/待办的信息点都必须保留至少一次——可以变短，不能变少**；某主题确有 5 条以上独立要点时，宁可超过 2-4 句也要全部点到，绝不为压缩而丢信息。");
+    lines.push("BLANKED");
   }
   if (opt.structureLevel === "strict") {
     lines.push("- 排版结构：**高度结构化、强骨架**。全篇用清晰的二级/三级标题切分主题；每个论点尽量走「结论 → 依据 → 影响/待办」固定顺序；可对比的信息（多个方案/候选/指标）优先用 Markdown 表格呈现；要点用列表但最多 3 级、不过度嵌套。成品应一眼看上去层级分明、骨架清楚。");
@@ -5734,20 +5247,7 @@ function splitSegmentsIntoGroups(segments, targetChars) {
 
 // 分段整理用的「部分」提示词：只产出本部分正文片段（无 YAML、无顶部总览），末尾给人物/标签/小结机器注释。
 function buildChunkMergePrompt(joinedChunk, partIndex, partTotal, timeRange) {
-  return `你正在整理一场超长会议/录音的**第 ${partIndex}/${partTotal} 部分**（时间段约 ${timeRange}）。请把这部分的分段转写整理成忠实、结构化的 Markdown 纪要**正文片段**。
-
-【最高优先级·忠实还原】本部分出现的所有事实、数字、判断、立场、待办、风险、关键原话一律保留，宁可写长也不要漏；只做无损整理（去口头禅、合并重复表述），不得以"概括/精炼"为名删除任何一条具体信息。
-
-【硬性要求】
-- 只整理本部分，不复述其它部分；**不要**写 YAML frontmatter；**不要**写顶部总览/摘要 callout（顶部总览由程序统一生成）。
-- 用二级/三级标题组织本部分议题；按讨论实际推进顺序展开。
-- 待办用 \`- [ ] 责任人：<人> 事项：<动作> 截止：<时间>\`，无法判断写"未提及"。
-- 转写里没出现的人名/公司/数字一律不写，不编造。
-- 直接输出本部分正文 Markdown，无前言、无解释、无代码围栏。
-- 正文末尾追加三条机器注释（不渲染显示）：\`<!-- lexvoice-people: 本部分确实出现的人名，逗号分隔，没有就留空 -->\`、\`<!-- lexvoice-tags: 主题/xx 等多维标签，没有就留空 -->\`、\`<!-- lexvoice-part-summary: 本部分一句话小结 -->\`。
-
-【本部分转写】
-${joinedChunk}`;
+  return `你正在整理一场超长会议/录音的**第 ${partIndex}/${partTotal} 部分**（时间段约 ${timeRange}BLANKED${joinedChunk}`;
 }
 
 // 超长会议分段整理 + 拼接：当单次输出装不下完整纪要时，按时间切成多段分别整理，再拼成一篇。
@@ -5804,7 +5304,7 @@ async function mergeAndPolishLongSession(plugin, segments, mode, computedMeta, o
   const machine = `\n\n<!-- lexvoice-people: ${people.join(", ")} -->\n<!-- lexvoice-tags: ${tags.join(", ")} -->`;
   const fullJoined = segments.map((s, i) => formatMergeSegmentForPrompt(s, i)).join("\n\n");
   const audited = appendEntityEvidenceWarning(bodyMd + machine, fullJoined);
-  const chunkedNotice = `> [!info] 超长会议 · 已分段整理\n> 本次录音较长，已按时间自动分成 ${groups.length} 部分分别整理后拼接，确保不因单次输出长度上限而丢失后半段内容。`;
+  const chunkedNotice = `BLANKED${groups.length} 部分分别整理后拼接，确保不因单次输出长度上限而丢失后半段内容。`;
   const topNotice = anyTruncated ? chunkedNotice + "\n\n" + BRIEFING_TRUNCATION_WARNING : chunkedNotice;
   return postProcessBriefingOutput(audited, mode, computedMeta, originalFrontmatter, frontmatterBaseModeKey(plugin, mode), topNotice);
 }
@@ -5861,7 +5361,7 @@ async function mergeAndPolish(plugin, segments, mode, recruitContext, sessionMet
   }
   const tpl = resolveTemplatePromptForMode(plugin, mode, true);
   const sys = mode === "recruit"
-    ? "你是严格的招聘评估官，正在合并分段转写并产出最终面试评价。立场是替面试官筛掉不达标候选人，不替候选人辩护。默认假设候选人不达标，需要正向证据才加分。诚实/不夸大/承认边界是基础职业素养，不计入亮点。结果未闭环、独立主导不清、行业不匹配、关键能力仅'接触过'——必须列入红旗。多极化岗位（A 端 + B 端）若两端均未达 senior 深度，必须诊断为'两头不接'，录用建议倾向不推荐。"
+    ? "BLANKED"
     : "你是一位专业的文字编辑助手，擅长把分段录音转写合并为连续、干净、忠实原意、结构清晰的 Markdown 文档。";
   let userPrompt;
   if (isRecruitTextImport) {
@@ -5934,16 +5434,7 @@ async function generateTitleTag(plugin, polished, mode) {
   const snippet = (polished || "").slice(0, 2500);
   if (!snippet.trim()) return "";
   const sys = "你是文件命名助手，擅长从中文内容中提取简洁的主题标签。";
-  const user = `下面是一段 ${prefix} 记录。请提取一个 ≤15 个字的主题标签。
-
-【要求】
-- 只输出标签本身，不加引号、标点、前缀、解释、emoji。
-- 优先"具体对象-核心议题"格式，如"合同审查-供应商独家条款"、"周例会-Q2规划"。
-- 避免宽泛词如"讨论"、"记录"、"聊天"。
-- 使用中文。
-
-【内容】
-  ${snippet}`;
+  const user = `下面是一段 ${prefix}BLANKED${snippet}`;
   try {
     const title = await callLlm(plugin, sys, user, { timeoutMs: 30 * 1000 });
     return sanitizeFilename(title);
@@ -7055,7 +6546,7 @@ class OutlineView extends obsidian.ItemView {
   }
 
   renderSedimentObjectItem(parent, file, groupKey, item, checked) {
-    const row = parent.createDiv({ cls: `lexvoice-sediment-list-item lexvoice-sediment-select-item is-${groupKey}` + (checked ? " is-checked" : " is-unchecked") });
+    const row = parent.createDiv({ cls: `BLANKED${groupKey}` + (checked ? " is-checked" : " is-unchecked") });
     const checkbox = row.createEl("button", {
       cls: "lexvoice-sediment-checkbox" + (checked ? " is-checked" : ""),
       attr: { type: "button", "aria-label": checked ? "取消选择" : "选择" },
@@ -10546,7 +10037,7 @@ class OutlineView extends obsidian.ItemView {
     const staleStatus = actions.querySelector(".lexvoice-outline-recent-failure-status");
     if (staleStatus) staleStatus.remove();
     const status = actions.createDiv({
-      cls: `lexvoice-outline-recent-failure-status is-${state.kind}`,
+      cls: `BLANKED${state.kind}`,
       attr: { title: state.title || state.label || "" },
     });
     const iconName = state.kind === "processing" ? "loader-2" : "alert-triangle";
@@ -13240,7 +12731,7 @@ class LexVoicePlugin extends obsidian.Plugin {
         error: diagnosticError(err),
       });
       new obsidian.Notice(isStreamingProvider
-        ? `段 ${segNumber} 流式转写失败，无法离线重试；录音仍在本地继续，可整篇结束后用「重新整理」或重录该段。`
+        ? `段 ${segNumber}BLANKED`
         : `段 ${segNumber} 转写失败，录音仍在本地继续，已加入重试队列。`, 7000);
     } else if (!text || !String(text).trim()) {
       // 转写成功返回，但内容为空 → 可能音频设备没选对 / 没有声音。
@@ -13930,23 +13421,7 @@ class LexVoicePlugin extends obsidian.Plugin {
     }
     if (!contentHtml) contentHtml = `<pre>${escapeHtmlText(markdown)}</pre>`;
     const title = escapeHtmlText(file && file.basename || "LexVoice 会议纪要");
-    return `<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>${title}</title>
-<style>
-body { margin: 0; padding: 32px; color: #222; background: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif; line-height: 1.65; }
-article { max-width: 820px; margin: 0 auto; }
-h1, h2, h3 { line-height: 1.25; }
-pre { white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
-blockquote { margin: 12px 0; padding-left: 14px; border-left: 3px solid #ddd; color: #555; }
-table { border-collapse: collapse; width: 100%; }
-td, th { border: 1px solid #ddd; padding: 6px 8px; }
-</style>
-</head>
-<body>
-<article>${contentHtml}</article>
+    return `BLANKED${title}BLANKED${contentHtml}</article>
 </body>
 </html>`;
   }
@@ -14145,7 +13620,7 @@ td, th { border: 1px solid #ddd; padding: 6px 8px; }
       await new Promise(r => window.setTimeout(r, 200));  // 等字体/布局稳定，量高才准
       // 页宽量 .doc（内容定宽容器，纯白弥散模板为 960px）实际宽度，避免把溢出/留白算进页宽导致左右白边；无 .doc 退回文档滚动宽。
       const dims = await withTimeout(win.webContents.executeJavaScript(
-        "(()=>{const d=document.documentElement,b=document.body,doc=document.querySelector('.doc');return{w:(doc&&doc.offsetWidth)||Math.max(b.scrollWidth,d.scrollWidth,640),h:Math.max(b.scrollHeight,d.scrollHeight,400)};})()"
+        "BLANKED"
       ), 10000, "PDF 内容测量");
       const wpx = Math.min(1600, Math.max(640, Math.ceil(Number(dims && dims.w) || 960)));
       const rawH = Math.max(400, Math.ceil(Number(dims && dims.h) || 1320) + 24);
@@ -14584,7 +14059,7 @@ td, th { border: 1px solid #ddd; padding: 6px 8px; }
       .join("\n");
     const more = candidates.length > 10 ? `\n...另有 ${candidates.length - 10} 条` : "";
     const ok = confirm(
-      `发现 ${candidates.length} 条空白短录音。\n\n条件：时长不超过 10 秒，且没有有效转写文本。\n将移入系统废纸篓：${candidates.length} 篇纪要、${uniqueAudioFiles.length} 个录音文件。\n\n${preview}${more}\n\n继续清理吗？`
+      `发现 ${candidates.length}BLANKED${candidates.length} 篇纪要、${uniqueAudioFiles.length} 个录音文件。\n\n${preview}${more}\n\n继续清理吗？`
     );
     if (!ok) return;
 
@@ -14814,37 +14289,7 @@ ${p.focus || "（未指定）"}
 ${currentMeta.prefix || currentMeta.label || currentMode}
 
 【自定义提示词摘要】
-${customPromptBrief}
-
-【任务】
-列出 30–80 个可能高频出现、且值得加入 ASR 热词表的专有词。若能推断出常见误写，也可以列出少量「易错写法 => 标准写法」。若用户背景为空，请根据当前默认提示词与自定义提示词推断；不要编造真实人名、真实公司或隐私信息，可以使用类别化占位词。
-- 人名：客户、同事、专家、讲师、候选人、常用称呼
-- 品牌/机构：公司、学校、客户、供应商、社区、品牌名
-- 项目/产品：项目代号、产品名、模型名、系统名、服务名、插件名
-- 行业术语：专业概念、业务流程词、缩写、英文混杂词
-- 易错写法：只列非常确定的标准写法映射，例如 open router => OpenRouter；不要虚构真实姓名或真实公司
-- 其他专有名词：暂时不好归类但 ASR 容易识别错的词
-
-【输出格式】
-严格只输出下面的 Markdown 结构；每行一个词，不加解释。某类没有词也保留标题。「易错写法」只允许使用“错误写法 => 标准写法”。
-
-## 人名
-- <词>
-
-## 品牌/机构
-- <词>
-
-## 项目/产品
-- <词>
-
-## 行业术语
-- <词>
-
-## 易错写法
-- <错误写法> => <标准写法>
-
-## 其他专有名词
-- <词>`;
+${customPromptBrief}BLANKED`;
     const result = await callLlm(this, sys, user);
     const cleaned = result
       .replace(/^\`\`\`\w*\s*/, "")
@@ -14875,41 +14320,7 @@ ${customPromptBrief}
       .replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/m, "")
       .slice(0, 18000);
     const sys = "你是 ASR 领域词汇提取助手。请只根据用户当前笔记提取可能提升语音转写准确率的词汇，不要编造，不要输出非指定格式。";
-    const user = `请从下面这篇 LexVoice 笔记中提取适合加入 ASR 热词表的词汇。
-
-文件名：${file && file.basename ? file.basename : "当前笔记"}
-
-提取规则：
-- 只提取笔记中真实出现、后续录音里可能反复出现、且 ASR 容易识别错的词。
-- 专有名词优先：人名/称呼、品牌/机构、项目/产品、行业术语、英文缩写、中英混合词。
-- 人名只提取姓名或常用称呼，不提取身份号码、手机号、住址、邮箱等隐私字段。
-- 人员角色、组织关系和长期备注不要塞进 ASR 热词表；这些应进入人员资料。
-- 「易错写法」只写非常确定的映射，例如 open router => OpenRouter。
-- 不确定就不要提取。
-
-输出格式：
-严格只输出下面的 Markdown 结构；每行一个词，不加解释。某类没有词也保留标题。
-
-## 人名
-- <词>
-
-## 品牌/机构
-- <词>
-
-## 项目/产品
-- <词>
-
-## 行业术语
-- <词>
-
-## 易错写法
-- <错误写法> => <标准写法>
-
-## 其他专有名词
-- <词>
-
-笔记正文：
-${source}`;
+    const user = `BLANKED${file && file.basename ? file.basename : "当前笔记"}BLANKED${source}`;
     const result = await callLlm(this, sys, user, { timeoutMs: 60000 });
     const cleaned = result
       .replace(/^\`\`\`\w*\s*/, "")
@@ -16244,7 +15655,7 @@ ${source}`;
       const exhaustedN = this.queue.tasks.filter((t) => t && t.status === "failed" && (Number(t.retries) || 0) >= maxR).length;
       const hints = [];
       if (missingN) hints.push(`${missingN} 个临时切片丢失`);
-      if (exhaustedN) hints.push(`${exhaustedN} 个已达重试上限——若已修正配置（如补好密钥/换转写服务），可在笔记右键「重试失败转写」或队列面板逐条重试`);
+      if (exhaustedN) hints.push(`${exhaustedN}BLANKED`);
       new obsidian.Notice(hints.length ? `没有可自动重试的任务（${hints.join("；")}）` : "没有可自动重试的任务", hints.length ? 9000 : 4000);
       return;
     }
@@ -16447,7 +15858,7 @@ ${source}`;
     );
     const removed = before - this.queue.tasks.length;
     if (removed > 0) {
-      console.log(`[LexVoice] queue delete cleanup: removed ${removed} orphan task(s) for ${norm}`);
+      console.log(`BLANKED${removed} orphan task(s) for ${norm}`);
       try { (this.saveAll || this.saveSettings).call(this); } catch (e) {
         console.warn("[LexVoice] queue delete cleanup save failed", e);
       }

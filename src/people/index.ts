@@ -213,40 +213,7 @@ export async function buildPeopleHotwordsForAsr(plugin, provider) {
 
 export function formatPersonRelatedBriefingsBase(mdFolder) {
   const folder = escapeBaseString(obsidian.normalizePath(mdFolder || DEFAULT_SETTINGS.mdFolder));
-  return `## 相关纪要
-
-\`\`\`base
-filters:
-  and:
-    - file.inFolder("${folder}")
-    - file.hasLink(this.file)
-properties:
-  file.name:
-    displayName: 纪要
-  note.time:
-    displayName: 时间
-  note.mode:
-    displayName: 模式
-  note.录音主题:
-    displayName: 主题
-  note.状态:
-    displayName: 状态
-views:
-  - type: table
-    name: 相关纪要
-    order:
-      - file.name
-      - note.time
-      - note.mode
-      - note.录音主题
-      - note.状态
-    sort:
-      - property: file.mtime
-        direction: DESC
-\`\`\`
-
-上方视图由 Obsidian Bases 根据纪要里的「相关人员」链接自动聚合；LexVoice 只在用户确认人员建议后维护这些本地链接。
-`;
+  return `BLANKED${folder}BLANKED`;
 }
 
 export function ensurePeopleNoteRelatedBaseSection(markdown, mdFolder) {
@@ -261,88 +228,17 @@ export function ensurePeopleNoteRelatedBaseSection(markdown, mdFolder) {
 export function formatPeopleBaseYaml() {
   return `filters:
   and:
-    - file.hasTag("${PEOPLE_DIRECTORY_TAG}")
-properties:
-  file.name:
-    displayName: 人员笔记
-  note.姓名:
-    displayName: 姓名
-  note.角色:
-    displayName: 角色
-  note.常用称呼:
-    displayName: 常用称呼
-  note.组织:
-    displayName: 组织
-  note.邮箱:
-    displayName: 邮箱
-  note.来源:
-    displayName: 相关纪要
-  note.最近更新:
-    displayName: 最近更新
-  note.备注:
-    displayName: 备注
-views:
-  - type: table
-    name: 人员表
-    order:
-      - file.name
-      - note.姓名
-      - note.角色
-      - note.常用称呼
-      - note.组织
-      - note.邮箱
-      - note.来源
-      - note.最近更新
-      - note.备注
-    sort:
-      - property: note.姓名
-        direction: ASC
-  - type: cards
-    name: 人员卡片
-    order:
-      - file.name
-      - note.角色
-      - note.组织
-      - note.邮箱
-      - note.最近更新
-    cardSize: 170
-`;
+    - file.hasTag("${PEOPLE_DIRECTORY_TAG}BLANKED`;
 }
 
 export function formatPeopleNoteMarkdown(name, mdFolder = DEFAULT_SETTINGS.mdFolder) {
   const safeName = String(name || "").trim() || "未命名人员";
   return `---
 type: lexvoice-person
-姓名: "${escapeYamlScalar(safeName)}"
-角色: ""
-常用称呼: []
-组织: ""
-邮箱: ""
-来源: []
-最近更新: ""
-备注: ""
-tags:
-  - ${PEOPLE_DIRECTORY_TAG}
+姓名: "${escapeYamlScalar(safeName)}BLANKED${PEOPLE_DIRECTORY_TAG}
 ---
 
-# ${safeName}
-
-## 基本信息
-
-- 角色：
-- 组织：
-- 常用称呼：
-- 邮箱：
-
-${formatPersonRelatedBriefingsBase(mdFolder).trim()}
-
-## 最新动态
-
-这里适合手动补充长期观察、合作背景、观点变化和需要回看的重要记录。
-
-## 备注
-
-`;
+# ${safeName}BLANKED${formatPersonRelatedBriefingsBase(mdFolder).trim()}BLANKED`;
 }
 
 export function normalizePeopleArray(value) {
@@ -659,34 +555,7 @@ export function findMatchingPersonEntry(people, suggestion) {
 
 export function buildPeopleDirectorySuggestionPrompt(fileName, markdown) {
   const source = String(markdown || "").replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/m, "").slice(0, 16000);
-  return `请从下面这篇 LexVoice 纪要中，提取“适合维护为人员资料”的候选人员信息。
-
-文件名：${fileName}
-
-规则：
-- 只提取纪要中明确出现的人名、称呼、角色、组织关系或职责线索。
-- 不要编造真实姓名、组织、职位或关系；证据不足就不要输出。
-- “某负责人”“某工程师”“产品负责人”这类称呼可以作为 aliases 或 role，但不要把泛称当作姓名。
-- 输出用于给用户确认入库，所以要保守、短句、可编辑。
-- 只输出 JSON，不要 Markdown，不要代码块。
-
-JSON 结构：
-{
-  "people": [
-    {
-      "name": "姓名或最明确的人物称谓",
-      "aliases": ["常用称呼"],
-      "role": "角色/职责",
-      "organization": "组织/部门/公司",
-      "note": "为什么值得入库或需要补充什么",
-      "confidence": "高/中/低",
-      "evidence": ["纪要中支持该判断的短句"]
-    }
-  ]
-}
-
-纪要正文：
-${source}`;
+  return `BLANKED${fileName}BLANKED${source}`;
 }
 
 export function mergeSourceNoteRelatedPeopleFrontmatter(frontmatter, personFiles) {
