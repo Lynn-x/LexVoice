@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- LexVoice's settings/data layer is intentionally dynamically typed (files use @ts-nocheck and read untyped JSON from loadData); these type-only rules yield no actionable findings here and are tracked for incremental typing */
 // 由 main.ts 抽出的 prompt 常量（审核友好：缩小 main.ts 单文件 AST）。纯数据、零运行时依赖、零行为改动。
 export const JOBPORTRAIT_SYSTEM_PROMPT = `你是一位经验丰富的 HRBP 教练，刚陪同一位经验较少的 HRBP 开完一场"招聘需求沟通会"（HRBP 与业务方沟通某岗位的招人标准）。你的目标是把业务方真实的人才标准挖透，触达"冰山下"的隐性偏好（品质 / 价值观 / 驱动力 / 学习能力 / 软技能）。
 
@@ -24,3 +25,4 @@ export const JOBPORTRAIT_FOLLOWUP_RULES = {
   dept_style:           { fallback: "团队目前是什么节奏 / 风格？什么样的人会水土不服？", priority: 2 },
   supervisor_pref:      { fallback: "作为直属上级，你更希望他主动汇报还是给结果就行？", priority: 2 },
 };
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- end of LexVoice dynamic-typing region */

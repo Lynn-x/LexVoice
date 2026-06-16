@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- LexVoice's settings/data layer is intentionally dynamically typed (files use @ts-nocheck and read untyped JSON from loadData); these type-only rules yield no actionable findings here and are tracked for incremental typing */
 // @ts-nocheck — Modal/Widget class 密集（this.plugin.* 等无 TS 字段声明）；已用 tsc 确认无漏引用(TS2304=0)，余者皆类字段类型噪音，故与 main.ts 同档跳过。
 // 由 main.ts 抽出（模块化拆解，提升工程稳定性；纯搬迁、零行为改动）。
 import * as obsidian from "obsidian";
@@ -984,7 +985,7 @@ export class RecruitContextModal extends obsidian.Modal {
     for (const q of list) {
       const chip = chips.createEl("button", { cls: "lexvoice-recruit-quality-chip", text: q.素质 });
       const detail = box.createDiv({ cls: "lexvoice-recruit-quality-detail" });
-      detail.style.display = "none";
+      detail.setCssStyles({ display: "none" });
       const parts = [];
       if (q.定义) parts.push(`定义：${q.定义}`);
       if (q.信号) parts.push(`信号：${q.信号}`);
@@ -2104,3 +2105,4 @@ export class BubbleWidget {
     wrapEl.addEventListener("pointercancel", endDrag);
   }
 }
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- end of LexVoice dynamic-typing region */

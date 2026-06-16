@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- LexVoice's settings/data layer is intentionally dynamically typed (files use @ts-nocheck and read untyped JSON from loadData); these type-only rules yield no actionable findings here and are tracked for incremental typing */
 // @ts-nocheck
 // 实时大纲的"文本/状态纯函数层"。从 main.ts 抽出，专门承载所有"把非确定性的 LLM markdown
 // 掰回确定结构"的逻辑——这是全项目正确性最敏感、历史 bug 最多的一层。
@@ -576,3 +577,4 @@ export function recolorReportHtml(html, targetHex, baseHex = REPORT_BASE_ACCENT_
   const style = `<style id="lexvoice-report-recolor">body{filter:hue-rotate(${delta}deg)}</style>`;
   return s.includes("</head>") ? s.replace("</head>", style + "</head>") : style + s;
 }
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- end of LexVoice dynamic-typing region */

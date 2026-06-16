@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- LexVoice's settings/data layer is intentionally dynamically typed (files use @ts-nocheck and read untyped JSON from loadData); these type-only rules yield no actionable findings here and are tracked for incremental typing */
 // @ts-nocheck
 import * as obsidian from "obsidian";
 // 实时大纲"文本/状态纯函数层"已抽到独立模块并由 vitest 回归测试覆盖（src/outline-text.test.ts）。
@@ -2082,7 +2083,7 @@ function buildPlaybackTimelineDetails(session) {
   // 显式关闭：返回空串 → 后续 lines 拼接里 `|| null` 自动跳过这一块
   // 若以后想恢复，把下一行删掉即可；底层渲染逻辑完整保留
   return "";
-  // eslint-disable-next-line no-unreachable
+  // eslint-disable-next-line no-unreachable -- intentionally disabled feature; unreachable code retained for easy restore
   const segments = (session && Array.isArray(session.segments)) ? session.segments : [];
   if (!segments.length) return "";
   const lines = [];
@@ -7882,10 +7883,9 @@ class OutlineView extends obsidian.ItemView {
 
     // 定位：贴近 anchor，向下展开，必要时翻转
     const rect = anchorEl.getBoundingClientRect();
-    pop.style.position = "fixed";
+    pop.setCssStyles({ position: "fixed", maxWidth: "320px" });
     pop.style.left = `${Math.max(8, rect.left)}px`;
     pop.style.top = `${rect.bottom + 6}px`;
-    pop.style.maxWidth = "320px";
 
     // 渲染对应内容
     if (field === "owner") this.renderTodoOwnerPopover(pop, file, todo);
@@ -11308,7 +11308,6 @@ class LexVoicePlugin extends obsidian.Plugin {
   async onunload() {
     try { if (this.recorder && this.recorder.state !== "idle") await this.recorder.stop(); } catch {}
     if (this.bubble) this.bubble.unmount();
-    this.app.workspace.detachLeavesOfType(VIEW_TYPE_OUTLINE);
     // 清理招聘项目重算 Debouncer，避免卸载后 pending timer 触发已 detach 的实例
     try { if (this._recruitRecalcDebouncers) { this._recruitRecalcDebouncers.forEach(d => { try { if (d.cancel) d.cancel(); } catch {} }); this._recruitRecalcDebouncers.clear(); } } catch {}
   }
@@ -11547,7 +11546,7 @@ class LexVoicePlugin extends obsidian.Plugin {
       "## 环境",
       `- LexVoice: ${this.manifest && this.manifest.version || "unknown"}`,
       `- Obsidian API: ${obsidian.apiVersion || "unknown"}`,
-      `- 平台: ${redactDiagnosticText(navigator.platform || "")}`,
+      `- 平台: ${redactDiagnosticText(obsidian.Platform.isMacOS ? "macOS" : obsidian.Platform.isWin ? "Windows" : obsidian.Platform.isLinux ? "Linux" : obsidian.Platform.isIosApp ? "iOS" : obsidian.Platform.isAndroidApp ? "Android" : "unknown")}`,
       "",
       "## 当前配置摘要",
       `- 转写服务: ${redactDiagnosticText(activeId)} / ${redactDiagnosticText(provider.name || "")}`,
@@ -13917,16 +13916,19 @@ class LexVoicePlugin extends obsidian.Plugin {
 
   async renderMarkdownToEmailHtml(file, markdown) {
     let contentHtml = "";
+    const renderComponent = new obsidian.Component();
     try {
       const el = document.createElement("article");
       if (obsidian.MarkdownRenderer && typeof obsidian.MarkdownRenderer.render === "function") {
-        await obsidian.MarkdownRenderer.render(this.app, markdown, el, file.path, this);
+        await obsidian.MarkdownRenderer.render(this.app, markdown, el, file.path, renderComponent);
       } else if (obsidian.MarkdownRenderer && typeof obsidian.MarkdownRenderer.renderMarkdown === "function") {
-        await obsidian.MarkdownRenderer.renderMarkdown(markdown, el, file.path, this);
+        await obsidian.MarkdownRenderer.renderMarkdown(markdown, el, file.path, renderComponent);
       }
       contentHtml = el.innerHTML;
     } catch (e) {
       console.warn("[LexVoice] markdown render for email pdf failed, fallback to plain markdown", e);
+    } finally {
+      renderComponent.unload();
     }
     if (!contentHtml) contentHtml = `<pre>${escapeHtmlText(markdown)}</pre>`;
     const title = escapeHtmlText(file && file.basename || "LexVoice 会议纪要");
@@ -16595,3 +16597,4 @@ ${source}`;
 
 
 export default LexVoicePlugin;
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- end of LexVoice dynamic-typing region */

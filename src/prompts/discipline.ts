@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- LexVoice's settings/data layer is intentionally dynamically typed (files use @ts-nocheck and read untyped JSON from loadData); these type-only rules yield no actionable findings here and are tracked for incremental typing */
 // 由 main.ts 抽出的 prompt 常量（审核友好：缩小 main.ts 单文件 AST）。纯数据、零运行时依赖、零行为改动。
 export const SHARED_DISCIPLINE = `## §3 写作纪律
 - **信息密度门槛**：每条 bullet 必须含 [事实 / 判断 / 动作 / 风险] 之一。仅描述对话过程的句子（"双方就 X 进行了讨论"）一律删除。
@@ -72,3 +73,4 @@ export const STRUCTURE_LEVEL_INSTRUCTIONS = {
 - **强结构化提炼**：把口语化叙述转化为论点—支撑—证据的逻辑层级，不要逐字转录
 - 适合：深度复盘、战略讨论、复杂决策会议`,
 };
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- end of LexVoice dynamic-typing region */

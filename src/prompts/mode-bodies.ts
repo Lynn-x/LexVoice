@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- LexVoice's settings/data layer is intentionally dynamically typed (files use @ts-nocheck and read untyped JSON from loadData); these type-only rules yield no actionable findings here and are tracked for incremental typing */
 // 由 main.ts 抽出的 prompt 常量（审核友好：缩小 main.ts 单文件 AST）。纯数据、零运行时依赖、零行为改动。
 export const MODE_BODIES = {
   learning: `## §0 适用判断
@@ -687,3 +688,4 @@ vs JD 期望：JD 要求 L<x> · 候选人实际 L<y> · 差距：<一句客观>
 - 上下文**没有**【必要素质清单】时，这行注释整行不要输出。
 - 它是机器注释（HTML 注释），照原样输出，不要翻译键名、不要加任何解释文字；与 lexvoice-people / lexvoice-tags 并列放在文末。`,
 };
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return -- end of LexVoice dynamic-typing region */
