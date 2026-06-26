@@ -1,6 +1,6 @@
 {
   "name": "lexvoice",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "description": "Obsidian desktop plugin for recording, transcription, and AI-organized Markdown notes.",
   "main": "main.js",
   "scripts": {

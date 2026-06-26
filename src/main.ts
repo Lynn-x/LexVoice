@@ -201,7 +201,7 @@ function normalizeLexVoiceSettings(savedData) {
   s.briefingStructureLevel = pickDefined(composer.structureLevel, raw.briefingStructureLevel, defaults.briefingStructureLevel);
   s.repolishPreferencePromptAddendum = pickDefined(composer.repolishPreferencePromptAddendum, raw.repolishPreferencePromptAddendum, defaults.repolishPreferencePromptAddendum);
   s.repolishPreference = pickDefined(composer.repolishPreference, raw.repolishPreference, defaults.repolishPreference);
-  s.thinkingMode = pickDefined(raw.thinkingMode, defaults.thinkingMode);
+  s.thinkingMode = pickDefined(composer.thinkingMode, raw.thinkingMode, defaults.thinkingMode);
   const languagePolicy = composer.languagePolicy || raw.languagePolicy || {};
   s.briefingTranslationMode = pickDefined(languagePolicy.mode, raw.briefingTranslationMode, defaults.briefingTranslationMode);
   s.briefingTargetLanguage = pickDefined(languagePolicy.targetLanguage, raw.briefingTargetLanguage, defaults.briefingTargetLanguage);
@@ -397,6 +397,7 @@ function serializeLexVoiceSettings(s) {
       structureLevel: s.briefingStructureLevel || "balanced",
       repolishPreferencePromptAddendum: s.repolishPreferencePromptAddendum || "",
       repolishPreference: s.repolishPreference || "",
+      thinkingMode: s.thinkingMode || "auto",
       languagePolicy: {
         mode: s.briefingTranslationMode || "off",
         targetLanguage: s.briefingTargetLanguage || "zh-CN",
