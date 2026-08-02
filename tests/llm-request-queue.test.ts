@@ -90,4 +90,32 @@ describe("LlmRequestQueue", () => {
 
     expect(order).toEqual(["first", "outline", "question", "suggestion"]);
   });
+
+  it("runs an overdue outline during sustained interactive traffic", async () => {
+    let now = 0;
+    const queue = new LlmRequestQueue({
+      now: () => now,
+      backgroundMaxWaitMs: 15_000,
+    });
+    const order: string[] = [];
+    let releaseFirst!: () => void;
+    const firstGate = new Promise<void>((resolve) => { releaseFirst = resolve; });
+    const first = queue.enqueue(1, async () => {
+      await firstGate;
+      order.push("first");
+    });
+    const outline = queue.enqueue(2, async () => {
+      order.push("outline");
+    });
+
+    now = 16_000;
+    const questions = [1, 2, 3].map((index) => queue.enqueue(0, async () => {
+      order.push(`question-${index}`);
+    }));
+
+    releaseFirst();
+    await Promise.all([first, outline, ...questions]);
+
+    expect(order).toEqual(["first", "outline", "question-1", "question-2", "question-3"]);
+  });
 });
