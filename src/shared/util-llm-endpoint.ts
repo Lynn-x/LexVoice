@@ -115,6 +115,7 @@ export function isPrivateNetworkHost(hostname) {
     if (octets.some(n => n < 0 || n > 255)) return false;
     const [a, b] = octets;
     return a === 10
+      || (a === 100 && b >= 64 && b <= 127)
       || a === 127
       || (a === 172 && b >= 16 && b <= 31)
       || (a === 192 && b === 168)
