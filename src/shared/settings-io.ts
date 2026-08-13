@@ -32,7 +32,7 @@ import type {
   TranscribeProviderSettings,
 } from "./types";
 
-export const SETTINGS_SCHEMA_VERSION = 3;
+export const SETTINGS_SCHEMA_VERSION = 4;
 export const LEGACY_VOCABULARY_FILE = "lexvoice 词汇表.md";
 
 type UnknownRecord = Record<string, unknown>;
@@ -40,7 +40,7 @@ type UnknownRecord = Record<string, unknown>;
 const PROMPT_MODES = ["learning", "interview", "meeting", "seminar", "huddle", "monologue", "recruit"] as const;
 const STRUCTURE_LEVELS = ["loose", "balanced", "strict"] as const;
 const THINKING_MODES = ["auto", "reasoning", "fast"] as const;
-const AUDIO_CHANNEL_MODES = ["auto", "mono", "multichannel"] as const;
+const AUDIO_CHANNEL_MODES = ["mono", "multichannel"] as const;
 
 function isRecord(value: unknown): value is UnknownRecord {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -77,7 +77,7 @@ function normalizeAudioChannelMode(value: unknown): PluginSettings["audioChannel
   const mode = String(value || "").trim();
   return AUDIO_CHANNEL_MODES.includes(mode as typeof AUDIO_CHANNEL_MODES[number])
     ? mode as PluginSettings["audioChannelMode"]
-    : "auto";
+    : "mono";
 }
 
 function firstNonBlankString(fallback: string, ...values: unknown[]): string {

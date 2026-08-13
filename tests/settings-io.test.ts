@@ -62,6 +62,13 @@ describe("settings-io round-trip（白名单防丢键兜底）", () => {
     expect(serializeLexVoiceSettings(a).schemaVersion).toBe(SETTINGS_SCHEMA_VERSION);
   });
 
+  it("旧版自动声道配置迁移为单声道，显式多声道保持不变", () => {
+    const legacy = normalizeLexVoiceSettings({ settings: { capture: { channelMode: "auto" } } });
+    const explicit = normalizeLexVoiceSettings({ settings: { capture: { channelMode: "multichannel" } } });
+    expect(legacy.audioChannelMode).toBe("mono");
+    expect(explicit.audioChannelMode).toBe("multichannel");
+  });
+
   it("默认设置：DEFAULT_SETTINGS 的每个顶层键都必须在 normalize→serialize→normalize 后原样存活", () => {
     const a = normalizeLexVoiceSettings({});
     const b = roundTrip(a);

@@ -10,8 +10,10 @@ import {
   buildSpeakerMappings,
   clampSpeakerChannelCount,
   extractSpeakerIdsFromMarkdown,
+  normalizeAudioChannelMode,
   normalizeSpeakerMappings,
   replaceSpeakerDisplayName,
+  shouldUseIndependentChannelTranscription,
 } from "../src/audio/channel-speakers";
 import {
   analyzeAudioBufferChannels,
@@ -33,19 +35,24 @@ function makeAudioBuffer(channels: Float32Array[], sampleRate = 1_000): AudioBuf
 }
 
 describe("hardware channel speaker mapping", () => {
-  it("uses the same two-channel acquisition policy for auto and multichannel modes", () => {
+  it("migrates legacy auto mode to mono and only splits channels after explicit opt-in", () => {
+    expect(normalizeAudioChannelMode("auto")).toBe("mono");
+    expect(normalizeAudioChannelMode(undefined)).toBe("mono");
+    expect(shouldUseIndependentChannelTranscription("auto")).toBe(false);
+    expect(shouldUseIndependentChannelTranscription("mono")).toBe(false);
+    expect(shouldUseIndependentChannelTranscription("multichannel")).toBe(true);
     expect(buildMicrophoneAudioConstraints({ channelMode: "auto", deviceId: "dji-rx" })).toMatchObject({
       deviceId: { exact: "dji-rx" },
-      channelCount: { ideal: 2 },
-      echoCancellation: false,
-      noiseSuppression: false,
-      autoGainControl: false,
-    });
-    expect(buildMicrophoneAudioConstraints({ channelMode: "mono", targetChannels: 4 })).toMatchObject({
       channelCount: { ideal: 1 },
       echoCancellation: true,
       noiseSuppression: true,
       autoGainControl: true,
+    });
+    expect(buildMicrophoneAudioConstraints({ channelMode: "multichannel", targetChannels: 4 })).toMatchObject({
+      channelCount: { ideal: 4 },
+      echoCancellation: false,
+      noiseSuppression: false,
+      autoGainControl: false,
     });
   });
 

@@ -710,15 +710,14 @@ export class LexVoiceSettingTab extends obsidian.PluginSettingTab {
     if (mode === "mic" && !isLexVoiceMobileRuntime()) {
       const channelField = grid.createDiv({ cls: "lexvoice-audio-input-field lexvoice-audio-channel-field" });
       const titleRow = channelField.createDiv({ cls: "lexvoice-audio-channel-title-row" });
-      titleRow.createDiv({ cls: "lexvoice-audio-input-label", text: "录音声道" });
+      titleRow.createDiv({ cls: "lexvoice-audio-input-label", text: "按声道区分说话人" });
       const titleActions = titleRow.createDiv({ cls: "lexvoice-audio-channel-title-actions" });
       const channelModeSelect = titleActions.createEl("select", {
         cls: "dropdown lexvoice-audio-channel-mode",
         attr: { "aria-label": "录音声道模式" },
       });
-      channelModeSelect.createEl("option", { value: "auto", text: "自动" });
-      channelModeSelect.createEl("option", { value: "mono", text: "单声道" });
-      channelModeSelect.createEl("option", { value: "multichannel", text: "多声道" });
+      channelModeSelect.createEl("option", { value: "mono", text: "关闭（推荐）" });
+      channelModeSelect.createEl("option", { value: "multichannel", text: "按独立声道区分" });
       channelModeSelect.value = normalizeAudioChannelMode(this.plugin.settings.audioChannelMode);
       channelModeSelect.addEventListener("change", async () => {
         this.plugin.settings.audioChannelMode = normalizeAudioChannelMode(channelModeSelect.value);
@@ -727,16 +726,14 @@ export class LexVoiceSettingTab extends obsidian.PluginSettingTab {
       });
       const detectButton = titleActions.createEl("button", {
         cls: "lexvoice-audio-channel-detect",
-        text: "测试",
+        text: "检测声道",
         attr: { type: "button" },
       });
       const channelHint = channelField.createDiv({ cls: "lexvoice-audio-input-hint lexvoice-audio-channel-hint" });
       const selectedChannelMode = normalizeAudioChannelMode(this.plugin.settings.audioChannelMode);
       channelHint.setText(selectedChannelMode === "mono"
-        ? "将所有输入合并为一个声道。"
-        : selectedChannelMode === "multichannel"
-          ? "保留每个声道，分别转写为不同说话人。"
-          : "自动识别单声道或多声道。");
+        ? "按一路音频转写，不根据左右声道判断说话人。需要时可先检测声道，再手动启用。"
+        : "仅适用于不同发射器已分别输出到独立声道的录音。现场串音可能造成归属错误。");
       const channelResult = channelField.createDiv({ cls: "lexvoice-audio-channel-result" });
       detectButton.onclick = async () => {
         detectButton.disabled = true;
@@ -749,13 +746,14 @@ export class LexVoiceSettingTab extends obsidian.PluginSettingTab {
           const selected = String(this.plugin.settings.selectedMicrophoneDevice || "").trim();
           const audio = buildMicrophoneAudioConstraints({
             deviceId: selected,
-            channelMode: selectedChannelMode,
+            // 检测临时请求多声道，但不改变正式录音设置。
+            channelMode: "multichannel",
             targetChannels: MAX_SPEAKER_CHANNELS,
           });
           stream = await navigator.mediaDevices.getUserMedia({ audio });
           const info = await configureMicrophoneTrackChannels(
             stream.getAudioTracks()[0],
-            selectedChannelMode,
+            "multichannel",
             MAX_SPEAKER_CHANNELS,
           );
           const probeBlob = await recordChannelProbe(stream, 5000);
@@ -767,33 +765,32 @@ export class LexVoiceSettingTab extends obsidian.PluginSettingTab {
           let contentStatus = "未确认";
           let contentState = "warning";
           if (analysis.separation === "separated") {
-            contentStatus = "已分离";
-            contentState = "success";
+            contentStatus = "有明显差异";
           } else if (analysis.separation === "duplicated") {
-            contentStatus = "内容相同";
+            contentStatus = "高度重复";
             contentState = "warning";
           } else if (analysis.separation === "single") {
             contentStatus = "单声道";
             contentState = "muted";
           }
           renderChannelProbeRows(channelResult, [
-            { label: "输入设备", value: `${info.channelCount} 个声道`, state: info.channelCount > 1 ? "success" : "muted" },
-            { label: "测试录音", value: `${analysis.channelCount} 个声道`, state: analysis.channelCount > 1 ? "success" : "muted" },
+            { label: "输入设备", value: `${info.channelCount} 个声道`, state: "muted" },
+            { label: "测试录音", value: `${analysis.channelCount} 个声道`, state: "muted" },
             { label: "检测到声音", value: activeChannels.length ? activeChannels.join("、") : "无", state: activeChannels.length ? "success" : "warning" },
-            { label: "说话人区分", value: contentStatus, state: contentState },
+            { label: "声道差异", value: contentStatus, state: contentState },
           ]);
           if (analysis.separation === "separated") {
-            channelHint.setText("测试通过。各声道将分别标记为说话人1、说话人2……");
-            channelField.addClass("is-multichannel");
-            channelField.removeClass("is-channel-warning");
+            channelHint.setText("检测到声道差异，但这不能证明每个声道只包含一位说话人。请分别讲话并确认另一声道几乎无声音。");
+            channelField.removeClass("is-multichannel");
+            channelField.addClass("is-channel-warning");
           } else if (analysis.separation === "duplicated") {
-            channelHint.setText("各声道内容相同。请在接收器上把输出改为「Stereo（立体声）」后重试。");
+            channelHint.setText("各声道内容高度重复，不适合按声道区分说话人。建议切回“关闭”。");
             channelField.removeClass("is-multichannel");
             channelField.addClass("is-channel-warning");
           } else {
             channelHint.setText(analysis.channelCount > 1
-              ? "未能确认各声道是否分离。请分别对每支麦克风说话后重试。"
-              : "当前录音为单声道，无法按声道区分说话人。");
+              ? "录音包含多个声道，但无法确认隔离效果。建议切回“关闭”。"
+              : "测试录音只有一个声道，请使用“关闭”模式。");
             channelField.removeClass("is-multichannel");
             channelField.addClass("is-channel-warning");
           }
@@ -808,7 +805,7 @@ export class LexVoiceSettingTab extends obsidian.PluginSettingTab {
         } finally {
           if (stream) stream.getTracks().forEach((track) => track.stop());
           detectButton.disabled = false;
-          detectButton.setText("测试");
+          detectButton.setText("检测声道");
         }
       };
     }

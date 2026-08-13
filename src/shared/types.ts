@@ -1,5 +1,7 @@
 export type AudioInputMode = "mic" | "mix-virtual" | "virtualCable";
-export type AudioChannelMode = "auto" | "mono" | "multichannel";
+// "auto" remains accepted only while reading legacy 1.15.x data and is
+// normalized to mono before it reaches PluginSettings.
+export type AudioChannelMode = "mono" | "multichannel";
 export type BubbleSize = "large" | "medium" | "small";
 export type PeopleContextMode = "privacy" | "hotwords" | "localFull";
 export type QuickDictationTarget = "editor" | "clipboard";
@@ -306,6 +308,8 @@ export interface TranscribeQueueTaskPayload {
   sourceUrl?: string;
   sourceTitle?: string;
   sourcePlatform?: string;
+  captureMode?: string;
+  audioChannelMode?: AudioChannelMode;
   audioChannelCount?: number;
 }
 

@@ -34,20 +34,27 @@ function finiteChannelCount(value: unknown, fallback = 1): number {
 
 export function normalizeAudioChannelMode(value: unknown): AudioChannelMode {
   const mode = String(value || "").trim().toLowerCase();
-  if (mode === "mono" || mode === "multichannel") return mode;
-  return "auto";
+  // 1.15.0/1.15.1 stored "auto" for most users. A multi-channel device only
+  // proves that the recording has multiple channels; it does not prove that
+  // each channel contains one isolated speaker. Treat every legacy/unknown
+  // value as mono and require an explicit multichannel opt-in.
+  return mode === "multichannel" ? "multichannel" : "mono";
+}
+
+export function shouldUseIndependentChannelTranscription(value: unknown): boolean {
+  return normalizeAudioChannelMode(value) === "multichannel";
 }
 
 export function buildMicrophoneAudioConstraints(options: {
   deviceId?: string;
-  channelMode?: AudioChannelMode;
+  channelMode?: AudioChannelMode | "auto";
   mobile?: boolean;
   targetChannels?: number;
 } = {}): MediaTrackConstraints {
   const mode = normalizeAudioChannelMode(options.channelMode);
   const deviceId = String(options.deviceId || "").trim();
   const mobile = !!options.mobile;
-  const preserveChannels = !mobile && mode !== "mono";
+  const preserveChannels = !mobile && shouldUseIndependentChannelTranscription(mode);
   const targetChannels = Math.max(1, Math.min(
     MAX_SPEAKER_CHANNELS,
     finiteChannelCount(options.targetChannels, DEFAULT_SPEAKER_CHANNELS),
@@ -119,26 +126,12 @@ export async function negotiateAudioTrackChannels(
 
 export async function configureMicrophoneTrackChannels(
   track: MediaStreamTrack | null | undefined,
-  channelMode: AudioChannelMode,
+  channelMode: AudioChannelMode | "auto",
   targetChannels = DEFAULT_SPEAKER_CHANNELS,
 ): Promise<AudioChannelInfo> {
   const mode = normalizeAudioChannelMode(channelMode);
-  if (mode === "mono") return readAudioTrackChannelInfo(track);
-  let info = await negotiateAudioTrackChannels(track, targetChannels);
-  if (mode === "auto" && info.channelCount <= 1 && track && typeof track.applyConstraints === "function") {
-    try {
-      await track.applyConstraints({
-        channelCount: { ideal: 1 },
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-      });
-      info = readAudioTrackChannelInfo(track);
-    } catch {
-      // Some single-channel drivers expose no processing constraints. Keep the acquired stream.
-    }
-  }
-  return info;
+  if (!shouldUseIndependentChannelTranscription(mode)) return readAudioTrackChannelInfo(track);
+  return negotiateAudioTrackChannels(track, targetChannels);
 }
 
 export function buildSpeakerMappings(

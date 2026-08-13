@@ -70,6 +70,7 @@ import {
   normalizeAudioChannelMode,
   normalizeSpeakerMappings,
   replaceSpeakerDisplayName,
+  shouldUseIndependentChannelTranscription,
   speakerLabelForChannel,
 } from "./audio/channel-speakers";
 import { renderMultichannelAudioBufferSliceToWav, transcribeAudioByChannels } from "./asr/channel-transcription";
@@ -6537,7 +6538,7 @@ async function mergeAndPolish(plugin, segments, mode, recruitContext, sessionMet
     });
     if (adaptiveLength) userPrompt = adaptiveLength + "\n\n---\n\n" + userPrompt;
   }
-  // 多声道分离出的说话人是既定事实：注入硬约束，覆盖各模式里「弱化/不强制标注说话人」的规则。
+  // 用户明确启用独立声道转写后保留其声道标签；标签不是声纹识别结论。
   const knownSpeakerClause = buildKnownSpeakerClause(
     resolveKnownSpeakerLabels(joined, originalFrontmatter),
   );
@@ -17238,8 +17239,9 @@ class LexVoicePlugin extends obsidian.Plugin {
             const reportedChannelCount = session.captureMode === "mic"
               ? Math.max(1, Number(session.audioChannelCount) || 1)
               : 1;
-            const channelMode = normalizeAudioChannelMode(session.audioChannelMode || this.settings.audioChannelMode);
-            const inspectRecordedChannels = session.captureMode === "mic" && channelMode !== "mono";
+            const channelMode = normalizeAudioChannelMode(session.audioChannelMode);
+            const inspectRecordedChannels = session.captureMode === "mic"
+              && shouldUseIndependentChannelTranscription(channelMode);
             // 处理上限按硬件能力放到 4（DJI 一收多发 / 四声道接口）；实际只会处理录音文件里真实存在的声道。
             const expectedChannels = inspectRecordedChannels ? MAX_SPEAKER_CHANNELS : 1;
             if (inspectRecordedChannels) {
@@ -17258,7 +17260,7 @@ class LexVoicePlugin extends obsidian.Plugin {
               if (channelTranscription.usedMultichannel && !session._channelSpeakersNotified) {
                 session._channelSpeakersNotified = true;
                 new obsidian.Notice(
-                  `已按声道区分 ${channelTranscription.processedChannelCount} 位说话人。可在纪要页顶部为他们填写姓名。`,
+                  `已按 ${channelTranscription.processedChannelCount} 个独立声道转写。请检查串音，并在纪要页确认说话人姓名。`,
                   9000,
                 );
               }
@@ -17273,7 +17275,7 @@ class LexVoicePlugin extends obsidian.Plugin {
               }
               if (channelTranscription.separation === "duplicated" && !session._channelDuplicatedNotified) {
                 session._channelDuplicatedNotified = true;
-                new obsidian.Notice("各声道内容相同，已按单声道转写。请在接收器上把输出改为「Stereo（立体声）」后重试。", 10000);
+                new obsidian.Notice("各声道内容高度重复，已按单声道转写。若现场存在串音，请关闭“按声道区分说话人”。", 10000);
                 await this.logDiagnostic("warn", "asr.channel_content_duplicated", "录音多声道内容重复，已回退为单声道转写", {
                   actualChannelCount: channelTranscription.actualChannelCount,
                   inputLabel: session.audioChannelLabel || "",
@@ -17290,7 +17292,7 @@ class LexVoicePlugin extends obsidian.Plugin {
                 session._channelDownmixNotified = true;
                 const actual = channelTranscription.actualChannelCount;
                 new obsidian.Notice(actual > 1
-                  ? `检测到 ${actual} 个可用声道，将按声道区分说话人。`
+                  ? `录音保留 ${actual} 个声道，将按当前设置分别转写。`
                   : "输入设备为多声道，但录音文件只有单声道。本次将按单声道转写。", 9000);
                 await this.logDiagnostic("warn", "asr.channel_encoder_downmix", "录音编码保留的声道少于设备输入声道", {
                   expectedChannelCount: expectedHardwareChannels,
@@ -21358,9 +21360,11 @@ ${source}`;
     try {
       const audioBuffer = await decodeAudioBlob(source.blob);
       const reportedChannelCount = Math.max(1, Number(task.audioChannelCount) || 1);
-      const channelMode = normalizeAudioChannelMode(task.audioChannelMode || this.settings.audioChannelMode);
+      // Older persisted tasks may not carry a channel mode. Missing/legacy
+      // values must recover as mono instead of inheriting a later global choice.
+      const channelMode = normalizeAudioChannelMode(task.audioChannelMode);
       const inspectRecordedChannels = (task.captureMode === "mic" || reportedChannelCount > 1)
-        && channelMode !== "mono";
+        && shouldUseIndependentChannelTranscription(channelMode);
       const requestedChannelCount = inspectRecordedChannels ? MAX_SPEAKER_CHANNELS : 1;
       const sliceBlob = requestedChannelCount > 1
         ? renderMultichannelAudioBufferSliceToWav(audioBuffer, start, end, requestedChannelCount)
@@ -21394,13 +21398,13 @@ ${source}`;
     }
     const audio = await this.readTranscribeTaskAudioBlob(task);
     const reportedChannelCount = Math.max(1, Number(task.audioChannelCount) || 1);
-    const channelMode = normalizeAudioChannelMode(task.audioChannelMode || this.settings.audioChannelMode);
+    const channelMode = normalizeAudioChannelMode(task.audioChannelMode);
     const inspectRecordedChannels = (task.captureMode === "mic" || reportedChannelCount > 1)
-      && channelMode !== "mono";
+      && shouldUseIndependentChannelTranscription(channelMode);
     const expectedChannelCount = inspectRecordedChannels
       ? MAX_SPEAKER_CHANNELS
       : reportedChannelCount;
-    const channelTranscription = inspectRecordedChannels || reportedChannelCount > 1
+    const channelTranscription = inspectRecordedChannels
       ? await transcribeAudioByChannels(this, audio.blob, audio.blob.type || "audio/wav", expectedChannelCount)
       : null;
     const text = channelTranscription

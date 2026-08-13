@@ -186,7 +186,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   filterShortRecordings: true,
 
   captureMode: "mic",
-  audioChannelMode: "auto", // 自动：多声道设备保留声道，普通单声道麦克风继续使用语音增强
+  audioChannelMode: "mono", // 默认不根据声道判断说话人；仅在用户明确启用后保留并分别转写声道
   selectedVirtualDevice: "",  // 用户指定的虚拟声卡 deviceId；空 = 拒绝录制并提示用户选择，插件不自动挑选设备
   selectedMicrophoneDevice: "", // 用户指定的麦克风 deviceId；空 = 使用系统默认输入（非插件挑选），选定设备不可用时直接报错不回退
 
