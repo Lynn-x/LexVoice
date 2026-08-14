@@ -634,17 +634,34 @@ export async function callLlmWithContinuation(plugin, system, user, options, opt
   let text = String(first.text || "");
   let finishReason = first.finishReason;
   let continuations = 0;
-  while (isTruncatedFinishReason(finishReason) && continuations < maxContinuations && text.trim()) {
+  // 思考模式可能耗尽 max_tokens，返回截断状态却没有可见正文；先关闭思考模式重试一次，
+  // 避免空正文直接阻断续写。对未识别的端点，applyThinkingParam 会保持请求不变。
+  const emptyTruncated = !text.trim() && isTruncatedFinishReason(finishReason);
+  const effOptions = emptyTruncated ? Object.assign({}, options, { thinkingMode: "fast" }) : options;
+  if (emptyTruncated) {
+    try {
+      const retry = await callLlmWithMeta(plugin, system, user, effOptions);
+      text = String(retry.text || "");
+      finishReason = retry.finishReason;
+    } catch { /* 重试失败时保留原始结果，交给下方兜底续写 */ }
+  }
+  while (isTruncatedFinishReason(finishReason) && continuations < maxContinuations) {
     continuations++;
-    const messages = [
-      { role: "system", content: system },
-      { role: "user", content: user },
-      { role: "assistant", content: text },
-      { role: "user", content: "你上一条回复因长度上限被截断了。请直接从断点处继续输出剩余内容、无缝衔接，不要重复任何已输出的文字、不要重新开头、不要加任何前言或结束语，直接接着写。" },
-    ];
+    const messages = text.trim()
+      ? [
+          { role: "system", content: system },
+          { role: "user", content: user },
+          { role: "assistant", content: text },
+          { role: "user", content: "你上一条回复因长度上限被截断了。请直接从断点处继续输出剩余内容、无缝衔接，不要重复任何已输出的文字、不要重新开头、不要加任何前言或结束语，直接接着写。" },
+        ]
+      : [
+          { role: "system", content: system },
+          { role: "user", content: user },
+          { role: "user", content: "你上一次生成因思考或输出过长被截断，且没有产生任何可见内容。请忽略截断状态，直接完整回答原始任务，不要提及截断、不要加任何前言。" },
+        ];
     let data;
     try {
-      data = await requestLlmChatCompletion(plugin, messages, options);
+      data = await requestLlmChatCompletion(plugin, messages, effOptions);
     } catch {
       break; // 续写失败就用已有内容，不让整体失败
     }
