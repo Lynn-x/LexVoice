@@ -32,7 +32,7 @@ import type {
   TranscribeProviderSettings,
 } from "./types";
 
-export const SETTINGS_SCHEMA_VERSION = 3;
+export const SETTINGS_SCHEMA_VERSION = 4;
 export const LEGACY_VOCABULARY_FILE = "lexvoice 词汇表.md";
 
 type UnknownRecord = Record<string, unknown>;

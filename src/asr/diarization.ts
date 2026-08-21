@@ -4,6 +4,27 @@ export interface DiarizationRequestOptions {
   supportsPrompt: boolean;
 }
 
+export function normalizeRequestedSpeakerCount(value: unknown): number {
+  const count = Math.floor(Number(value) || 0);
+  if (count < 2) return 0;
+  return Math.min(100, count);
+}
+
+export function buildDashScopeTranscriptionParameters(
+  options: { diarization?: boolean; speakerCount?: number },
+  language?: string,
+): Record<string, unknown> {
+  const parameters: Record<string, unknown> = {
+    channel_id: [0],
+    diarization_enabled: options.diarization !== false,
+  };
+  const speakerCount = normalizeRequestedSpeakerCount(options.speakerCount);
+  if (speakerCount >= 2 && options.diarization !== false) parameters.speaker_count = speakerCount;
+  const normalizedLanguage = typeof language === "string" ? language.trim() : "";
+  if (normalizedLanguage && normalizedLanguage !== "auto") parameters.language_hints = [normalizedLanguage];
+  return parameters;
+}
+
 function providerRecord(provider: unknown): Record<string, unknown> {
   return provider && typeof provider === "object" ? provider as Record<string, unknown> : {};
 }

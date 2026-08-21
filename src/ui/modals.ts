@@ -15,6 +15,88 @@ import { listJDProjects } from '../recruit/jd-projects';
 import { getBuiltInVisiblePolishModeKeys, getCustomPromptModeTemplates, getEffectivePolishMode, getModeMeta, getVisibleModeEntries, isCustomPromptModeTemplate, makeCustomPromptModeId, sanitizePromptTemplate, setLexVoiceModePillIcon } from '../shared/mode-meta';
 import { getActivityStagePosition } from '../shared/activity-progress';
 import { getDesktopProcess } from '../shared/desktop-runtime';
+import { isSpeakerDiarizationProvider, normalizeRequestedSpeakerCount } from '../asr/diarization';
+import { isDashScopeFileTransProvider, resolveImportTranscribeProvider } from '../asr/long-audio-transcription';
+
+function resolveImportSpeakerSelection(plugin) {
+  const provider = resolveImportTranscribeProvider(plugin);
+  const profile = plugin.getTranscribeProviderProfile(provider.id, provider);
+  const supportsDiarization = !!(profile && profile.speakerDiarization)
+    || isSpeakerDiarizationProvider(provider)
+    || isDashScopeFileTransProvider(provider);
+  const supportsExactCount = supportsDiarization && isDashScopeFileTransProvider(provider);
+  const enabled = supportsDiarization && plugin.settings.importSpeakerDiarization !== false;
+  return {
+    supportsDiarization,
+    supportsExactCount,
+    enabled,
+    count: enabled && supportsExactCount
+      ? normalizeRequestedSpeakerCount(plugin.settings.importSpeakerCount)
+      : 0,
+  };
+}
+
+function renderImportSpeakerControl(parent, owner) {
+  const box = parent.createDiv({ cls: "lexvoice-import-mode lexvoice-import-speaker" });
+  const copy = box.createDiv();
+  copy.createDiv({ cls: "lexvoice-import-mode-title", text: "说话人" });
+  const hint = copy.createDiv({ cls: "lexvoice-import-mode-hint" });
+  const control = box.createDiv({ cls: "lexvoice-import-speaker-control" });
+
+  const toggleLabel = control.createEl("label", { cls: "lexvoice-import-speaker-toggle" });
+  const toggle = toggleLabel.createEl("input", { type: "checkbox" });
+  toggleLabel.createSpan({ text: "区分说话人" });
+  toggle.checked = owner.selectedSpeakerDiarization;
+  toggle.disabled = !owner.speakerSelection.supportsDiarization;
+
+  let countInput = null;
+  if (owner.speakerSelection.supportsExactCount) {
+    const numberControl = control.createDiv({ cls: "lexvoice-import-number-control" });
+    countInput = numberControl.createEl("input", {
+      cls: "lexvoice-import-number-input is-compact",
+      attr: {
+        type: "number",
+        min: "2",
+        max: "100",
+        step: "1",
+        inputmode: "numeric",
+        placeholder: "自动",
+        "aria-label": "说话人数",
+      },
+    });
+    countInput.value = owner.selectedSpeakerCount > 0 ? String(owner.selectedSpeakerCount) : "";
+    countInput.disabled = !owner.selectedSpeakerDiarization;
+    numberControl.createSpan({ cls: "lexvoice-import-number-unit", text: "人" });
+    countInput.oninput = () => {
+      const normalized = normalizeRequestedSpeakerCount(countInput.value);
+      owner.selectedSpeakerCount = normalized;
+      if (normalized > 0 && !toggle.checked) {
+        toggle.checked = true;
+        owner.selectedSpeakerDiarization = true;
+        countInput.disabled = false;
+      }
+    };
+  } else {
+    control.createSpan({ cls: "lexvoice-import-speaker-auto", text: "自动识别人数" });
+  }
+
+  if (!owner.speakerSelection.supportsDiarization) {
+    hint.setText("当前导入转写模型不支持说话人区分。");
+  } else if (owner.speakerSelection.supportsExactCount) {
+    hint.setText("填写实际发言人数可减少相近声音被合并；留空则自动识别。");
+  } else {
+    hint.setText("当前模型支持区分说话人，但人数由模型自动识别。");
+  }
+
+  toggle.onchange = () => {
+    owner.selectedSpeakerDiarization = toggle.checked;
+    if (!toggle.checked) owner.selectedSpeakerCount = 0;
+    if (countInput) {
+      countInput.disabled = !toggle.checked;
+      if (!toggle.checked) countInput.value = "";
+    }
+  };
+}
 export function pickReportAccentColor(app, defaultHex) {
   return new Promise((resolve) => {
     const modal = new obsidian.Modal(app);
@@ -2323,6 +2405,9 @@ export class AudioImportOptionsModal extends obsidian.Modal {
       options.mode || plugin.settings.polishMode,
       "meeting",
     );
+    this.speakerSelection = resolveImportSpeakerSelection(plugin);
+    this.selectedSpeakerDiarization = this.speakerSelection.enabled;
+    this.selectedSpeakerCount = this.speakerSelection.count;
     this.onConfirm = typeof options.onConfirm === "function" ? options.onConfirm : null;
   }
 
@@ -2351,9 +2436,11 @@ export class AudioImportOptionsModal extends obsidian.Modal {
       this.selectedMode = getEffectivePolishMode(this.plugin.settings, modeSelect.value, "meeting");
     };
 
+    renderImportSpeakerControl(contentEl, this);
+
     contentEl.createDiv({
       cls: "lexvoice-import-execution-note",
-      text: "音频将按整文件转写。转写服务和说话人识别可在设置的“说话人”页修改。",
+      text: "本次选择只影响当前导入任务；默认转写服务可在设置的“说话人”页修改。",
     });
 
     const actions = contentEl.createDiv({ cls: "lexvoice-import-actions" });
@@ -2362,7 +2449,11 @@ export class AudioImportOptionsModal extends obsidian.Modal {
     const start = actions.createEl("button", { text: "开始转写", cls: "mod-cta", attr: { type: "button" } });
     start.onclick = async () => {
       start.disabled = true;
-      const payload = { mode: this.selectedMode };
+      const payload = {
+        mode: this.selectedMode,
+        speakerDiarization: this.selectedSpeakerDiarization,
+        speakerCount: this.selectedSpeakerDiarization ? this.selectedSpeakerCount : 0,
+      };
       this.close();
       if (this.onConfirm) await this.onConfirm(payload);
     };
@@ -2383,6 +2474,9 @@ export class ImportAudioModal extends obsidian.Modal {
     this.modeSelect = null;
     this.modeHint = null;
     this.selectedMode = getEffectivePolishMode(plugin.settings, plugin.settings.polishMode, "meeting");
+    this.speakerSelection = resolveImportSpeakerSelection(plugin);
+    this.selectedSpeakerDiarization = this.speakerSelection.enabled;
+    this.selectedSpeakerCount = this.speakerSelection.count;
     this.batches = [];
     this.groupCheckboxes = new Map();
     this.fileCheckboxes = new Map();
@@ -2399,9 +2493,10 @@ export class ImportAudioModal extends obsidian.Modal {
     desc.setText(`从 ${this.plugin.settings.audioFolder} 选择音频。支持 WebM、M4A/MP4、MP3、WAV、AAC、OGG、FLAC 等格式；同一次录音的分段会合并显示。`);
 
     this.renderModeControl(contentEl);
+    renderImportSpeakerControl(contentEl, this);
     contentEl.createDiv({
       cls: "lexvoice-import-execution-note",
-      text: "按整文件转写；说话人设置使用“设置 → 说话人”中的配置。",
+      text: "本次选择只影响当前导入任务。",
     });
 
     const folderPath = obsidian.normalizePath(this.plugin.settings.audioFolder);
@@ -2630,7 +2725,10 @@ export class ImportAudioModal extends obsidian.Modal {
     if (!paths.length) return;
     const mode = getEffectivePolishMode(this.plugin.settings, this.selectedMode || this.plugin.settings.polishMode, "meeting");
     this.close();
-    await this.plugin.importAudioFiles(paths, mode);
+    await this.plugin.importAudioFiles(paths, mode, {
+      speakerDiarization: this.selectedSpeakerDiarization,
+      speakerCount: this.selectedSpeakerDiarization ? this.selectedSpeakerCount : 0,
+    });
   }
   onClose() { this.contentEl.empty(); }
 }

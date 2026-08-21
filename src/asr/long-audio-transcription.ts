@@ -2,6 +2,7 @@ import { requestUrl } from "obsidian";
 import { delayMs } from "../shared/util-audio";
 import { formatElapsed } from "../shared/util-common";
 import { resolveTranscribeProvider, transcribeAudio } from "./transcribe";
+import { buildDashScopeTranscriptionParameters } from "./diarization";
 
 export const DASHSCOPE_FILETRANS_PROTOCOL = "dashscope-filetrans";
 
@@ -374,14 +375,7 @@ async function transcribeWithDashScope(
     options.fileName || "",
   );
   notify({ phase: "submit", label: "正在提交转写任务" });
-  const parameters: JsonRecord = {
-    channel_id: [0],
-    diarization_enabled: options.diarization !== false,
-  };
-  const speakerCount = Math.max(0, Math.min(100, Math.floor(Number(options.speakerCount) || 0)));
-  if (speakerCount >= 2 && options.diarization !== false) parameters.speaker_count = speakerCount;
-  const language = asString(provider.language);
-  if (language && language !== "auto") parameters.language_hints = [language];
+  const parameters = buildDashScopeTranscriptionParameters(options, provider.language);
   const submitResponse = await requestUrl({
     url: provider.endpoint,
     method: "POST",

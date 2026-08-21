@@ -2,6 +2,30 @@
 // 由 main.ts 抽出（模块化拆解，提升工程稳定性；纯搬迁、零行为改动）。
 import type { PluginSettings } from "./types";
 
+export const LEGACY_DEFAULT_LIBRARY_PATHS = {
+  vocabularyFile: "LexVoice/词汇表.md",
+  peopleDirectoryFolder: "LexVoice/人员",
+  peopleBaseFile: "LexVoice/人员库.base",
+  learningCardsFolder: "LexVoice/学习卡片",
+  todoCardsFolder: "LexVoice/待办卡片",
+  lexVoiceBasesFolder: "LexVoice/视图",
+  diagnosticsLogFolder: "LexVoice/诊断日志",
+  archiveFolder: "LexVoice/归档",
+  duplicatePeopleArchiveFolder: "LexVoice/归档/重复人员",
+} as const;
+
+export const DEFAULT_LIBRARY_PATHS = {
+  vocabularyFile: "LexVoice/资料库/词汇表.md",
+  peopleDirectoryFolder: "LexVoice/资料库/人员",
+  peopleBaseFile: "LexVoice/资料库/视图/人员库.base",
+  learningCardsFolder: "LexVoice/资料库/学习卡片",
+  todoCardsFolder: "LexVoice/资料库/待办",
+  lexVoiceBasesFolder: "LexVoice/资料库/视图",
+  diagnosticsLogFolder: "LexVoice/系统/诊断日志",
+  archiveFolder: "LexVoice/资料库/归档",
+  duplicatePeopleArchiveFolder: "LexVoice/资料库/归档/重复人员",
+} as const;
+
 export const DEFAULT_DAILY_MEETING_OVERVIEW_HEADING = "今日会议概要";
 
 export const DEFAULT_DAILY_MEETING_OVERVIEW_TEMPLATE = [
@@ -173,14 +197,14 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   },
 
   customVocabulary: "",
-  vocabularyFile: "LexVoice/词汇表.md",
-  peopleDirectoryFolder: "LexVoice/人员",
-  peopleBaseFile: "LexVoice/人员库.base",
-  learningCardsFolder: "LexVoice/学习卡片",
-  todoCardsFolder: "LexVoice/待办卡片",
+  vocabularyFile: DEFAULT_LIBRARY_PATHS.vocabularyFile,
+  peopleDirectoryFolder: DEFAULT_LIBRARY_PATHS.peopleDirectoryFolder,
+  peopleBaseFile: DEFAULT_LIBRARY_PATHS.peopleBaseFile,
+  learningCardsFolder: DEFAULT_LIBRARY_PATHS.learningCardsFolder,
+  todoCardsFolder: DEFAULT_LIBRARY_PATHS.todoCardsFolder,
   sedimentAutoExtract: false,  // 默认关闭：转写完成不自动沉淀，手动点「沉淀」再扫描（省 token）；开启则转写完成后自动扫描并入库
 
-  lexVoiceBasesFolder: "LexVoice/视图",
+  lexVoiceBasesFolder: DEFAULT_LIBRARY_PATHS.lexVoiceBasesFolder,
   peopleContextMode: "privacy",
   peopleHotwordsConsentAt: "",
   peopleSuggestionIgnores: [],
@@ -213,7 +237,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 
   maxRetries: 3,
   diagnosticsLogEnabled: true,
-  diagnosticsLogFolder: "LexVoice/诊断日志",
+  diagnosticsLogFolder: DEFAULT_LIBRARY_PATHS.diagnosticsLogFolder,
 
   showFloatingBall: true,
   bubbleSize: "large",  // 悬浮气泡大小：large / medium / small

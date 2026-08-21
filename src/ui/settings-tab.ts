@@ -1972,11 +1972,11 @@ export class LexVoiceSettingTab extends obsidian.PluginSettingTab {
     const advancedBody = c;
     this.createSettingsSubhead(advancedBody, "保存位置", "这些路径都是当前 Obsidian 库内的相对路径，只影响后续新建内容。");
 
-    vocabPathSetting = createPathSetting(advancedBody, "转写词表文件", "用于保存专有名词、术语和易错写法。", this.plugin.settings.vocabularyFile || DEFAULT_SETTINGS.vocabularyFile, "LexVoice/词汇表.md",
+    vocabPathSetting = createPathSetting(advancedBody, "转写词表文件", "用于保存专有名词、术语和易错写法。", this.plugin.settings.vocabularyFile || DEFAULT_SETTINGS.vocabularyFile, DEFAULT_SETTINGS.vocabularyFile,
       async v => { this.plugin.settings.vocabularyFile = v || DEFAULT_SETTINGS.vocabularyFile; },
       refreshVocabStatus);
 
-    createPathSetting(advancedBody, "人员资料文件夹", "一人一篇 Markdown，用于长期维护姓名、常用称呼、角色、组织和相关纪要。", this.plugin.settings.peopleDirectoryFolder || DEFAULT_SETTINGS.peopleDirectoryFolder, "LexVoice/人员",
+    createPathSetting(advancedBody, "人员资料文件夹", "一人一篇 Markdown，用于长期维护姓名、常用称呼、角色、组织和相关纪要。", this.plugin.settings.peopleDirectoryFolder || DEFAULT_SETTINGS.peopleDirectoryFolder, DEFAULT_SETTINGS.peopleDirectoryFolder,
       async v => { this.plugin.settings.peopleDirectoryFolder = v || DEFAULT_SETTINGS.peopleDirectoryFolder; },
       async setting => {
         try {
@@ -1987,21 +1987,21 @@ export class LexVoiceSettingTab extends obsidian.PluginSettingTab {
         }
       });
 
-    createPathSetting(advancedBody, "学习卡片文件夹", "用于保存概念、机制、案例、QA、追问和观点卡片。", this.plugin.settings.learningCardsFolder || DEFAULT_SETTINGS.learningCardsFolder, "LexVoice/学习卡片",
+    createPathSetting(advancedBody, "学习卡片文件夹", "用于保存概念、机制、案例、QA、追问和观点卡片。", this.plugin.settings.learningCardsFolder || DEFAULT_SETTINGS.learningCardsFolder, DEFAULT_SETTINGS.learningCardsFolder,
       async v => { this.plugin.settings.learningCardsFolder = v || DEFAULT_SETTINGS.learningCardsFolder; },
       async setting => {
         const count = countMarkdownInFolder(this.plugin.settings.learningCardsFolder || DEFAULT_SETTINGS.learningCardsFolder);
         setting.setDesc(`当前 ${count} 张学习卡片。卡片负责复用，原始依据仍回链到纪要。`);
       });
 
-    createPathSetting(advancedBody, "待办卡片文件夹", "用于保存从纪要中确认后的行动项卡片。", this.plugin.settings.todoCardsFolder || DEFAULT_SETTINGS.todoCardsFolder, "LexVoice/待办卡片",
+    createPathSetting(advancedBody, "待办文件夹", "用于保存从纪要中确认后的行动项。", this.plugin.settings.todoCardsFolder || DEFAULT_SETTINGS.todoCardsFolder, DEFAULT_SETTINGS.todoCardsFolder,
       async v => { this.plugin.settings.todoCardsFolder = v || DEFAULT_SETTINGS.todoCardsFolder; },
       async setting => {
         const count = countMarkdownInFolder(this.plugin.settings.todoCardsFolder || DEFAULT_SETTINGS.todoCardsFolder);
         setting.setDesc(`当前 ${count} 张待办卡片。待办卡片适合跟踪跨会议、跨项目的行动项。`);
       });
 
-    createPathSetting(advancedBody, "视图文件夹", "保存 LexVoice 生成的资料总览和 Base 视图。", this.plugin.settings.lexVoiceBasesFolder || DEFAULT_SETTINGS.lexVoiceBasesFolder, "LexVoice/视图",
+    createPathSetting(advancedBody, "视图文件夹", "保存 LexVoice 生成的资料总览和 Base 视图。", this.plugin.settings.lexVoiceBasesFolder || DEFAULT_SETTINGS.lexVoiceBasesFolder, DEFAULT_SETTINGS.lexVoiceBasesFolder,
       async v => { this.plugin.settings.lexVoiceBasesFolder = v || DEFAULT_SETTINGS.lexVoiceBasesFolder; });
 
     const vocabScanCount = countKnowledgeExtractionHistory(this.plugin.settings, "vocabulary");

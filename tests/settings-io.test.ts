@@ -43,7 +43,7 @@ import {
   normalizeLexVoiceSettings,
   serializeLexVoiceSettings,
 } from "../src/shared/settings-io";
-import { DEFAULT_SETTINGS } from "../src/shared/defaults";
+import { DEFAULT_LIBRARY_PATHS, DEFAULT_SETTINGS } from "../src/shared/defaults";
 import type { PluginSettings } from "../src/shared/types";
 
 // 模拟真实的「保存 → 落盘 → 重启读回」链路：
@@ -57,6 +57,19 @@ function roundTrip(settings: PluginSettings): PluginSettings {
 }
 
 describe("settings-io round-trip（白名单防丢键兜底）", () => {
+  it("默认资料目录集中在资料库，诊断日志集中在系统目录", () => {
+    expect(DEFAULT_SETTINGS.vocabularyFile).toBe("LexVoice/资料库/词汇表.md");
+    expect(DEFAULT_SETTINGS.peopleDirectoryFolder).toBe("LexVoice/资料库/人员");
+    expect(DEFAULT_SETTINGS.peopleBaseFile).toBe("LexVoice/资料库/视图/人员库.base");
+    expect(DEFAULT_SETTINGS.learningCardsFolder).toBe("LexVoice/资料库/学习卡片");
+    expect(DEFAULT_SETTINGS.todoCardsFolder).toBe("LexVoice/资料库/待办");
+    expect(DEFAULT_SETTINGS.lexVoiceBasesFolder).toBe("LexVoice/资料库/视图");
+    expect(DEFAULT_SETTINGS.diagnosticsLogFolder).toBe("LexVoice/系统/诊断日志");
+    expect(DEFAULT_LIBRARY_PATHS.archiveFolder).toBe("LexVoice/资料库/归档");
+    expect(DEFAULT_LIBRARY_PATHS.duplicatePeopleArchiveFolder).toBe("LexVoice/资料库/归档/重复人员");
+    expect(SETTINGS_SCHEMA_VERSION).toBe(4);
+  });
+
   it("serialize 输出携带 schemaVersion", () => {
     const a = normalizeLexVoiceSettings({});
     expect(serializeLexVoiceSettings(a).schemaVersion).toBe(SETTINGS_SCHEMA_VERSION);
@@ -86,6 +99,13 @@ describe("settings-io round-trip（白名单防丢键兜底）", () => {
     a.inboxFolder = "收件箱";
     a.reportBrandName = "测试公司";
     a.customVocabulary = "术语A，术语B";
+    a.vocabularyFile = "自定义/词汇表.md";
+    a.peopleDirectoryFolder = "自定义/人员";
+    a.peopleBaseFile = "自定义/视图/人员库.base";
+    a.learningCardsFolder = "自定义/学习卡片";
+    a.todoCardsFolder = "自定义/待办";
+    a.lexVoiceBasesFolder = "自定义/视图";
+    a.diagnosticsLogFolder = "自定义/诊断日志";
 
     // 布尔开关类（含「默认 true 改 false」这种最容易被 || 兜底吃掉的方向）
     a.inboxAutoImport = false;
@@ -144,6 +164,13 @@ describe("settings-io round-trip（白名单防丢键兜底）", () => {
     expect(b.inboxFolder).toBe("收件箱");
     expect(b.reportBrandName).toBe("测试公司");
     expect(b.customVocabulary).toBe("术语A，术语B");
+    expect(b.vocabularyFile).toBe("自定义/词汇表.md");
+    expect(b.peopleDirectoryFolder).toBe("自定义/人员");
+    expect(b.peopleBaseFile).toBe("自定义/视图/人员库.base");
+    expect(b.learningCardsFolder).toBe("自定义/学习卡片");
+    expect(b.todoCardsFolder).toBe("自定义/待办");
+    expect(b.lexVoiceBasesFolder).toBe("自定义/视图");
+    expect(b.diagnosticsLogFolder).toBe("自定义/诊断日志");
 
     expect(b.inboxAutoImport).toBe(false);
     expect(b.consolidatedLayout).toBe(false);

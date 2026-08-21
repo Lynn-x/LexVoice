@@ -1,4 +1,4 @@
-export const BRIEFING_PIPELINE_VERSION = 3;
+export const BRIEFING_PIPELINE_VERSION = 5;
 
 export type BriefingSegment = {
   index?: number;
@@ -38,7 +38,7 @@ export type BriefingPartCheckpoint = {
   outputRatio?: number;
   minimumOutputChars?: number;
   targetOutputChars?: number;
-  qualityStatus?: "pending" | "ok" | "under-detailed";
+  qualityStatus?: "pending" | "ok" | "under-detailed" | "under-grounded";
   repairAttempts?: number;
   updatedAt: string;
 };
@@ -93,6 +93,14 @@ export type BriefingFidelityAssessment = {
   minimumOutputChars: number;
   targetOutputChars: number;
   needsExpansion: boolean;
+};
+
+export type BriefingGroundingAssessment = {
+  anchors: string[];
+  missingAnchors: string[];
+  matchedAnchors: number;
+  ratio: number;
+  needsRepair: boolean;
 };
 
 export const EMPTY_BRIEFING_USAGE: BriefingUsage = {
@@ -159,14 +167,73 @@ export function createBriefingJobId(input: {
   };
 }
 
+function splitBriefingTextAtBoundaries(value: unknown, maxChars: number): string[] {
+  let remaining = cleanText(value);
+  if (!remaining) return [];
+  const limit = Math.max(2_000, Math.floor(Number(maxChars) || 12_000));
+  const chunks: string[] = [];
+  while (remaining.length > limit) {
+    const floor = Math.floor(limit * 0.62);
+    const window = remaining.slice(0, limit + 1);
+    let cut = -1;
+    for (const pattern of [/\n\s*\n/g, /[。！？!?；;]\s*/g, /[，,、：:]\s*/g]) {
+      pattern.lastIndex = floor;
+      let match: RegExpExecArray | null;
+      while ((match = pattern.exec(window))) cut = Math.max(cut, match.index + match[0].length);
+    }
+    if (cut < floor) cut = limit;
+    const chunk = remaining.slice(0, cut).trim();
+    if (chunk) chunks.push(chunk);
+    remaining = remaining.slice(cut).trimStart();
+  }
+  if (remaining.trim()) chunks.push(remaining.trim());
+  return chunks;
+}
+
+/**
+ * Whole-file ASR and diarization providers may return a multi-hour transcript
+ * as one segment. Treating that segment as atomic defeats the long-meeting
+ * pipeline, so create internal virtual segments while retaining interpolated
+ * time ranges. These boundaries never appear in the final note.
+ */
+export function expandOversizedBriefingSegments(
+  inputSegments: BriefingSegment[],
+  targetChars: number,
+): BriefingSegment[] {
+  const limit = Math.max(4_000, Math.floor(Number(targetChars) || 24_000));
+  const expanded: BriefingSegment[] = [];
+  for (const source of Array.isArray(inputSegments) ? inputSegments : []) {
+    const text = cleanText(source?.text);
+    if (!text) continue;
+    const pieces = text.length > limit * 1.15
+      ? splitBriefingTextAtBoundaries(text, limit)
+      : [text];
+    const start = finiteNonNegative(source?.startOffsetMs);
+    const end = Math.max(start, finiteNonNegative(source?.endOffsetMs));
+    let consumedChars = 0;
+    for (const piece of pieces) {
+      const pieceStartRatio = text.length ? consumedChars / text.length : 0;
+      consumedChars += piece.length;
+      const pieceEndRatio = text.length ? Math.min(1, consumedChars / text.length) : 1;
+      expanded.push({
+        ...source,
+        index: expanded.length,
+        startOffsetMs: Math.round(start + (end - start) * pieceStartRatio),
+        endOffsetMs: Math.round(start + (end - start) * pieceEndRatio),
+        text: piece,
+      });
+    }
+  }
+  return expanded;
+}
+
 export function planBriefingParts(
   inputSegments: BriefingSegment[],
   targetChars = 24000,
 ): BriefingPartPlan[] {
-  const segments = (Array.isArray(inputSegments) ? inputSegments : [])
-    .filter((segment) => cleanText(segment?.text));
-  if (!segments.length) return [];
   const limit = Math.max(4000, Math.floor(Number(targetChars) || 24000));
+  const segments = expandOversizedBriefingSegments(inputSegments, limit);
+  if (!segments.length) return [];
   const totalChars = segments.reduce((sum, segment) => sum + cleanText(segment.text).length, 0);
   const desiredPartCount = Math.max(1, Math.ceil(totalChars / limit));
   const balancedTarget = Math.max(1, Math.ceil(totalChars / desiredPartCount));
@@ -193,8 +260,8 @@ export function planBriefingParts(
   return groups.map((group, index) => {
     const first = group[0];
     const last = group[group.length - 1];
-    const segmentStart = Number.isFinite(Number(first.index)) ? Number(first.index) : inputSegments.indexOf(first);
-    const segmentEnd = Number.isFinite(Number(last.index)) ? Number(last.index) : inputSegments.indexOf(last);
+    const segmentStart = Number.isFinite(Number(first.index)) ? Number(first.index) : segments.indexOf(first);
+    const segmentEnd = Number.isFinite(Number(last.index)) ? Number(last.index) : segments.indexOf(last);
     return {
       index,
       segments: group,
@@ -282,6 +349,46 @@ export function assessBriefingPartFidelity(
     minimumOutputChars,
     targetOutputChars,
     needsExpansion: outputChars < minimumOutputChars,
+  };
+}
+
+function normalizeGroundingAnchor(value: unknown): string {
+  return cleanText(value).toLocaleLowerCase().replace(/[\s`*_~，。！？、；：,.!?;:'"“”‘’（）()\u005b\u005d【】<>《》]/g, "");
+}
+
+export function extractBriefingGroundingAnchors(source: unknown): string[] {
+  const text = cleanText(source)
+    .replace(/^===SEG[^\n]*$/gmi, "")
+    .replace(/^TIME\s*:[^\n]*$/gmi, "");
+  if (!text) return [];
+  const candidates: string[] = [];
+  for (const match of text.matchAll(/\b[A-Za-z][A-Za-z0-9._/+:-]{2,40}\b/g)) candidates.push(match[0]);
+  for (const match of text.matchAll(/(?:\d+(?:\.\d+)?\s*(?:%|％|万|亿|元|人|个|次|天|周|月|年|分钟|小时|GB|MB|K|M)|\b\d{2,}(?:\.\d+)?\b)/gi)) candidates.push(match[0]);
+  for (const match of text.matchAll(/[“「『"]([^”」』"\n]{2,28})[”」』"]/g)) candidates.push(match[1]);
+  const seen = new Set<string>();
+  const anchors: string[] = [];
+  for (const candidate of candidates) {
+    const normalized = normalizeGroundingAnchor(candidate);
+    if (normalized.length < 2 || seen.has(normalized) || /^seg\d*$/i.test(normalized)) continue;
+    seen.add(normalized);
+    anchors.push(cleanText(candidate));
+    if (anchors.length >= 80) break;
+  }
+  return anchors;
+}
+
+export function assessBriefingPartGrounding(source: unknown, output: unknown): BriefingGroundingAssessment {
+  const anchors = extractBriefingGroundingAnchors(source);
+  const normalizedOutput = normalizeGroundingAnchor(output);
+  const missingAnchors = anchors.filter((anchor) => !normalizedOutput.includes(normalizeGroundingAnchor(anchor)));
+  const matchedAnchors = anchors.length - missingAnchors.length;
+  const ratio = anchors.length ? matchedAnchors / anchors.length : 1;
+  return {
+    anchors,
+    missingAnchors,
+    matchedAnchors,
+    ratio,
+    needsRepair: anchors.length >= 4 && ratio < 0.35,
   };
 }
 
@@ -391,7 +498,77 @@ export function assembleBriefingParts(parts: BriefingPartCheckpoint[]): string {
       incomplete.map((part) => part.index),
     );
   }
-  return ordered.map((part) => normalizeBriefingPartBody(part.text)).filter(Boolean).join("\n\n");
+  const fragmentMode = ordered.length > 1;
+  return ordered
+    .map((part) => normalizeBriefingPartBody(part.text, { fragmentMode }))
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+export type BriefingPartEnvelope = {
+  body: string;
+  summary: string;
+};
+
+function extractCalloutBlock(value: string, kindPattern: string): { block: string; content: string } | null {
+  const lines = value.split(/\r?\n/);
+  const start = lines.findIndex((line) => new RegExp(`^\\s*>\\s*\\[!(?:${kindPattern})\\]`, "i").test(line));
+  if (start < 0) return null;
+  let end = start + 1;
+  while (end < lines.length && /^\s*>/.test(lines[end])) end += 1;
+  const blockLines = lines.slice(start, end);
+  const content = blockLines
+    .slice(1)
+    .map((line) => line.replace(/^\s*>\s?/, "").trim())
+    .filter(Boolean)
+    .join(" ");
+  return { block: blockLines.join("\n"), content };
+}
+
+function stripLeakedBriefingMarkers(value: string): string {
+  return value
+    .replace(/^\s*>?\s*lexvoice-part-summary(?:\s*:.*)?\s*$(?:\r?\n\s*>[^\n]*)*/gim, "")
+    .replace(/^\s*>?\s*lexvoice-(?:people|tags)(?:\s*:.*)?\s*$/gim, "");
+}
+
+/** Extract the internal part protocol while tolerating weak-model variants. */
+export function extractBriefingPartEnvelope(value: unknown): BriefingPartEnvelope {
+  const raw = cleanText(value);
+  if (!raw) return { body: "", summary: "" };
+
+  const bodyMatch = raw.match(/<!--\s*lexvoice-part-body-start\s*-->([\s\S]*?)<!--\s*lexvoice-part-body-end\s*-->/i);
+  const summaryMatch = raw.match(/<!--\s*lexvoice-part-summary\s*:\s*([\s\S]*?)\s*-->/i);
+  let summary = cleanText(summaryMatch?.[1]);
+  if (!summary) {
+    const lines = raw.split(/\r?\n/);
+    const markerIndex = lines.findIndex((line) => /^\s*>?\s*lexvoice-part-summary(?:\s*:.*)?\s*$/i.test(line));
+    if (markerIndex >= 0) {
+      const inline = lines[markerIndex].replace(/^\s*>?\s*lexvoice-part-summary\s*:?\s*/i, "").trim();
+      if (inline) {
+        summary = inline;
+      } else {
+        const following: string[] = [];
+        for (let index = markerIndex + 1; index < lines.length; index += 1) {
+          const line = lines[index];
+          if (/^\s*#{1,6}\s+/.test(line)) break;
+          if (!/^\s*>/.test(line) && line.trim()) break;
+          const content = line.replace(/^\s*>\s?/, "").trim();
+          if (content) following.push(content);
+        }
+        summary = cleanText(following.join(" "));
+      }
+    }
+  }
+  const abstract = extractCalloutBlock(raw, "abstract|summary");
+  if (!summary && abstract?.content) summary = abstract.content;
+
+  let body = bodyMatch ? bodyMatch[1] : raw;
+  body = stripLeakedBriefingMarkers(body)
+    .replace(/<!--\s*lexvoice-part-(?:body-start|body-end)\s*-->/gi, "")
+    .replace(/<!--\s*lexvoice-part-summary\s*:[\s\S]*?-->/gi, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  return { body, summary };
 }
 
 /**
@@ -400,13 +577,32 @@ export function assembleBriefingParts(parts: BriefingPartCheckpoint[]): string {
  * model responses may still contain a generated "part N" heading, so remove
  * only that implementation-specific wrapper before deterministic assembly.
  */
-export function normalizeBriefingPartBody(value: unknown): string {
-  return cleanText(value)
+export function normalizeBriefingPartBody(
+  value: unknown,
+  options: { fragmentMode?: boolean } = {},
+): string {
+  let normalized = stripLeakedBriefingMarkers(cleanText(value))
+    .replace(/<!--\s*lexvoice-part-(?:body-start|body-end)\s*-->/gi, "")
+    .replace(/<!--\s*lexvoice-part-summary\s*:[\s\S]*?-->/gi, "")
     .replace(
       /^\s*#{1,6}\s*(?:第\s*\d+\s*(?:\/\s*\d+\s*)?(?:部分|分部|时段)|(?:内部)?(?:时间窗口|转写窗口|分段)\s*\d+)(?:\s*[·:：—-]\s*[^\n]*)?\s*\n+/gim,
       "",
     )
     .trim();
+
+  if (options.fragmentMode) {
+    normalized = normalized.replace(/^\s*#\s+[^\n]+\n+/gm, "").trim();
+    const leadingCallout = extractCalloutBlock(normalized, "abstract|summary");
+    if (leadingCallout && normalized.indexOf(leadingCallout.block) < 8) {
+      normalized = normalized.replace(leadingCallout.block, "").trim();
+    }
+    normalized = normalized
+      .replace(/^(\s*#{2,3}\s+)(?:[一二三四五六七八九十百]+|\d+)[、.．]\s*/gm, "$1")
+      .replace(/^\s*---\s*$/gm, "")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+  }
+  return normalized;
 }
 
 export class BriefingPipelineIncompleteError extends Error {

@@ -6,7 +6,9 @@ import {
 } from "../src/asr/speaker-mapping";
 import {
   getSpeakerDiarizationRequestOptions,
+  buildDashScopeTranscriptionParameters,
   isSpeakerDiarizationProvider,
+  normalizeRequestedSpeakerCount,
 } from "../src/asr/diarization";
 
 describe("speaker confirmation preparation", () => {
@@ -34,6 +36,26 @@ describe("speaker confirmation preparation", () => {
 });
 
 describe("diarization provider protocol", () => {
+  it("normalizes an explicit participant count for one import task", () => {
+    expect(normalizeRequestedSpeakerCount("3")).toBe(3);
+    expect(normalizeRequestedSpeakerCount(1)).toBe(0);
+    expect(normalizeRequestedSpeakerCount(200)).toBe(100);
+    expect(normalizeRequestedSpeakerCount("")).toBe(0);
+  });
+
+  it("passes the requested participant count to DashScope diarization", () => {
+    expect(buildDashScopeTranscriptionParameters({ diarization: true, speakerCount: 3 }, "zh")).toEqual({
+      channel_id: [0],
+      diarization_enabled: true,
+      speaker_count: 3,
+      language_hints: ["zh"],
+    });
+    expect(buildDashScopeTranscriptionParameters({ diarization: false, speakerCount: 3 })).toEqual({
+      channel_id: [0],
+      diarization_enabled: false,
+    });
+  });
+
   it("uses OpenAI diarized JSON and automatic server chunking", () => {
     const provider = { model: "gpt-4o-transcribe-diarize", protocol: "openai-diarized-transcription" };
     expect(isSpeakerDiarizationProvider(provider)).toBe(true);

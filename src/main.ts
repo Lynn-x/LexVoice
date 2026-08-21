@@ -5,8 +5,10 @@ import * as obsidian from "obsidian";
 // 这里 import 回来，保持原有调用点用裸名引用不变。
 import { normalizeRealtimeOutlineList, parseRecruitRealtimeOutlineProtocol, buildRecruitRealtimeOutlineFallback, buildRecruitRealtimeOutlineMemory, advanceRealtimeOutlineCursor, hashRealtimeOutlineText, getRealtimeOutlineAnchorTime, cleanRealtimeOutlineItemText, makeRealtimeOutlineNode, parseRealtimeOutlineStateFromMarkdown, selectIncrementalRealtimeOutlineSegments, repairRealtimeOutlineAnchors, mergeStableRealtimeOutlineNodes, normalizeOutlineMarkdownForDisplay, validateRealtimeOutlineMarkdown, mergeCoverageNoRegress, deriveFollowupCards, findLowEvidenceEntities, sanitizeProjectFolderName, recolorReportHtml, desensitizeResumeText } from "./outline-text";
 import { drainRealtimeOutlineBacklog } from "./outline-finalizer";
-import { buildSemanticOutlinePrompt, parseSemanticOutlineGraph, buildSemanticCanvasDocument, normalizeJsonCanvasDocument, getSemanticCanvasPath, extractSemanticSourceSections } from "./canvas/semantic-outline-canvas";
+import { buildSemanticOutlinePrompt, buildSemanticBranchExpansionPrompt, parseSemanticOutlineGraph, parseSemanticBranchExpansion, replaceSemanticBranch, buildSemanticCanvasDocument, normalizeJsonCanvasDocument, getSemanticCanvasPath, extractSemanticSourceSections, getSemanticGenerationPolicy } from "./canvas/semantic-outline-canvas";
+import { inferSemanticCanvasSourcePath, parseSemanticCanvasSourcePath } from "./canvas/source-note";
 import { LexVoiceSettingTab } from "./ui/settings-tab";
+import { MinutesKanbanView, VIEW_TYPE_MINUTES_KANBAN } from "./ui/minutes-kanban-view";
 import { getDesktopModule, getDesktopProcess } from "./shared/desktop-runtime";
 import { pickReportAccentColor, AudioTimeModal, PeopleDirectorySuggestionModal, SpeakerNameConfirmModal, QueueModal, VirtualCableSetupModal, RecruitContextModal, ImportTextModal, ImportAudioModal, AudioImportOptionsModal, BubbleWidget } from "./ui/modals";
 import { stripLexVoiceFrontmatterSimple, getRecentNoteProcessingState, lexvoiceConfirm, enumerateAudioDevices, trashLexVoiceFile, normalizeAudioInputMode, audioInputModeLabel } from "./ui/helpers";
@@ -25,7 +27,7 @@ import { PEOPLE_SUGGESTION_CACHE_LIMIT, splitPersonFieldValue, normalizePersonLo
 import { getSedimentTodoId, getSedimentCardId, getSedimentHotwordId, getSedimentPersonId, withSedimentCandidateIds, removeSedimentGroupDone, sanitizeSedimentText, normalizeSedimentTodoSubtasks, normalizeSedimentExtractionModel, stripSedimentPreExtractionBlocks, extractSedimentPreExtractionBlock, splitOutSedimentBlock, appendSedimentPreExtractionBlock, upsertSedimentPreExtractionBlockInFile, generateSedimentObjects, writeSedimentObjectCards } from "./sediment";
 import { createVocabularyGroups, parseVocabularyGroups, flattenVocabularyGroups, countVocabularyGroups, normalizeVocabularyInput, mergeVocabularyGroups, isStructuredVocabularyMarkdown, loadVocabularyGroups, formatVocabularyMarkdown, applyVocabularyCorrections } from "./vocabulary";
 import { logLlmRequestDiagnostic, getLlmConfigIssue, isLlmConfigError, isLlmServiceBlockedError, isLlmNonRetryableError, isLlmContextLimitError, formatLlmConfigIssue, formatLlmFailureIssue, callLlm, callBriefingMergeLlm, stripModeSuggestionBlocks } from "./llm/core";
-import { DEFAULT_DAILY_MEETING_OVERVIEW_HEADING, DEFAULT_DAILY_MEETING_OVERVIEW_TEMPLATE, DEFAULT_SETTINGS } from "./shared/defaults";
+import { DEFAULT_DAILY_MEETING_OVERVIEW_HEADING, DEFAULT_DAILY_MEETING_OVERVIEW_TEMPLATE, DEFAULT_LIBRARY_PATHS, DEFAULT_SETTINGS, LEGACY_DEFAULT_LIBRARY_PATHS } from "./shared/defaults";
 // 设置序列化层已抽到独立模块（src/shared/settings-io.ts）并由 round-trip 测试覆盖（tests/settings-io.test.ts）。
 // 这里 import 回来，保持原有调用点用裸名引用不变。
 import { SETTINGS_SCHEMA_VERSION, LEGACY_VOCABULARY_FILE, normalizeLexVoiceSettings, serializeLexVoiceSettings, extractLexVoiceJobItems } from "./shared/settings-io";
@@ -81,10 +83,10 @@ import {
 } from "./audio/channel-speakers";
 import { renderMultichannelAudioBufferSliceToWav, transcribeAudioByChannels } from "./asr/channel-transcription";
 import { applySpeakerNamesForLlm, buildConfirmedSpeakerMappings, collectSpeakerCandidates } from "./asr/speaker-mapping";
-import { isSpeakerDiarizationProvider } from "./asr/diarization";
+import { isSpeakerDiarizationProvider, normalizeRequestedSpeakerCount } from "./asr/diarization";
 import { isDashScopeFileTransProvider, resolveImportTranscribeProvider, transcribeImportedAudio } from "./asr/long-audio-transcription";
 import { BriefingCheckpointStore } from "./briefing/checkpoint-store";
-import { BriefingPipelineIncompleteError, assembleBriefingParts, assessBriefingPartFidelity, buildProgrammaticTopicMap, createBriefingJobId, getBriefingFidelityPolicy, getBriefingPartTargetChars, normalizeBriefingPartBody, planBriefingParts, reconcileBriefingCheckpoint } from "./briefing/pipeline";
+import { BriefingPipelineIncompleteError, assembleBriefingParts, assessBriefingPartFidelity, assessBriefingPartGrounding, buildProgrammaticTopicMap, createBriefingJobId, extractBriefingPartEnvelope, getBriefingFidelityPolicy, getBriefingPartTargetChars, normalizeBriefingPartBody, planBriefingParts, reconcileBriefingCheckpoint } from "./briefing/pipeline";
 import {
   ExternalInboxScanner,
   createExternalInboxLedger,
@@ -214,9 +216,9 @@ function legacyPromptFieldForMode(mode) {
 
 
 // 结构化程度三档 —— 控制主体内容的层级深度
-// LexVoice 视图（.base 文件）—— 默认创建到 LexVoice/视图/{按模式,场景}/ 目录下，可在设置里修改。
+// LexVoice 视图（.base 文件）—— 默认创建到资料库的视图目录，可在设置里修改。
 function getLexVoiceBasesFolder(settings) {
-  return obsidian.normalizePath((settings && settings.lexVoiceBasesFolder) || DEFAULT_SETTINGS.lexVoiceBasesFolder || "LexVoice/视图");
+  return obsidian.normalizePath((settings && settings.lexVoiceBasesFolder) || DEFAULT_SETTINGS.lexVoiceBasesFolder || DEFAULT_LIBRARY_PATHS.lexVoiceBasesFolder);
 }
 
 const LEARNING_WALL_FILE = "学习卡片瀑布墙.md";
@@ -6036,14 +6038,11 @@ function parseBriefingPartResponse(raw) {
   const sedimentPreExtraction = extractSedimentPreExtractionBlock(String(raw || ""));
   const parsedPeople = parsePeopleFromOutput(sedimentPreExtraction.cleaned);
   const parsedTags = parseSuggestedTagsFromOutput(parsedPeople.cleaned);
-  let body = parsedTags.cleaned;
-  const summaryMatch = body.match(/<!--\s*lexvoice-part-summary\s*:\s*([\s\S]*?)\s*-->/i);
-  const summary = summaryMatch ? summaryMatch[1].trim() : "";
-  if (summaryMatch) body = body.replace(summaryMatch[0], "");
-  body = stripModeSuggestionBlocks(body.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, "")).trim();
+  const envelope = extractBriefingPartEnvelope(parsedTags.cleaned);
+  const body = stripModeSuggestionBlocks(envelope.body.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, "")).trim();
   return {
     body,
-    summary,
+    summary: envelope.summary,
     people: mergeUniqueStrings([], (parsedPeople.people || []).concat(parsedTags.people || [])),
     tags: mergeUniqueStrings([], parsedTags.tags || []),
     sedimentObjects: sedimentPreExtraction.objects || null,
@@ -6059,12 +6058,14 @@ function mergeBriefingUsage(...items) {
   }), { promptTokens: 0, completionTokens: 0, reasoningTokens: 0, totalTokens: 0 });
 }
 
-function buildBriefingPartExpansionPrompt(joinedChunk, currentBody, timeRange, fidelityContract) {
-  return `当前纪要正文相对原始转写明显过短，说明上一版把展开讨论压成了摘要。请对照原始转写，返回一份**完整替换版正文**。
+function buildBriefingPartExpansionPrompt(joinedChunk, currentBody, timeRange, fidelityContract, groundingContract = "") {
+  return `当前纪要正文相对原始转写不够完整，可能过短，也可能遗漏了可核验的数字、术语或关键原话。请对照原始转写，返回一份**完整替换版正文**。
 
 这是同一场会议中的一个内部时间窗口，不是独立会议，也不是独立文档。内部切片仅用于控制请求体量，最终会按时间顺序合并为一篇纪要。
 
 ${fidelityContract}
+
+${groundingContract}
 
 修订规则：
 - 保留当前稿里已经正确呈现的内容，并补回遗漏的事实、推理链、案例、数字、分歧、风险、上下文和行动依据。
@@ -6073,7 +6074,7 @@ ${fidelityContract}
 - 不要重新介绍会议背景，不要输出独立会议的总标题、全局摘要或全局结论；跨窗口延续的议题直接续写，不强行在本窗口收束。
 - 不要输出修订说明、前言、YAML 或代码围栏。
 - 待办只在原文确有动作时使用 Markdown todo；责任人和截止时间不明确就省略。
-- 末尾保留三条机器注释：\`lexvoice-people\`、\`lexvoice-tags\`、\`lexvoice-part-summary\`。
+- 必须用 \`<!-- lexvoice-part-body-start -->\` 和 \`<!-- lexvoice-part-body-end -->\` 包住可见正文；正文之外只保留三条完整 HTML 注释：\`lexvoice-people\`、\`lexvoice-tags\`、\`lexvoice-part-summary\`。不得输出裸文本标记。
 
 【时间范围】
 ${timeRange}
@@ -6096,6 +6097,8 @@ function buildChunkMergePrompt(joinedChunk, partIndex, partTotal, timeRange, top
 
 【最高优先级·忠实还原】本部分出现的所有事实、数字、判断、立场、待办、风险、关键原话一律保留，宁可写长也不要漏；只做无损整理（去口头禅、合并重复表述），不得以"概括/精炼"为名删除任何一条具体信息。禁止用"还讨论了 X""此外提到 Y"这类一句话带过本部分实际展开过的内容——该展开的要展开成完整段落。
 
+【全局校正】实时分段只是草稿。请结合下方全程议题图统一同一人物、产品、组织和专业术语的写法；明显属于同一实体的局部 ASR 误写可以按完整上下文校正。无法可靠判断的词保留原表述并标注“待核对”，不得擅自补造。
+
 【组织主轴·以事为中心】按议题或事项的发展脉络组织：问题如何提出、背景和证据如何补充、观点如何演进或发生分歧、最终形成什么判断与动作。明确保留讨论中的正例、反例、类比和失败经验，并说明它们支撑或限制了什么判断。不要按说话人轮次机械写成「A 说……B 说……」；只有关键观点、独特判断、明确分歧和责任承诺需要注明提出者。
 
 ${fidelityContract}
@@ -6106,8 +6109,8 @@ ${topLevelRule}
 - 标题必须使用真实议题名称，不得使用“第 N 部分”“时间窗口 N”“分段 N”或时间范围作为标题。本文的连续性规则高于下方模式模板中的文档级标题、全局摘要和结论要求。
 - 待办用 \`- [ ] 事项：<动作>\`，能确定时再补 \`责任人：<人>\` 和 \`截止：<时间>\`；无法判断就直接省略该字段，不要写"未提及"。
 - 转写里没出现的人名/公司/数字一律不写，不编造。
-- 直接输出本部分正文 Markdown，无前言、无解释、无代码围栏。
-- 正文末尾追加三条机器注释（不渲染显示）：\`<!-- lexvoice-people: 本部分确实出现的人名，逗号分隔，没有就留空 -->\`、\`<!-- lexvoice-tags: 主题/xx 等多维标签，没有就留空 -->\`、\`<!-- lexvoice-part-summary: 本部分一句话小结 -->\`。
+- 直接输出本部分正文 Markdown，无前言、无解释、无代码围栏。正文必须以 \`<!-- lexvoice-part-body-start -->\` 开始，以 \`<!-- lexvoice-part-body-end -->\` 结束。
+- 正文结束标记之后追加三条完整 HTML 注释（不渲染显示）：\`<!-- lexvoice-people: 本部分确实出现的人名，逗号分隔，没有就留空 -->\`、\`<!-- lexvoice-tags: 主题/xx 等多维标签，没有就留空 -->\`、\`<!-- lexvoice-part-summary: 本部分一句话小结 -->\`。禁止把 \`lexvoice-people\`、\`lexvoice-tags\`、\`lexvoice-part-summary\` 作为普通文本或引用块输出。
 
 【全程议题图·只用于理解跨时段关系】
 ${topicMap || "（未生成；请严格按当前时段原始转写整理）"}
@@ -6175,6 +6178,8 @@ function buildBriefingTopicMapPrompt(joined, partPlans, mode) {
 
 要求：
 - 覆盖全程主要议题、人物、决策、分歧、待办、关键数字和跨时段呼应；每项标注大致时间或对应部分。
+- 单列“术语与实体统一”小节：归并上下文中明显指向同一对象的不同写法，指出仍无法确认的疑似 ASR 错词。不要猜测真实名称。
+- 识别跨时段延续的同一事项，避免后续分部把它误写成多个互不相关的话题。
 - 只写原始转写明确出现的内容，不猜测，不生成最终评价，不代替正文。
 - 输出 Markdown 列表，控制在 2500 字以内；不要 YAML、callout、代码围栏。
 - 当前整理模式：${mode}。
@@ -6450,11 +6455,12 @@ async function mergeAndPolishLongSession(plugin, segments, mode, computedMeta, o
       );
       let parsed = parseBriefingPartResponse(response.text);
       fidelity = assessBriefingPartFidelity(plan.chars, parsed.body, fidelityInput);
+      let grounding = assessBriefingPartGrounding(joinedChunk, parsed.body);
       let combinedUsage = mergeBriefingUsage(response.usage);
       let repairAttempts = 0;
-      if (parsed.body && !response.truncated && fidelity.needsExpansion) {
+      if (parsed.body && !response.truncated && (fidelity.needsExpansion || grounding.needsRepair)) {
         repairAttempts = 1;
-        await logLlmRequestDiagnostic(plugin, "warn", "llm.briefing_part_under_detailed", "纪要分部明显短于原始材料，正在对照原文补回细节", {
+        await logLlmRequestDiagnostic(plugin, "warn", "llm.briefing_part_under_detailed", fidelity.needsExpansion ? "纪要分部明显短于原始材料，正在对照原文补回细节" : "纪要分部缺少多项可核验信息，正在对照原文重新整理", {
           mode,
           jobId: identity.id,
           part: plan.index + 1,
@@ -6465,11 +6471,20 @@ async function mergeAndPolishLongSession(plugin, segments, mode, computedMeta, o
           minimumOutputChars: fidelity.minimumOutputChars,
           targetOutputChars: fidelity.targetOutputChars,
           outputRatio: Number(fidelity.outputRatio.toFixed(3)),
+          groundingAnchors: grounding.anchors.length,
+          groundingMatched: grounding.matchedAnchors,
+          groundingRatio: Number(grounding.ratio.toFixed(3)),
+          repairReason: fidelity.needsExpansion && grounding.needsRepair
+            ? "detail-and-grounding"
+            : (fidelity.needsExpansion ? "detail" : "grounding"),
         });
+        const groundingContract = grounding.needsRepair
+          ? `【必须核对的原文锚点】上一版遗漏较多可核验信息。请在语义正确的位置保留或解释这些原文锚点；如完整上下文能确认是 ASR 误写，可统一为正确写法，但不得直接丢弃：\n- ${grounding.missingAnchors.slice(0, 24).join("\n- ")}`
+          : "";
         const repair = await callBriefingMergeLlm(
           plugin,
           "你是纪要保真编辑。你的任务是对照原始转写补回被摘要掉的信息，并返回完整替换稿；不得用空话凑长度，也不得编造原文没有的内容。",
-          buildBriefingPartExpansionPrompt(joinedChunk, parsed.body, `${start}–${end}`, fidelityContract),
+          buildBriefingPartExpansionPrompt(joinedChunk, parsed.body, `${start}–${end}`, fidelityContract, groundingContract),
           Object.assign(
             { stream: true, thinkingMode: "fast", payload: { max_tokens: partMaxTokens } },
             createBriefingLlmActivityOptions(plugin, computedMeta, {
@@ -6483,13 +6498,18 @@ async function mergeAndPolishLongSession(plugin, segments, mode, computedMeta, o
         );
         const repaired = parseBriefingPartResponse(repair.text);
         const repairedFidelity = assessBriefingPartFidelity(plan.chars, repaired.body, fidelityInput);
+        const repairedGrounding = assessBriefingPartGrounding(joinedChunk, repaired.body);
         combinedUsage = mergeBriefingUsage(combinedUsage, repair.usage);
-        if (repaired.body && !repair.truncated && repairedFidelity.outputChars > fidelity.outputChars) {
+        const repairedScore = repairedFidelity.outputChars + repairedGrounding.matchedAnchors * 120;
+        const currentScore = fidelity.outputChars + grounding.matchedAnchors * 120;
+        if (repaired.body && !repair.truncated && repairedScore > currentScore) {
           response = repair;
           parsed = repaired;
           fidelity = repairedFidelity;
+          grounding = repairedGrounding;
         }
-        await logLlmRequestDiagnostic(plugin, fidelity.needsExpansion ? "warn" : "info", "llm.briefing_part_detail_repaired", fidelity.needsExpansion ? "纪要分部补充后仍偏短，已保留较完整版本" : "纪要分部已对照原文补回细节", {
+        const repairStillWeak = fidelity.needsExpansion || grounding.needsRepair;
+        await logLlmRequestDiagnostic(plugin, repairStillWeak ? "warn" : "info", "llm.briefing_part_detail_repaired", repairStillWeak ? "纪要分部补充后仍需复核，已保留信息更完整的版本" : "纪要分部已对照原文补回细节", {
           mode,
           jobId: identity.id,
           part: plan.index + 1,
@@ -6500,9 +6520,12 @@ async function mergeAndPolishLongSession(plugin, segments, mode, computedMeta, o
           minimumOutputChars: fidelity.minimumOutputChars,
           targetOutputChars: fidelity.targetOutputChars,
           outputRatio: Number(fidelity.outputRatio.toFixed(3)),
+          groundingAnchors: grounding.anchors.length,
+          groundingMatched: grounding.matchedAnchors,
+          groundingRatio: Number(grounding.ratio.toFixed(3)),
         });
       }
-      const body = normalizeBriefingPartBody(parsed.body);
+      const body = normalizeBriefingPartBody(parsed.body, { fragmentMode: partPlans.length > 1 });
       Object.assign(part, {
         status: body && !response.truncated ? "complete" : (body ? "partial" : "failed"),
         text: body,
@@ -6517,7 +6540,7 @@ async function mergeAndPolishLongSession(plugin, segments, mode, computedMeta, o
         outputRatio: Number(fidelity.outputRatio.toFixed(4)),
         minimumOutputChars: fidelity.minimumOutputChars,
         targetOutputChars: fidelity.targetOutputChars,
-        qualityStatus: fidelity.needsExpansion ? "under-detailed" : "ok",
+        qualityStatus: fidelity.needsExpansion ? "under-detailed" : (grounding.needsRepair ? "under-grounded" : "ok"),
         repairAttempts,
         error: body
           ? (response.truncated ? "本部分在续写后仍被输出上限截断" : "")
@@ -7170,6 +7193,9 @@ class OutlineView extends obsidian.ItemView {
     this.sedimentLastUndo = null;
     this.noteAskByPath = {};
     this.semanticCanvasRunningPaths = new Set();
+    this.semanticCanvasProgressByPath = new Map();
+    this.activeCanvasSource = { canvasPath: "", sourcePath: "" };
+    this.activeCanvasSourceSeq = 0;
   }
   getViewType() { return VIEW_TYPE_OUTLINE; }
   getDisplayText() { return "LexVoice 实时纪要"; }
@@ -7178,12 +7204,13 @@ class OutlineView extends obsidian.ItemView {
     this.containerEl.children[1].empty();
     this._lastSig = "";
     this.render();
+    void this.syncActiveCanvasSourceNote();
     // 节流：recorder 每 500ms 滴答一次。只更新计时文本，结构不变时不重建 DOM。
     this.unsubscribeRecorder = this.plugin.recorder.on(() => this.scheduleUpdate());
     this.registerEvent(this.app.workspace.on("active-leaf-change", () => {
       this.showRecentHome = true;
       this.idlePanelTab = "";
-      this.scheduleUpdate();
+      void this.syncActiveCanvasSourceNote();
     }));
     // 文件系统变化需要刷新最近纪要。create 在启动、同步和批量粘贴时可能密集触发，
     // 因此统一进入短延迟合并刷新；metadata changed 负责补上 frontmatter 尚未解析完成的情况。
@@ -7318,6 +7345,7 @@ class OutlineView extends obsidian.ItemView {
       askState ? `${askState.running ? 1 : 0}:${askState.multiSelect ? 1 : 0}:${askState.question || ""}:${askState.error || ""}:${(askState.followups || []).join("|")}:${Array.isArray(askState.entries) ? askState.entries.map((e) => `${e.id}${e.expanded ? "1" : "0"}${e.written ? "1" : "0"}${e.selected ? "1" : "0"}`).join(",") : ""}` : "",
       activeNote ? activeNote.path : "",
       activeNote ? activeNote.stat.mtime : 0,
+      this.activeCanvasSource ? `${this.activeCanvasSource.canvasPath}:${this.activeCanvasSource.sourcePath}` : "",
     ].join("|");
   }
   // 仅刷新计时和"x 段"等高频文本，避免重建按钮和重绘 Markdown
@@ -7371,6 +7399,7 @@ class OutlineView extends obsidian.ItemView {
     // 只有"真正在录音/暂停"时才把面板接管成录音态；录音一停（即便后台还在转写/整理）就回到 idle 头，
     // 让用户能立刻开始下一段——后台 finalizing 不阻塞录音（recorder 已 idle，startRecording 允许）。
     const activelyRecording = !!(session && (recState === "recording" || recState === "paused"));
+    root.toggleClass("is-idle-view", !activelyRecording);
     const activeTab = this.idlePanelTab || "outline";
 
     // 招聘上下文内联编辑：接管整个面板（顶部返回 + 分组表单 + 底部操作）。非录音中才允许进。
@@ -7384,8 +7413,9 @@ class OutlineView extends obsidian.ItemView {
     if (activelyRecording) {
       const sessionNote = this.getSessionNoteFile(session);
       if (activeTab === "outline") root.addClass("has-meeting-composer");
-      this.renderActiveHead(root, session, recInfo, recordingIssue);
-      this.renderIdleTabs(root, activeTab);
+      const stickyChrome = root.createDiv({ cls: "lexvoice-outline-sticky-chrome" });
+      this.renderActiveHead(stickyChrome, session, recInfo, recordingIssue);
+      this.renderIdleTabs(stickyChrome, activeTab);
       if (activeTab === "recent") {
         this.renderRecent(root);
       } else if (activeTab === "extract") {
@@ -7403,13 +7433,14 @@ class OutlineView extends obsidian.ItemView {
       if (activeTab === "outline") this.renderMeetingComposer(root, session);
     } else {
       // 非录音中（含录音刚结束、后台转写/整理；或已加载的纪要；或全空闲）：始终显示 idle 头（新建录音可用）。
-      this.renderIdleHead(root);
+      const stickyChrome = root.createDiv({ cls: "lexvoice-outline-sticky-chrome" });
+      this.renderIdleHead(stickyChrome);
       if (session && session.finalizing) {
-        const banner = root.createDiv({ cls: "lexvoice-finalizing-banner is-background" });
+        const banner = stickyChrome.createDiv({ cls: "lexvoice-finalizing-banner is-background" });
         try { obsidian.setIcon(banner.createSpan({ cls: "lexvoice-finalizing-banner-icon" }), "loader-2"); } catch { /* intentionally empty */ }
         banner.createSpan({ cls: "lexvoice-finalizing-banner-text", text: "AI 正在后台整理上一段，可直接开始下一段录音" });
       }
-      this.renderIdleTabs(root, activeTab);
+      this.renderIdleTabs(stickyChrome, activeTab);
       if (session) {
         // 录音已结束、后台处理中：仍展示这条 session 的大纲 / 沉淀
         const sessionNote = this.getSessionNoteFile(session);
@@ -7457,12 +7488,54 @@ class OutlineView extends obsidian.ItemView {
 
   getActiveLexVoiceNoteFile() {
     const file = this.app.workspace.getActiveFile();
-    if (!(file instanceof obsidian.TFile) || file.extension !== "md") return null;
+    if (!(file instanceof obsidian.TFile)) return null;
+    if (file.extension === "canvas") {
+      const canvasPath = obsidian.normalizePath(file.path);
+      const sourcePath = this.activeCanvasSource && this.activeCanvasSource.canvasPath === canvasPath
+        ? obsidian.normalizePath(this.activeCanvasSource.sourcePath || "")
+        : "";
+      const sourceFile = sourcePath ? this.app.vault.getAbstractFileByPath(sourcePath) : null;
+      return sourceFile instanceof obsidian.TFile && sourceFile.extension === "md" ? sourceFile : null;
+    }
+    if (file.extension !== "md") return null;
     const mdFolder = obsidian.normalizePath(this.plugin.settings.mdFolder || DEFAULT_SETTINGS.mdFolder);
     const path = obsidian.normalizePath(file.path);
     if (path === mdFolder || path.startsWith(mdFolder + "/")) return file;
     const mode = this.plugin.detectModeFromMarkdown(file);
     return mode ? file : null;
+  }
+
+  async syncActiveCanvasSourceNote() {
+    const active = this.app.workspace.getActiveFile();
+    const sequence = ++this.activeCanvasSourceSeq;
+    if (!(active instanceof obsidian.TFile) || active.extension !== "canvas") {
+      this.activeCanvasSource = { canvasPath: "", sourcePath: "" };
+      this.scheduleUpdate();
+      return;
+    }
+    const canvasPath = obsidian.normalizePath(active.path);
+    this.activeCanvasSource = { canvasPath, sourcePath: "" };
+    this.scheduleUpdate();
+    let sourcePath = "";
+    try {
+      sourcePath = parseSemanticCanvasSourcePath(await this.app.vault.cachedRead(active), canvasPath);
+    } catch (error) {
+      console.warn("[LexVoice] read semantic canvas source failed", error);
+    }
+    if (sequence !== this.activeCanvasSourceSeq) return;
+    const current = this.app.workspace.getActiveFile();
+    if (!(current instanceof obsidian.TFile) || obsidian.normalizePath(current.path) !== canvasPath) return;
+    let sourceFile = sourcePath ? this.app.vault.getAbstractFileByPath(obsidian.normalizePath(sourcePath)) : null;
+    if (!(sourceFile instanceof obsidian.TFile)) {
+      const inferredPath = inferSemanticCanvasSourcePath(canvasPath);
+      sourceFile = inferredPath ? this.app.vault.getAbstractFileByPath(obsidian.normalizePath(inferredPath)) : null;
+    }
+    this.activeCanvasSource = {
+      canvasPath,
+      sourcePath: sourceFile instanceof obsidian.TFile && sourceFile.extension === "md" ? sourceFile.path : "",
+    };
+    this._lastSig = "";
+    this.scheduleUpdate();
   }
 
   getCompletedNotePanelData(file) {
@@ -7492,7 +7565,9 @@ class OutlineView extends obsidian.ItemView {
   }
 
   renderIdleTabs(root, activeTab) {
-    const tabs = root.createDiv({ cls: "lexvoice-outline-panel-tabs" });
+    // Keep the shared panel-tab hook for active-session/mobile rules, while the
+    // idle-view hook owns the approved minutes-sidebar geometry.
+    const tabs = root.createDiv({ cls: "lexvoice-outline-panel-tabs lexvoice-outline-tabs" });
     const outlineBtn = tabs.createEl("button", {
       text: "大纲",
       cls: activeTab === "outline" ? "is-active" : "",
@@ -10566,72 +10641,228 @@ class OutlineView extends obsidian.ItemView {
     const nodes = parseRealtimeOutlineStateFromMarkdown(outlineMarkdown);
     if (!nodes.length) return null;
     const running = this.semanticCanvasRunningPaths.has(file.path);
+    const progress = this.semanticCanvasProgressByPath.get(file.path);
+    const idleLabel = "打开或更新语义 Canvas";
+    const activeLabel = progress && progress.label ? progress.label : "正在生成语义 Canvas";
     const button = parent.createEl("button", {
       cls: `lexvoice-outline-canvas-btn${running ? " is-canvas-loading" : ""}`,
       attr: {
         type: "button",
-        title: running ? "正在生成语义 Canvas" : "生成或更新语义 Canvas",
-        "aria-label": running ? "正在生成语义 Canvas" : "生成或更新语义 Canvas",
+        title: running ? activeLabel : idleLabel,
+        "aria-label": running ? activeLabel : idleLabel,
       },
     });
     try { obsidian.setIcon(button, running ? "loader-2" : "network"); } catch { button.setText("Canvas"); }
     button.disabled = running;
-    button.onclick = () => void this.generateSemanticCanvas(file, outlineMarkdown);
+    button.onclick = (event) => void this.showSemanticCanvasMenu(event, file, outlineMarkdown);
     return button;
   }
 
-  async generateSemanticCanvas(sourceFile, outlineMarkdown) {
+  async readSemanticCanvas(sourceFile) {
+    const canvasPath = obsidian.normalizePath(getSemanticCanvasPath(sourceFile.path));
+    const canvasFile = this.app.vault.getAbstractFileByPath(canvasPath);
+    if (!(canvasFile instanceof obsidian.TFile)) return { canvasPath, canvasFile: null, existing: null };
+    try {
+      const existing = normalizeJsonCanvasDocument(JSON.parse(await this.app.vault.read(canvasFile)));
+      return { canvasPath, canvasFile, existing };
+    } catch {
+      return { canvasPath, canvasFile, existing: null };
+    }
+  }
+
+  async openSemanticSourceSection(sourceFile, sourceSectionId) {
+    const markdown = await this.app.vault.cachedRead(sourceFile);
+    const section = extractSemanticSourceSections(markdown).find((item) => item.id === sourceSectionId);
+    if (!section) {
+      await this.app.workspace.getLeaf(false).openFile(sourceFile);
+      return;
+    }
+    await this.app.workspace.openLinkText(`${sourceFile.path}#${section.heading}`, sourceFile.path, false);
+  }
+
+  async showSemanticCanvasMenu(event, sourceFile, outlineMarkdown) {
+    if (!(sourceFile instanceof obsidian.TFile) || this.semanticCanvasRunningPaths.has(sourceFile.path)) return;
+    const state = await this.readSemanticCanvas(sourceFile);
+    if (!(state.canvasFile instanceof obsidian.TFile)) {
+      await this.generateSemanticCanvas(sourceFile, outlineMarkdown, { mode: "full" });
+      return;
+    }
+    if (!state.existing) {
+      new obsidian.Notice("现有语义 Canvas 无法解析，请检查文件后再更新。", 7000);
+      return;
+    }
+    const menu = new obsidian.Menu();
+    menu.addItem((item) => item
+      .setTitle("打开语义图")
+      .setIcon("network")
+      .onClick(() => void this.app.workspace.getLeaf(true).openFile(state.canvasFile)));
+    menu.addItem((item) => item
+      .setTitle("更新整张语义图")
+      .setIcon("refresh-cw")
+      .onClick(() => void this.generateSemanticCanvas(sourceFile, outlineMarkdown, { mode: "full" })));
+    if (state.existing.lexvoiceSemantic?.graph) {
+      menu.addItem((item) => item
+        .setTitle("自适应排版")
+        .setIcon("layout-dashboard")
+        .onClick(() => void this.generateSemanticCanvas(sourceFile, outlineMarkdown, { mode: "layout", layoutMode: "adaptive" })));
+      menu.addItem((item) => item
+        .setTitle("左右展开")
+        .setIcon("columns-3")
+        .onClick(() => void this.generateSemanticCanvas(sourceFile, outlineMarkdown, { mode: "layout", layoutMode: "bilateral" })));
+      menu.addItem((item) => item
+        .setTitle("向右展开")
+        .setIcon("arrow-right")
+        .onClick(() => void this.generateSemanticCanvas(sourceFile, outlineMarkdown, { mode: "layout", layoutMode: "right" })));
+      for (const branch of state.existing.lexvoiceSemantic.graph.branches.slice(0, 7)) {
+        menu.addSeparator();
+        menu.addItem((item) => item.setTitle(branch.title).setIsLabel(true));
+        menu.addItem((item) => item
+          .setTitle("更新这条主线")
+          .setIcon("refresh-cw")
+          .onClick(() => void this.generateSemanticCanvas(sourceFile, outlineMarkdown, { mode: "branch", branchKey: branch.key })));
+        menu.addItem((item) => item
+          .setTitle("继续下钻")
+          .setIcon("git-branch-plus")
+          .onClick(() => void this.generateSemanticCanvas(sourceFile, outlineMarkdown, { mode: "drill", branchKey: branch.key })));
+        if (branch.sourceSections && branch.sourceSections[0]) {
+          menu.addItem((item) => item
+            .setTitle("定位原文")
+            .setIcon("text-search")
+            .onClick(() => void this.openSemanticSourceSection(sourceFile, branch.sourceSections[0])));
+        }
+      }
+    }
+    this.showLexVoiceMenuAtMouse(menu, event, "lexvoice-semantic-canvas-menu");
+  }
+
+  async generateSemanticCanvas(sourceFile, outlineMarkdown, options = { mode: "full" }) {
     if (!(sourceFile instanceof obsidian.TFile) || this.semanticCanvasRunningPaths.has(sourceFile.path)) return;
     const outlineNodes = parseRealtimeOutlineStateFromMarkdown(outlineMarkdown);
-    if (outlineNodes.length < 2) {
+    if (options.mode === "full" && outlineNodes.length < 2) {
       new obsidian.Notice("当前大纲内容太少，暂时无法生成语义图。", 5000);
       return;
     }
-    const llmIssue = getLlmConfigIssue(this.plugin.settings);
+    const llmIssue = options.mode !== "layout" ? getLlmConfigIssue(this.plugin.settings) : null;
     if (llmIssue) {
       new obsidian.Notice(`生成语义图前需要先完成大模型配置：${formatLlmConfigIssue(llmIssue)}`, 9000);
       return;
     }
 
     this.semanticCanvasRunningPaths.add(sourceFile.path);
+    this.semanticCanvasProgressByPath.set(sourceFile.path, { label: "正在读取纪要", phase: "prepare", current: 0, total: 1 });
     this.render();
+    const progressNotice = new obsidian.Notice("正在读取纪要…", 300000);
+    const updateProgress = async (phase, label, current = 0, total = 1) => {
+      this.semanticCanvasProgressByPath.set(sourceFile.path, { phase, label, current, total });
+      progressNotice.setMessage(total > 1 ? `${label}（${current}/${total}）` : label);
+      await this.plugin.logDiagnostic("info", "canvas.semantic_phase", label, {
+        sourcePath: sourceFile.path,
+        phase,
+        current,
+        total,
+        mode: options.mode,
+        branchKey: options.branchKey || "",
+      });
+    };
     try {
       const sourceMarkdown = await this.app.vault.cachedRead(sourceFile);
       const sourceSections = extractSemanticSourceSections(sourceMarkdown);
-      const prompt = buildSemanticOutlinePrompt(sourceFile.basename, outlineNodes, sourceSections);
-      const raw = await callLlm(this.plugin, prompt.system, prompt.user, {
-        timeoutMs: 120000,
-        payload: { max_tokens: 5600 },
-        priority: "user",
-        thinkingMode: "fast",
-      });
-      const graph = parseSemanticOutlineGraph(raw, outlineNodes, sourceSections);
-      if (!graph) throw new Error("模型没有返回可用的语义关系结构");
+      const policy = getSemanticGenerationPolicy(sourceSections);
+      const state = await this.readSemanticCanvas(sourceFile);
+      if (state.canvasFile && !state.existing) throw new Error("已有语义 Canvas 文件无法解析，请先检查文件内容");
+      let graph = state.existing?.lexvoiceSemantic?.graph || null;
 
-      const canvasPath = obsidian.normalizePath(getSemanticCanvasPath(sourceFile.path));
-      let canvasFile = this.app.vault.getAbstractFileByPath(canvasPath);
-      let existing = null;
-      if (canvasFile instanceof obsidian.TFile) {
-        try {
-          existing = normalizeJsonCanvasDocument(JSON.parse(await this.app.vault.read(canvasFile)));
-        } catch {
-          throw new Error("已有语义 Canvas 文件无法解析，请先检查文件内容");
+      if (options.mode === "full") {
+        await updateProgress("overview", "正在提取中心命题与内容主线");
+        const prompt = buildSemanticOutlinePrompt(sourceFile.basename, outlineNodes, sourceSections, policy);
+        const raw = await callLlm(this.plugin, prompt.system, prompt.user, {
+          timeoutMs: 150000,
+          payload: { max_tokens: Math.min(7600, 2800 + policy.maxNodes * 90) },
+          priority: "user",
+          thinkingMode: "fast",
+        });
+        graph = parseSemanticOutlineGraph(raw, outlineNodes, sourceSections, policy);
+        if (!graph) throw new Error("模型没有返回可用的语义关系结构");
+        if (policy.expandBranches) {
+          const overview = graph;
+          for (const [index, branch] of overview.branches.entries()) {
+            await updateProgress("expand", `正在展开主线：${branch.title}`, index + 1, overview.branches.length);
+            try {
+              const branchPrompt = buildSemanticBranchExpansionPrompt(
+                sourceFile.basename,
+                branch,
+                sourceSections,
+                outlineNodes,
+                policy,
+              );
+              const branchRaw = await callLlm(this.plugin, branchPrompt.system, branchPrompt.user, {
+                timeoutMs: 150000,
+                payload: { max_tokens: Math.min(6200, 2200 + policy.branchNodeBudget * 260) },
+                priority: "user",
+                thinkingMode: "fast",
+              });
+              const expanded = parseSemanticBranchExpansion(branchRaw, branch, outlineNodes, sourceSections, policy);
+              if (expanded) graph = replaceSemanticBranch(graph, branch.key, expanded);
+              else await this.plugin.logDiagnostic("warn", "canvas.semantic_branch_invalid", "主线展开结果无法解析，已保留概览结构", {
+                sourcePath: sourceFile.path,
+                branchKey: branch.key,
+              });
+            } catch (branchError) {
+              await this.plugin.logDiagnostic("warn", "canvas.semantic_branch_failed", "主线展开失败，已保留概览结构", {
+                sourcePath: sourceFile.path,
+                branchKey: branch.key,
+                error: diagnosticError(branchError),
+              });
+            }
+          }
         }
+      } else if (options.mode === "branch" || options.mode === "drill") {
+        if (!graph) throw new Error("现有语义图缺少可更新的结构数据，请先更新整张语义图");
+        const branch = graph.branches.find((item) => item.key === options.branchKey);
+        if (!branch) throw new Error("找不到需要更新的内容主线");
+        await updateProgress(options.mode, options.mode === "drill" ? `正在继续下钻：${branch.title}` : `正在更新主线：${branch.title}`);
+        const branchPrompt = buildSemanticBranchExpansionPrompt(
+          sourceFile.basename,
+          branch,
+          sourceSections,
+          outlineNodes,
+          policy,
+          options.mode === "drill",
+        );
+        const branchRaw = await callLlm(this.plugin, branchPrompt.system, branchPrompt.user, {
+          timeoutMs: 150000,
+          payload: { max_tokens: Math.min(6800, 2400 + policy.branchNodeBudget * 290) },
+          priority: "user",
+          thinkingMode: "fast",
+        });
+        const replacement = parseSemanticBranchExpansion(branchRaw, branch, outlineNodes, sourceSections, policy);
+        if (!replacement) throw new Error("模型没有返回可用的主线结构");
+        graph = replaceSemanticBranch(graph, branch.key, replacement);
+      } else if (options.mode === "layout") {
+        if (!graph) throw new Error("现有语义图缺少结构数据，无法重新排版");
+        await updateProgress("layout", "正在重新排版");
       }
+      if (!graph) throw new Error("没有可写入的语义结构");
+
+      await updateProgress("write", "正在写入语义 Canvas");
       const document = buildSemanticCanvasDocument(graph, {
         sourcePath: sourceFile.path,
         sourceTitle: sourceFile.basename,
         sourceSections,
-        existing,
+        existing: state.existing,
+        policy,
+        forceRelayout: options.mode === "layout",
+        layoutMode: options.layoutMode || state.existing?.lexvoiceSemantic?.layoutMode || "adaptive",
       });
       const content = `${JSON.stringify(document, null, 2)}\n`;
+      let canvasFile = state.canvasFile;
       if (canvasFile instanceof obsidian.TFile) {
         await this.app.vault.modify(canvasFile, content);
       } else {
         try {
-          canvasFile = await this.app.vault.create(canvasPath, content);
+          canvasFile = await this.app.vault.create(state.canvasPath, content);
         } catch (error) {
-          const raced = this.app.vault.getAbstractFileByPath(canvasPath);
+          const raced = this.app.vault.getAbstractFileByPath(state.canvasPath);
           if (!(raced instanceof obsidian.TFile)) throw error;
           canvasFile = raced;
           await this.app.vault.modify(canvasFile, content);
@@ -10639,7 +10870,8 @@ class OutlineView extends obsidian.ItemView {
       }
       await this.plugin.logDiagnostic("info", "canvas.semantic_generated", "语义 Canvas 已生成", {
         sourcePath: sourceFile.path,
-        canvasPath,
+        canvasPath: state.canvasPath,
+        mode: options.mode,
         outlineNodeCount: outlineNodes.length,
         sourceSectionCount: sourceSections.length,
         branchCount: graph.branches.length,
@@ -10649,16 +10881,19 @@ class OutlineView extends obsidian.ItemView {
         })(),
       });
       if (canvasFile instanceof obsidian.TFile) await this.app.workspace.getLeaf(true).openFile(canvasFile);
-      new obsidian.Notice("语义 Canvas 已生成。", 4000);
+      progressNotice.hide();
+      new obsidian.Notice(options.mode === "layout" ? "语义 Canvas 已重新排版。" : "语义 Canvas 已更新。", 4000);
     } catch (error) {
       console.error("[LexVoice] generate semantic canvas failed", error);
       await this.plugin.logDiagnostic("warn", "canvas.semantic_failed", "语义 Canvas 生成失败", {
         sourcePath: sourceFile.path,
         error: diagnosticError(error),
       });
+      progressNotice.hide();
       new obsidian.Notice(`语义 Canvas 生成失败：${(error && error.message) || error}`, 9000);
     } finally {
       this.semanticCanvasRunningPaths.delete(sourceFile.path);
+      this.semanticCanvasProgressByPath.delete(sourceFile.path);
       this.render();
     }
   }
@@ -11060,16 +11295,23 @@ class OutlineView extends obsidian.ItemView {
   renderTitleRow(head, title, options = {}) {
     const row = head.createDiv({ cls: "lexvoice-outline-title-row" });
     row.createDiv({ cls: "lexvoice-outline-title", text: title });
+    const actions = row.createDiv({ cls: "lexvoice-outline-title-actions" });
     const noteFile = options && options.noteFile instanceof obsidian.TFile ? options.noteFile : null;
     if (noteFile) {
-      const noteBtn = row.createEl("button", {
+      const noteBtn = actions.createEl("button", {
         cls: "clickable-icon lexvoice-outline-note-btn",
         attr: { "aria-label": "打开当前纪要", title: "打开当前纪要" },
       });
       try { obsidian.setIcon(noteBtn, "file-text"); } catch { noteBtn.setText("纪要"); }
       noteBtn.onclick = () => this.app.workspace.getLeaf(false).openFile(noteFile);
     }
-    const btn = row.createEl("button", {
+    const kanbanBtn = actions.createEl("button", {
+      cls: "clickable-icon lexvoice-outline-kanban-btn",
+      attr: { "aria-label": "打开纪要看板", title: "打开纪要看板" },
+    });
+    try { obsidian.setIcon(kanbanBtn, "layout-dashboard"); } catch { kanbanBtn.setText("看板"); }
+    kanbanBtn.onclick = () => { void this.plugin.openMinutesKanban(); };
+    const btn = actions.createEl("button", {
       cls: "clickable-icon lexvoice-outline-settings-btn",
       attr: { "aria-label": "打开 LexVoice 设置", title: "打开 LexVoice 设置" },
     });
@@ -11289,6 +11531,7 @@ class OutlineView extends obsidian.ItemView {
     const isMobile = isLexVoiceMobileRuntime();
 
     const controls = head.createDiv({ cls: "lexvoice-outline-controls" });
+    const primaryControls = controls.createDiv({ cls: "lexvoice-outline-primary-controls" });
 
     // 自定义下拉：用 Obsidian Menu 替代原生 <select>（OS 渲染的选项弹层没法美化）。菜单贴字段宽度、当前项左侧加色点，样式与面板一致。
     const mkSelect = (row, opts) => {
@@ -11328,22 +11571,20 @@ class OutlineView extends obsidian.ItemView {
     };
 
     // 模板（常驻显示——最常切换的"录音整理成什么"）
-    const modeRow = controls.createDiv({ cls: "lexvoice-outline-control-row" });
+    const modeRow = primaryControls.createDiv({ cls: "lexvoice-outline-control-row is-template-control" });
     modeRow.createSpan({ cls: "lexvoice-outline-control-label", text: "模板" });
     const currentMode = getEffectivePolishMode(this.plugin.settings, this.plugin.settings.polishMode);
-    mkSelect(modeRow, {
+    const modeSelect = mkSelect(modeRow, {
       current: currentMode,
       items: getVisiblePolishModeKeys(this.plugin.settings).map(k => ({ value: k, label: getModeMeta(this.plugin.settings, k).label })),
       onPick: async (k) => { this.plugin.settings.polishMode = k; await this.plugin.saveSettings(); this.scheduleUpdate(); },
     });
-
-    // 招聘评估：「对象」卡片紧跟模板（解锁 + recruit 模式时）——突出当前候选人 / JD，不沉到底部。
-    if (isRecruitFeatureUnlocked(this.plugin.settings) && currentMode === "recruit") {
-      this.renderRecruitContextCard(controls);
-    }
+    modeRow.onclick = (event) => {
+      if (!modeSelect.contains(event.target)) modeSelect.click();
+    };
 
     // 音频输入（常驻，和模板并列——最常跟着录音场景切换：会议 / 视频 / 纯麦）
-    const capRow = controls.createDiv({ cls: "lexvoice-outline-control-row" });
+    const capRow = primaryControls.createDiv({ cls: "lexvoice-outline-control-row is-audio-control" });
     capRow.createSpan({ cls: "lexvoice-outline-control-label", text: "音频" });
     const capOpts = isMobile
       ? [["mic", "仅麦克风（手机端）"]]
@@ -11353,46 +11594,30 @@ class OutlineView extends obsidian.ItemView {
           ["virtualCable", "仅电脑音频（视频/课程）"],
         ];
     const currentInputMode = resolveRuntimeAudioInputMode(this.plugin.settings.captureMode || "mic");
-    mkSelect(capRow, {
+    const capSelect = mkSelect(capRow, {
       current: currentInputMode,
       items: capOpts.map(([v, t]) => ({ value: v, label: t })),
       disabled: isMobile,
       onPick: async (v) => { this.plugin.settings.captureMode = resolveRuntimeAudioInputMode(v); await this.plugin.saveSettings(); this.scheduleUpdate(); },
     });
-    if (isMobile) {
-      capRow.createSpan({
-        cls: "setting-item-description",
-        text: "手机端用于现场麦克风采集；电脑音频和虚拟声卡请在桌面端使用。",
-      });
+    if (!isMobile) {
+      capRow.onclick = (event) => {
+        if (!capSelect.contains(event.target)) capSelect.click();
+      };
     }
-
-    // 更多设置：方案 / 偏好 / 思考 默认折叠，保持面板上半部分清爽（折叠态记在视图实例上，本次面板内保持）。
+    // 招聘评估：「对象」卡片位于两项主设置之后，避免打断模板 / 音频的固定双列关系。
+    if (isRecruitFeatureUnlocked(this.plugin.settings) && currentMode === "recruit") {
+      this.renderRecruitContextCard(controls);
+    }
+    // 更多设置由主操作行末尾的图标控制；展开区保持两列紧凑布局。
     const moreWrap = controls.createDiv({ cls: "lexvoice-outline-more" + (this._sidebarMoreExpanded ? " is-expanded" : "") });
-    const moreToggle = moreWrap.createDiv({ cls: "lexvoice-outline-more-toggle" });
-    try { obsidian.setIcon(moreToggle.createSpan({ cls: "lexvoice-outline-more-chev" }), "chevron-right"); } catch { /* intentionally empty */ }
-    moreToggle.createSpan({ cls: "lexvoice-outline-more-label", text: "更多设置" });
-    // 折叠态摘要：把 方案 / 偏好 / 思考 的当前值显示在右侧，不展开也一眼可见（展开后 CSS 自动隐藏）。
-    const moreSummaryParts = [];
-    const _ap = this.plugin.settings.activeLlmProfile;
-    if (_ap) { const _p = (this.plugin.settings.llmProfiles || []).find(x => x.id === _ap); if (_p && _p.name) moreSummaryParts.push(_p.name); }
-    const _pref = this.plugin.settings.repolishPreference;
-    if (_pref && REPOLISH_PREFERENCE_PRESETS[_pref]) moreSummaryParts.push(REPOLISH_PREFERENCE_PRESETS[_pref].label);
-    const _tm = this.plugin.settings.thinkingMode;
-    if (_tm === "fast") moreSummaryParts.push("快速模式"); else if (_tm === "reasoning") moreSummaryParts.push("推理模式");
-    const _seg = Number(this.plugin.settings.segmentIntervalMinutes) || 5;
-    moreSummaryParts.push(`${_seg} 分钟/段`);
-    if (moreSummaryParts.length) moreToggle.createSpan({ cls: "lexvoice-outline-more-summary", text: moreSummaryParts.join(" · ") });
-    moreToggle.onclick = () => {
-      this._sidebarMoreExpanded = !moreWrap.hasClass("is-expanded");
-      moreWrap.toggleClass("is-expanded", this._sidebarMoreExpanded);
-    };
     const moreBody = moreWrap.createDiv({ cls: "lexvoice-outline-more-body" });
 
     // API 方案快捷切换：复用设置页「API 方案」(llmProfiles)，侧边栏一键切换整套「转写 + AI 整理」配置。
     const schemeProfiles = Array.isArray(this.plugin.settings.llmProfiles) ? this.plugin.settings.llmProfiles : [];
-    const schemeRow = moreBody.createDiv({ cls: "lexvoice-outline-control-row lexvoice-outline-scheme-row" });
-    schemeRow.createSpan({ cls: "lexvoice-outline-control-label", text: "方案" });
-    mkSelect(schemeRow, {
+    const schemeCell = moreBody.createDiv({ cls: "lexvoice-outline-pair-cell lexvoice-outline-scheme-cell" });
+    schemeCell.createSpan({ cls: "lexvoice-outline-control-label", text: "方案" });
+    mkSelect(schemeCell, {
       current: this.plugin.settings.activeLlmProfile || "",
       items: [{ value: "", label: schemeProfiles.length ? "临时配置（未保存）" : "未保存方案 · 去设置添加" }]
         .concat(schemeProfiles.map(p => ({ value: p.id, label: p.name || p.id }))),
@@ -11406,7 +11631,7 @@ class OutlineView extends obsidian.ItemView {
       },
     });
 
-    const segmentField = schemeRow.createDiv({ cls: "lexvoice-outline-segment-inline" });
+    const segmentField = moreBody.createDiv({ cls: "lexvoice-outline-segment-inline" });
     segmentField.createSpan({ cls: "lexvoice-outline-segment-label", text: "分段" });
     const formatSegmentInterval = (value: number): string => {
       const normalized = Math.round(value * 10) / 10;
@@ -11487,23 +11712,29 @@ class OutlineView extends obsidian.ItemView {
       onPick: async (v) => { this.plugin.settings.thinkingMode = v; await this.plugin.saveSettings(); },
     });
 
-    // 设备状态条：根据当前音频输入方式检测对应硬件，给出可见反馈
-    const devStatus = controls.createDiv({ cls: "lexvoice-outline-device-status" });
-    void this.renderDeviceStatus(devStatus, currentInputMode);
-
     const actions = controls.createDiv({ cls: "lexvoice-outline-actions" });
     const startBtn = actions.createEl("button", { cls: "mod-cta lexvoice-outline-action-button is-record", attr: { type: "button" } });
     try { obsidian.setIcon(startBtn.createSpan({ cls: "lexvoice-outline-action-icon" }), "mic"); } catch { /* intentionally empty */ }
     startBtn.createSpan({ text: isMobile ? "新建录音" : "新建录音" });
     startBtn.onclick = () => { void this.plugin.startRecording(); };
-    const importBtn = actions.createEl("button", { cls: "lexvoice-outline-action-button", attr: { type: "button" } });
+    const actionCluster = actions.createDiv({ cls: "lexvoice-outline-action-cluster" });
+    const importBtn = actionCluster.createEl("button", { cls: "lexvoice-outline-action-button", attr: { type: "button", title: "导入音频", "aria-label": "导入音频" } });
     try { obsidian.setIcon(importBtn.createSpan({ cls: "lexvoice-outline-action-icon" }), "file-audio"); } catch { /* intentionally empty */ }
-    importBtn.createSpan({ text: "音频" });
     importBtn.onclick = () => new ImportAudioModal(this.app, this.plugin).open();
-    const importTextBtn = actions.createEl("button", { cls: "lexvoice-outline-action-button", attr: { type: "button" } });
+    const importTextBtn = actionCluster.createEl("button", { cls: "lexvoice-outline-action-button", attr: { type: "button", title: "导入文本", "aria-label": "导入文本" } });
     try { obsidian.setIcon(importTextBtn.createSpan({ cls: "lexvoice-outline-action-icon" }), "file-text"); } catch { /* intentionally empty */ }
-    importTextBtn.createSpan({ text: "文本" });
     importTextBtn.onclick = () => new ImportTextModal(this.app, this.plugin).open();
+    const moreBtn = actionCluster.createEl("button", {
+      cls: `lexvoice-outline-action-button is-more${this._sidebarMoreExpanded ? " is-active" : ""}`,
+      attr: { type: "button", title: "更多设置", "aria-label": "更多设置", "aria-expanded": this._sidebarMoreExpanded ? "true" : "false" },
+    });
+    try { obsidian.setIcon(moreBtn.createSpan({ cls: "lexvoice-outline-action-icon" }), "list-filter"); } catch { /* intentionally empty */ }
+    moreBtn.onclick = () => {
+      this._sidebarMoreExpanded = !moreWrap.hasClass("is-expanded");
+      moreWrap.toggleClass("is-expanded", this._sidebarMoreExpanded);
+      moreBtn.toggleClass("is-active", this._sidebarMoreExpanded);
+      moreBtn.setAttribute("aria-expanded", this._sidebarMoreExpanded ? "true" : "false");
+    };
   }
 
   getMeetingMaterialsFolder(session) {
@@ -12420,13 +12651,13 @@ class OutlineView extends obsidian.ItemView {
   getRecentFilters() {
     const filters = this.recentFilters || {};
     return {
-      time: filters.time || "week",
+      time: filters.time || "all",
       mode: filters.mode || "all",
     };
   }
 
   getDefaultRecentFilters() {
-    return { time: "week", mode: "all" };
+    return { time: "all", mode: "all" };
   }
 
   isRecentFilterActive(kind, value) {
@@ -12489,10 +12720,10 @@ class OutlineView extends obsidian.ItemView {
       const menuWidthHint = 160;
       const x = Math.max(8, Math.min(Math.round(rect.left), Math.max(8, window.innerWidth - menuWidthHint - 8)));
       const y = Math.max(8, Math.min(Math.round(rect.bottom + 8), Math.max(8, window.innerHeight - 8)));
-      this.showLexVoiceMenuAtPosition(menu, { x, y });
+      this.showLexVoiceMenuAtPosition(menu, { x, y }, "lexvoice-recent-group-menu");
       return;
     }
-    this.showLexVoiceMenuAtMouse(menu, evt);
+    this.showLexVoiceMenuAtMouse(menu, evt, "lexvoice-recent-group-menu");
   }
 
   getRecentModeFilterOptions() {
@@ -12627,34 +12858,30 @@ class OutlineView extends obsidian.ItemView {
     const filters = this.getRecentFilters();
     const wrap = parent.createDiv({ cls: "lexvoice-outline-recent-filter-wrap" });
     // 搜索框：实时按关键词过滤当前列表（标题 / 时间 / 模板文本），show/hide 不重渲染、保留输入焦点。
-    const searchInput = wrap.createEl("input", {
+    const searchBox = wrap.createDiv({ cls: "lexvoice-outline-recent-search-box" });
+    const searchIcon = searchBox.createSpan({ cls: "lexvoice-outline-recent-search-icon" });
+    try { obsidian.setIcon(searchIcon, "search"); } catch { /* intentionally empty */ }
+    const searchInput = searchBox.createEl("input", {
       cls: "lexvoice-outline-recent-search",
       attr: { type: "text", placeholder: "搜索纪要或关键词", spellcheck: "false" },
     });
     searchInput.value = this._recentSearch || "";
     searchInput.addEventListener("input", () => { this._recentSearch = searchInput.value; this.applyRecentSearchFilter(parent); });
-    const bar = wrap.createDiv({ cls: "lexvoice-outline-recent-filters" });
-    const groupChip = bar.createEl("button", {
+    const groupChip = wrap.createEl("button", {
       cls: "lexvoice-outline-recent-group-chip lexvoice-outline-recent-filter-chip is-active",
-      text: (RECENT_GROUP_OPTIONS.find((item) => item.id === this.getRecentGroupBy()) || RECENT_GROUP_OPTIONS[0]).label,
       attr: { type: "button", title: "选择纪要分组方式" },
     });
+    groupChip.createSpan({ text: (RECENT_GROUP_OPTIONS.find((item) => item.id === this.getRecentGroupBy()) || RECENT_GROUP_OPTIONS[0]).label });
+    const groupChevron = groupChip.createSpan({ cls: "lexvoice-outline-recent-filter-chevron" });
+    try { obsidian.setIcon(groupChevron, "chevron-down"); } catch { /* intentionally empty */ }
     groupChip.onclick = (evt) => this.showRecentGroupMenu(evt);
-    const chipDefs = [
-      ["time", RECENT_TIME_FILTER_OPTIONS],
-      ["mode", this.getRecentModeFilterOptions()],
-    ];
-    for (const [kind, options] of chipDefs) {
-      const value = filters[kind] || "all";
-      const label = this.getRecentFilterLabel(kind, value, allRecents);
-      const isActive = kind === "time" || this.isRecentFilterActive(kind, value);
-      const chip = bar.createEl("button", {
-        cls: `lexvoice-outline-recent-filter-chip ${isActive ? "is-active" : ""}`,
-        text: label,
-        attr: { type: "button", title: "筛选纪要列表" },
-      });
-      chip.onclick = (evt) => this.showRecentFilterMenu(evt, kind, options, value);
-    }
+    const modeValue = filters.mode || "all";
+    const modeChip = wrap.createEl("button", {
+      cls: `lexvoice-outline-recent-filter-chip ${this.isRecentFilterActive("mode", modeValue) ? "is-active" : ""}`,
+      text: this.getRecentFilterLabel("mode", modeValue, allRecents),
+      attr: { type: "button", title: "筛选纪要模板" },
+    });
+    modeChip.onclick = (evt) => this.showRecentFilterMenu(evt, "mode", this.getRecentModeFilterOptions(), modeValue);
     const clear = wrap.createEl("button", {
       cls: "lexvoice-outline-recent-filter-clear",
       text: "清除筛选",
@@ -12742,7 +12969,110 @@ class OutlineView extends obsidian.ItemView {
     return row;
   }
 
+  renderRecentFolderTree(sec, recents, activePath) {
+    const list = sec.createDiv({ cls: "lexvoice-outline-recent lexvoice-outline-recent--folder" });
+    const roots = new Map();
+    const makeNode = (key, label, path, depth) => ({ key, label, path, depth, items: [], children: new Map(), total: 0 });
+
+    for (const item of recents) {
+      const folderPath = obsidian.normalizePath(item.folderPath || "");
+      const rootPath = getRecentRootForPath(this.plugin, folderPath || item.file.path);
+      const rootKey = rootPath || "__root__";
+      const rootLabel = rootPath ? rootPath.split("/").pop() : "库根目录";
+      if (!roots.has(rootKey)) roots.set(rootKey, makeNode(rootKey, rootLabel, rootPath, 0));
+      let node = roots.get(rootKey);
+      const relative = getRecentNotePathRelativeToRoot(folderPath, rootPath);
+      const segments = relative ? relative.split("/").filter(Boolean) : [];
+      let cursorPath = rootPath;
+      for (let index = 0; index < segments.length; index++) {
+        const segment = segments[index];
+        cursorPath = obsidian.normalizePath(cursorPath ? `${cursorPath}/${segment}` : segment);
+        if (!node.children.has(cursorPath)) {
+          node.children.set(cursorPath, makeNode(cursorPath, segment, cursorPath, index + 1));
+        }
+        node = node.children.get(cursorPath);
+      }
+      node.items.push(item);
+    }
+
+    const finalizeNode = (node) => {
+      let total = node.items.length;
+      for (const child of node.children.values()) total += finalizeNode(child);
+      node.total = total;
+      return total;
+    };
+    for (const root of roots.values()) finalizeNode(root);
+
+    const sortNodes = (nodes) => Array.from(nodes.values()).sort((a, b) =>
+      String(a.label || "").localeCompare(String(b.label || ""), "zh-CN"));
+    const bindFolderToggle = (title, container, node, toggle, folderIcon) => {
+      const collapseKey = `folder:${node.key}`;
+      const applyCollapsedState = (collapsed) => {
+        container.classList.toggle("is-collapsed", collapsed);
+        title.setAttribute("aria-expanded", collapsed ? "false" : "true");
+        try { obsidian.setIcon(toggle, collapsed ? "chevron-right" : "chevron-down"); } catch { /* intentionally empty */ }
+        if (folderIcon) {
+          try { obsidian.setIcon(folderIcon, collapsed ? "folder" : "folder-open"); } catch { /* intentionally empty */ }
+        }
+      };
+      title.setAttribute("role", "button");
+      title.setAttribute("tabindex", "0");
+      title.setAttribute("title", node.path || node.label || "文件夹");
+      title.addEventListener("click", (evt) => {
+        evt.preventDefault();
+        evt.stopPropagation();
+        const collapsed = !this.recentCollapsedFolders.has(collapseKey);
+        if (collapsed) this.recentCollapsedFolders.add(collapseKey);
+        else this.recentCollapsedFolders.delete(collapseKey);
+        applyCollapsedState(collapsed);
+      });
+      title.addEventListener("keydown", (evt) => {
+        if (evt.key !== "Enter" && evt.key !== " ") return;
+        evt.preventDefault();
+        title.click();
+      });
+      applyCollapsedState(this.recentCollapsedFolders.has(collapseKey));
+    };
+
+    const renderNestedFolder = (parent, node) => {
+      const nodeEl = parent.createDiv({ cls: "lexvoice-outline-recent-folder-node" });
+      nodeEl.style.setProperty("--lexvoice-folder-depth", `${Math.min(6, Math.max(1, Number(node.depth) || 1))}`);
+      const title = nodeEl.createDiv({ cls: "lexvoice-outline-recent-folder-node-title" });
+      const toggle = title.createSpan({ cls: "lexvoice-outline-recent-folder-toggle" });
+      const icon = title.createSpan({ cls: "lexvoice-outline-recent-folder-node-icon" });
+      try { obsidian.setIcon(icon, "folder"); } catch { /* intentionally empty */ }
+      title.createSpan({ cls: "lexvoice-outline-recent-group-weekday", text: node.label || "未命名文件夹" });
+      title.createSpan({ cls: "lexvoice-outline-recent-group-count", text: `${node.total} 篇` });
+      const content = nodeEl.createDiv({ cls: "lexvoice-outline-recent-folder-content" });
+      // 与常见文件管理器一致：同级先显示子文件夹，再显示当前文件夹直属纪要。
+      for (const child of sortNodes(node.children)) renderNestedFolder(content, child);
+      for (const item of node.items) this.renderRecentNoteRow(content, item, activePath);
+      bindFolderToggle(title, nodeEl, node, toggle, icon);
+    };
+
+    for (const root of sortNodes(roots)) {
+      const groupEl = list.createDiv({ cls: "lexvoice-outline-recent-group lexvoice-outline-recent-group--named lexvoice-outline-recent-folder-root" });
+      const axis = groupEl.createDiv({ cls: "lexvoice-outline-recent-axis lexvoice-outline-recent-axis--named" });
+      const axisIcon = axis.createDiv({ cls: "lexvoice-outline-recent-axis-icon", attr: { title: root.path || root.label } });
+      try { obsidian.setIcon(axisIcon, "folder"); } catch { /* intentionally empty */ }
+      const itemsEl = groupEl.createDiv({ cls: "lexvoice-outline-recent-items" });
+      const groupTitle = itemsEl.createDiv({ cls: "lexvoice-outline-recent-group-title" });
+      const toggle = groupTitle.createSpan({ cls: "lexvoice-outline-recent-folder-toggle" });
+      groupTitle.createSpan({ cls: "lexvoice-outline-recent-group-weekday", text: root.label || "纪要" });
+      groupTitle.createSpan({ cls: "lexvoice-outline-recent-group-count", text: `${root.total} 篇` });
+      const content = itemsEl.createDiv({ cls: "lexvoice-outline-recent-folder-content" });
+      for (const child of sortNodes(root.children)) renderNestedFolder(content, child);
+      for (const item of root.items) this.renderRecentNoteRow(content, item, activePath);
+      bindFolderToggle(groupTitle, groupEl, root, toggle, axisIcon);
+    }
+    this.applyRecentSearchFilter(sec);
+  }
+
   renderRecentGrouped(sec, recents, activePath, groupBy) {
+    if (groupBy === "folder") {
+      this.renderRecentFolderTree(sec, recents, activePath);
+      return;
+    }
     const list = sec.createDiv({ cls: `lexvoice-outline-recent lexvoice-outline-recent--${groupBy}` });
     const groups = new Map();
     for (const item of recents) {
@@ -12760,10 +13090,9 @@ class OutlineView extends obsidian.ItemView {
     });
     for (const group of groupList) {
       const groupEl = list.createDiv({ cls: "lexvoice-outline-recent-group lexvoice-outline-recent-group--named" });
-      if (groupBy === "folder") groupEl.style.paddingLeft = `${Math.min(4, Math.max(0, Number(group.depth) || 0)) * 12}px`;
       const axis = groupEl.createDiv({ cls: "lexvoice-outline-recent-axis lexvoice-outline-recent-axis--named" });
       const axisIcon = axis.createDiv({ cls: "lexvoice-outline-recent-axis-icon", attr: { title: group.path || group.label } });
-      try { obsidian.setIcon(axisIcon, groupBy === "project" ? "folder-open" : "folder"); } catch { /* intentionally empty */ }
+      try { obsidian.setIcon(axisIcon, groupBy === "project" ? "tag" : "folder"); } catch { /* intentionally empty */ }
       const itemsEl = groupEl.createDiv({ cls: "lexvoice-outline-recent-items" });
       const groupTitle = itemsEl.createDiv({ cls: "lexvoice-outline-recent-group-title" });
       const collapseKey = groupBy === "folder" ? `folder:${group.key}` : "";
@@ -13832,6 +14161,13 @@ class LexVoicePlugin extends obsidian.Plugin {
     this.recorder.on(() => this.refreshOutlineView());
 
     this.registerView(VIEW_TYPE_OUTLINE, (leaf) => new OutlineView(leaf, this));
+    this.registerView(VIEW_TYPE_MINUTES_KANBAN, (leaf) => new MinutesKanbanView(leaf, {
+      getRootPath: () => obsidian.normalizePath(this.settings.mdFolder || DEFAULT_SETTINGS.mdFolder),
+      listItems: () => this.getMinutesKanbanItems(),
+      getModeOptions: () => getVisibleModeEntries(this.settings, false).map(([value, label]) => ({ value, label })),
+      moveItem: (item, folderPath) => this.moveMinutesKanbanItem(item, folderPath),
+      createFolder: (name) => this.createMinutesKanbanFolder(name),
+    }));
     // 自定义 Bases 视图「招聘看板」（@since 1.10.0；内部自带守卫，老版本/未启用 Bases 时安全跳过）。
     registerRecruitBoardView(this);
     this.addRibbonIcon("list-tree", "LexVoice 实时纪要面板", () => this.openOutlineView());
@@ -13892,6 +14228,7 @@ class LexVoicePlugin extends obsidian.Plugin {
     this.addCommand({ id: "check-updates", name: "检查更新", callback: () => this.checkForUpdates({ silent: false }) });
     this.addCommand({ id: "install-update", name: "安装可用更新", callback: () => this.installAvailableUpdate() });
     this.addCommand({ id: "open-outline", name: "打开实时纪要面板", callback: () => this.openOutlineView() });
+    this.addCommand({ id: "open-minutes-kanban", name: "打开纪要看板", callback: () => this.openMinutesKanban() });
     this.addCommand({ id: "record-mic-only", name: "开始录音 · 仅麦克风", callback: () => { this._oneShotCaptureMode = "mic"; void this.startRecording(); } });
     this.addCommand({ id: "record-mic-virtual", name: "开始录音 · 麦克风 + 电脑音频", callback: () => { this._oneShotCaptureMode = "mix-virtual"; void this.startRecording(); } });
     this.addCommand({ id: "record-virtual-only", name: "开始录音 · 仅电脑音频", callback: () => { this._oneShotCaptureMode = "virtualCable"; void this.startRecording(); } });
@@ -14262,9 +14599,10 @@ class LexVoicePlugin extends obsidian.Plugin {
     this.persistedQueue = extractLexVoiceJobItems(saved);
     // schema 升级：data.json 不带 schemaVersion 或低于当前版本时，
     // 立即写回新格式，避免长期保留旧平铺字段。
-    const savedVersion = (saved && typeof saved === "object" && Number.isFinite(saved.schemaVersion))
-      ? saved.schemaVersion
-      : 0;
+    const savedRecord = isRecord(saved) ? saved : {};
+    const savedSettingsRecord = isRecord(savedRecord.settings) ? savedRecord.settings : {};
+    const savedVersionValue = pickDefined(savedSettingsRecord.schemaVersion, savedRecord.schemaVersion, 0);
+    const savedVersion = Number.isFinite(Number(savedVersionValue)) ? Number(savedVersionValue) : 0;
     let shouldSave = savedVersion !== SETTINGS_SCHEMA_VERSION;
     // installedUpdateVersion 既记录内置更新器刚写入的待生效版本，也应在插件真正加载后
     // 与 manifest 对齐。否则通过 Obsidian 社区目录更新时，这个字段会永久停留在旧版本。
@@ -14277,6 +14615,11 @@ class LexVoicePlugin extends obsidian.Plugin {
       if (await this.migrateDefaultVocabularyFileLocation(saved)) shouldSave = true;
     } catch (e) {
       console.warn("[LexVoice] vocabulary location migrate failed", e);
+    }
+    try {
+      if (await this.migrateDefaultLibraryLayout(savedVersion)) shouldSave = true;
+    } catch (e) {
+      console.warn("[LexVoice] default library layout migrate failed", e);
     }
     if (shouldSave) {
       try { await this.saveAll(); } catch (e) { console.warn("[LexVoice] schema migrate failed", e); }
@@ -14505,6 +14848,61 @@ class LexVoicePlugin extends obsidian.Plugin {
       const content = await this.app.vault.cachedRead(targetFile);
       if (!isStructuredVocabularyMarkdown(content)) {
         await this.app.vault.modify(targetFile, formatVocabularyMarkdown(parseVocabularyGroups(content), this.settings.industryProfile));
+        changed = true;
+      }
+    }
+    return changed;
+  }
+
+  async migrateDefaultLibraryLayout(savedVersion) {
+    if (Number(savedVersion) >= 4) return false;
+    let changed = false;
+    const migrations = [
+      ["peopleDirectoryFolder", LEGACY_DEFAULT_LIBRARY_PATHS.peopleDirectoryFolder, DEFAULT_LIBRARY_PATHS.peopleDirectoryFolder],
+      ["learningCardsFolder", LEGACY_DEFAULT_LIBRARY_PATHS.learningCardsFolder, DEFAULT_LIBRARY_PATHS.learningCardsFolder],
+      ["todoCardsFolder", LEGACY_DEFAULT_LIBRARY_PATHS.todoCardsFolder, DEFAULT_LIBRARY_PATHS.todoCardsFolder],
+      ["lexVoiceBasesFolder", LEGACY_DEFAULT_LIBRARY_PATHS.lexVoiceBasesFolder, DEFAULT_LIBRARY_PATHS.lexVoiceBasesFolder],
+      ["peopleBaseFile", LEGACY_DEFAULT_LIBRARY_PATHS.peopleBaseFile, DEFAULT_LIBRARY_PATHS.peopleBaseFile],
+      ["vocabularyFile", LEGACY_DEFAULT_LIBRARY_PATHS.vocabularyFile, DEFAULT_LIBRARY_PATHS.vocabularyFile],
+      ["diagnosticsLogFolder", LEGACY_DEFAULT_LIBRARY_PATHS.diagnosticsLogFolder, DEFAULT_LIBRARY_PATHS.diagnosticsLogFolder],
+    ];
+    for (const [settingKey, legacyValue, nextValue] of migrations) {
+      const current = obsidian.normalizePath(String(this.settings[settingKey] || ""));
+      const legacyPath = obsidian.normalizePath(legacyValue);
+      const nextPath = obsidian.normalizePath(nextValue);
+      if (current.toLowerCase() !== legacyPath.toLowerCase()) continue;
+      const legacyEntry = this.app.vault.getAbstractFileByPath(legacyPath);
+      const nextEntry = this.app.vault.getAbstractFileByPath(nextPath);
+      if (legacyEntry && nextEntry) {
+        console.warn(`[LexVoice] default library migration skipped because both paths exist: ${legacyPath} -> ${nextPath}`);
+        continue;
+      }
+      if (legacyEntry && !nextEntry) {
+        const parentPath = nextPath.includes("/") ? nextPath.slice(0, nextPath.lastIndexOf("/")) : "";
+        if (parentPath) await this.ensureFolder(parentPath);
+        await this.app.fileManager.renameFile(legacyEntry, nextPath);
+      }
+      this.settings[settingKey] = nextPath;
+      changed = true;
+    }
+
+    const legacyArchiveFolder = obsidian.normalizePath(LEGACY_DEFAULT_LIBRARY_PATHS.archiveFolder);
+    const nextArchiveFolder = obsidian.normalizePath(DEFAULT_LIBRARY_PATHS.archiveFolder);
+    const legacyArchiveFolderEntry = this.app.vault.getAbstractFileByPath(legacyArchiveFolder);
+    const nextArchiveFolderEntry = this.app.vault.getAbstractFileByPath(nextArchiveFolder);
+    if (legacyArchiveFolderEntry && !nextArchiveFolderEntry) {
+      const parentPath = nextArchiveFolder.slice(0, nextArchiveFolder.lastIndexOf("/"));
+      await this.ensureFolder(parentPath);
+      await this.app.fileManager.renameFile(legacyArchiveFolderEntry, nextArchiveFolder);
+      changed = true;
+    } else {
+      const legacyArchive = obsidian.normalizePath(LEGACY_DEFAULT_LIBRARY_PATHS.duplicatePeopleArchiveFolder);
+      const nextArchive = obsidian.normalizePath(DEFAULT_LIBRARY_PATHS.duplicatePeopleArchiveFolder);
+      const legacyArchiveEntry = this.app.vault.getAbstractFileByPath(legacyArchive);
+      const nextArchiveEntry = this.app.vault.getAbstractFileByPath(nextArchive);
+      if (legacyArchiveEntry && !nextArchiveEntry) {
+        await this.ensureFolder(nextArchiveFolder);
+        await this.app.fileManager.renameFile(legacyArchiveEntry, nextArchive);
         changed = true;
       }
     }
@@ -16926,6 +17324,108 @@ class LexVoicePlugin extends obsidian.Plugin {
     await leaf.setViewState({ type: VIEW_TYPE_OUTLINE, active: true });
     void this.app.workspace.revealLeaf(leaf);
     this.syncBubbleVisibility();
+  }
+
+  getMinutesKanbanItems() {
+    const canvasFiles = this.app.vault.getFiles().filter((file) => file.extension === "canvas");
+    const root = obsidian.normalizePath(this.settings.mdFolder || DEFAULT_SETTINGS.mdFolder);
+    return getRecentNotes(this, Number.MAX_SAFE_INTEGER).filter((item) => {
+      const path = obsidian.normalizePath(item.file.path);
+      return path === root || path.startsWith(`${root}/`);
+    }).map((item) => {
+      const notePath = obsidian.normalizePath(item.file.path);
+      const expected = obsidian.normalizePath(getSemanticCanvasPath(notePath));
+      const prefix = `${item.file.basename} · 语义图`;
+      const associatedCanvases = canvasFiles.filter((file) => (
+        obsidian.normalizePath(file.path) === expected
+        || (file.parent && item.file.parent
+          && obsidian.normalizePath(file.parent.path) === obsidian.normalizePath(item.file.parent.path)
+          && file.basename.startsWith(prefix))
+      ));
+      const meta = getModeMeta(this.settings, item.mode) || MODE_META.off;
+      return {
+        file: item.file,
+        title: item.title || item.file.basename,
+        mode: item.mode,
+        modeLabel: meta.prefix || "纪要",
+        icon: meta.icon || "file-text",
+        folderPath: item.folderPath || obsidian.normalizePath(this.settings.mdFolder || DEFAULT_SETTINGS.mdFolder),
+        timeLabel: item.displayTime || "",
+        durationLabel: item.durationLabel || "",
+        canvasFiles: associatedCanvases,
+      };
+    });
+  }
+
+  async createMinutesKanbanFolder(rawName) {
+    const name = sanitizeFilename(String(rawName || "").replace(/[\\/]+/g, " ")).trim();
+    if (!name) throw new Error("请输入有效的文件夹名称");
+    const root = obsidian.normalizePath(this.settings.mdFolder || DEFAULT_SETTINGS.mdFolder);
+    const path = obsidian.normalizePath(`${root}/${name}`);
+    const existing = this.app.vault.getAbstractFileByPath(path);
+    if (existing && !(existing instanceof obsidian.TFolder)) throw new Error("同名文件已存在");
+    if (!existing) await this.ensureFolder(path);
+    return path;
+  }
+
+  async moveMinutesKanbanItem(item, rawFolderPath) {
+    const file = item && item.file;
+    if (!(file instanceof obsidian.TFile) || file.extension !== "md") throw new Error("纪要文件不存在");
+    const root = obsidian.normalizePath(this.settings.mdFolder || DEFAULT_SETTINGS.mdFolder);
+    const folderPath = obsidian.normalizePath(rawFolderPath || root);
+    if (!(folderPath === root || folderPath.startsWith(`${root}/`))) throw new Error("目标分组不在纪要目录内");
+    await this.ensureFolder(folderPath);
+    const currentFolder = file.parent ? obsidian.normalizePath(file.parent.path) : "";
+    if (currentFolder === folderPath) return;
+
+    const oldNotePath = obsidian.normalizePath(file.path);
+    const oldBase = file.basename;
+    const canvasSnapshots = [];
+    for (const canvasFile of Array.isArray(item.canvasFiles) ? item.canvasFiles : []) {
+      if (!(canvasFile instanceof obsidian.TFile) || canvasFile.extension !== "canvas") continue;
+      let content = "";
+      try { content = await this.app.vault.cachedRead(canvasFile); } catch { /* keep moving the note */ }
+      canvasSnapshots.push({ file: canvasFile, content });
+    }
+
+    const noteTarget = this.getAvailableMarkdownPath(`${folderPath}/${file.name}`, oldNotePath);
+    if (!noteTarget) throw new Error("无法生成可用的目标文件名");
+    await this.app.fileManager.renameFile(file, noteTarget);
+    const movedNote = this.app.vault.getAbstractFileByPath(noteTarget);
+    const newBase = movedNote instanceof obsidian.TFile
+      ? movedNote.basename
+      : String(noteTarget.split("/").pop() || oldBase).replace(/\.md$/i, "");
+
+    for (const snapshot of canvasSnapshots) {
+      const suffix = snapshot.file.basename.startsWith(oldBase)
+        ? snapshot.file.basename.slice(oldBase.length)
+        : " · 语义图";
+      const canvasTarget = this.getAvailableVaultPath(`${folderPath}/${newBase}${suffix}.canvas`);
+      if (!canvasTarget) continue;
+      try {
+        await this.app.fileManager.renameFile(snapshot.file, canvasTarget);
+        const movedCanvas = this.app.vault.getAbstractFileByPath(canvasTarget);
+        if (!(movedCanvas instanceof obsidian.TFile) || !snapshot.content) continue;
+        const document = JSON.parse(snapshot.content);
+        if (document && typeof document === "object" && document.lexvoiceSemantic && typeof document.lexvoiceSemantic === "object") {
+          document.lexvoiceSemantic.sourcePath = noteTarget;
+          await this.app.vault.modify(movedCanvas, JSON.stringify(document, null, 2));
+        }
+      } catch (error) {
+        console.warn("[LexVoice] move associated semantic canvas failed", error);
+      }
+    }
+  }
+
+  async openMinutesKanban() {
+    const existing = this.app.workspace.getLeavesOfType(VIEW_TYPE_MINUTES_KANBAN);
+    if (existing.length) {
+      await this.app.workspace.revealLeaf(existing[0]);
+      return;
+    }
+    const leaf = this.app.workspace.getLeaf("tab");
+    await leaf.setViewState({ type: VIEW_TYPE_MINUTES_KANBAN, active: true });
+    await this.app.workspace.revealLeaf(leaf);
   }
 
   // 打开大纲面板并进招聘上下文「内联编辑」视图（替掉原来的 flow:"settings" 弹窗）。
@@ -20555,7 +21055,7 @@ ${source}`;
     const duplicateGroups = Array.from(groups.values()).filter(group => group.length > 1);
     if (!duplicateGroups.length) return { groups: 0, merged: 0, updatedLinks: 0 };
 
-    const archiveFolder = obsidian.normalizePath("LexVoice/归档/重复人员");
+    const archiveFolder = obsidian.normalizePath(DEFAULT_LIBRARY_PATHS.duplicatePeopleArchiveFolder);
     await this.ensureFolder(archiveFolder);
     const replacements = [];
     let merged = 0;
@@ -22368,7 +22868,10 @@ ${source}`;
       paths: selectedPaths,
       mode: modeOverride || this.settings.polishMode,
       onConfirm: async (selection) => {
-        await this.importAudioFiles(selectedPaths, selection.mode);
+        await this.importAudioFiles(selectedPaths, selection.mode, {
+          speakerDiarization: selection.speakerDiarization,
+          speakerCount: selection.speakerCount,
+        });
       },
     });
     modal.open();
@@ -22384,11 +22887,23 @@ ${source}`;
       : null;
     const importProvider = resolveImportTranscribeProvider(this);
     const importProfile = this.getTranscribeProviderProfile(importProvider.id, importProvider);
-    const speakerDiarization = this.settings.importSpeakerDiarization !== false
-      && !!(importProfile && importProfile.speakerDiarization);
-    const speakerCount = speakerDiarization
-      ? Math.max(0, Math.min(100, Math.floor(Number(this.settings.importSpeakerCount) || 0)))
+    const providerSupportsSpeakerDiarization = !!(importProfile && importProfile.speakerDiarization)
+      || isSpeakerDiarizationProvider(importProvider)
+      || isDashScopeFileTransProvider(importProvider);
+    const requestedSpeakerDiarization = typeof options.speakerDiarization === "boolean"
+      ? options.speakerDiarization
+      : this.settings.importSpeakerDiarization !== false;
+    const speakerDiarization = requestedSpeakerDiarization
+      && providerSupportsSpeakerDiarization;
+    const requestedSpeakerCount = Object.prototype.hasOwnProperty.call(options, "speakerCount")
+      ? options.speakerCount
+      : this.settings.importSpeakerCount;
+    const speakerCount = speakerDiarization && isDashScopeFileTransProvider(importProvider)
+      ? normalizeRequestedSpeakerCount(requestedSpeakerCount)
       : 0;
+    const speakerModeLabel = speakerDiarization
+      ? ` · 区分说话人${speakerCount > 0 ? `（预计 ${speakerCount} 人）` : "（自动识别人数）"}`
+      : "";
     const moment = window.moment;
     const startedAt = moment();
     const sessionStamp = startedAt.format("YYYYMMDD-HHmmss");
@@ -22437,13 +22952,14 @@ ${source}`;
       externalAudioSource: externalSource,
       importTranscribeProviderId: importProvider.id,
       importSpeakerDiarization: speakerDiarization,
+      importSpeakerCount: speakerCount,
     };
 
     const header = [
       `# ${startedAt.format("YYYY-MM-DD HH:mm")} · ${meta.prefix}（导入处理中…）`,
       "",
       "> [!info] 导入信息",
-      `> 文件数：${paths.length} · 模式：${meta.prefix} · 转写：整文件${speakerDiarization ? " · 区分说话人" : ""}`,
+      `> 文件数：${paths.length} · 模式：${meta.prefix} · 转写：整文件${speakerModeLabel}`,
       `> 模型：${importProvider.model || importProvider.id} → ${this.settings.llmModel}`,
       externalSource && externalSource.name ? `> 来源：自动导入 · ${externalSource.name}` : null,
       "",
@@ -22484,7 +23000,7 @@ ${source}`;
         stageId: "prepare",
         type: "created",
         label: "导入任务已建立",
-        detail: `整文件转写 · ${importProfile.title || importProvider.id}${speakerDiarization ? " · 区分说话人" : ""}`,
+        detail: `整文件转写 · ${importProfile.title || importProvider.id}${speakerModeLabel}`,
       },
     });
 
@@ -22619,6 +23135,29 @@ ${source}`;
             });
           },
         });
+        const detectedSpeakerIds = speakerDiarization
+          ? extractSpeakerIdsFromMarkdown(String(result.text || ""))
+          : [];
+        if (speakerCount >= 2 && String(result.text || "").trim() && detectedSpeakerIds.length < speakerCount) {
+          const mismatchMessage = `已指定 ${speakerCount} 位说话人，模型实际区分出 ${detectedSpeakerIds.length} 位`;
+          new obsidian.Notice(`${mismatchMessage}。原始转写已保留，可在说话人编辑中核对。`, 9000);
+          await this.logDiagnostic("warn", "asr.import_speaker_count_mismatch", mismatchMessage, {
+            provider: importProvider.id,
+            model: importProvider.model || "",
+            audioName: displayName,
+            requestedSpeakerCount: speakerCount,
+            detectedSpeakerCount: detectedSpeakerIds.length,
+            detectedSpeakerIds,
+          });
+          this.updateImportActivity({
+            event: {
+              stageId: "transcribe",
+              type: "speaker-count-mismatch",
+              label: mismatchMessage,
+              detail: "不同说话人的声音可能较接近或存在较多重叠，建议核对原始转写。",
+            },
+          });
+        }
         successfulTranscriptions++;
         this.updateImportRequest({
           key: requestKey,

@@ -5,6 +5,9 @@ import {
   createBriefingCheckpoint,
   createBriefingJobId,
   assessBriefingPartFidelity,
+  assessBriefingPartGrounding,
+  expandOversizedBriefingSegments,
+  extractBriefingPartEnvelope,
   getBriefingFidelityPolicy,
   getBriefingPartTargetChars,
   normalizeBriefingPartBody,
@@ -70,7 +73,7 @@ describe("纪要整理流水线", () => {
     expect(targetTotal).toBe(16_120);
   });
 
-  it("短会和长会使用同一种分部计划，且不拆散单个转写段", () => {
+  it("短会沿用原段落，普通长会按段落形成内部窗口", () => {
     const short = planBriefingParts([segment(0, 1200)], 8000);
     expect(short).toHaveLength(1);
     expect(short[0].segmentStart).toBe(0);
@@ -79,6 +82,39 @@ describe("纪要整理流水线", () => {
     expect(long).toHaveLength(2);
     expect(long.map((part) => part.segmentStart)).toEqual([0, 1]);
     expect(long.map((part) => part.segmentEnd)).toEqual([0, 2]);
+  });
+
+  it("对数字、产品名和关键原话做确定性落地检查，防止弱模型写够长度但内容漂移", () => {
+    const source = "项目使用 Quick BI，预算 120 万，覆盖 8 个部门。负责人强调“先启动后校验”，计划 3 周完成。";
+    const drifted = assessBriefingPartGrounding(source, "会议讨论了平台建设、协作机制和后续安排。内容比较充分。".repeat(8));
+    expect(drifted.anchors.length).toBeGreaterThanOrEqual(4);
+    expect(drifted.needsRepair).toBe(true);
+    expect(drifted.missingAnchors).toContain("Quick");
+
+    const grounded = assessBriefingPartGrounding(source, "Quick BI 预算为 120 万，覆盖 8 个部门，采用先启动后校验，预计 3 周完成。");
+    expect(grounded.needsRepair).toBe(false);
+  });
+
+  it("整段长音频转写会在语义边界拆成内部窗口，不把数小时文本一次塞给模型", () => {
+    const text = Array.from({ length: 80 }, (_, index) => `第${index + 1}项讨论包含背景、例子和结论。`).join("\n\n");
+    const expanded = expandOversizedBriefingSegments([{
+      index: 0,
+      startOffsetMs: 0,
+      endOffsetMs: 3 * 60 * 60 * 1000,
+      text: text.repeat(20),
+    }], 8_000);
+
+    expect(expanded.length).toBeGreaterThan(1);
+    expect(expanded.every((item) => String(item.text).length <= 8_100)).toBe(true);
+    expect(expanded[0].startOffsetMs).toBe(0);
+    expect(expanded.at(-1)?.endOffsetMs).toBeLessThanOrEqual(3 * 60 * 60 * 1000);
+    expect(expanded.map((item) => item.text).join("")).toContain("第80项讨论");
+    expect(planBriefingParts([{
+      index: 0,
+      startOffsetMs: 0,
+      endOffsetMs: 3 * 60 * 60 * 1000,
+      text: text.repeat(20),
+    }], 8_000).length).toBeGreaterThan(1);
   });
 
   it("同一来源和偏好生成稳定任务 ID，偏好变化会隔离旧检查点", () => {
@@ -136,6 +172,51 @@ describe("纪要整理流水线", () => {
       .toBe("## 产品目标\n正文");
     expect(normalizeBriefingPartBody("### 时间窗口 2：42:00–84:00\n\n延续讨论"))
       .toBe("延续讨论");
+  });
+
+  it("弱模型输出的裸机器标记不会进入可见纪要", () => {
+    const parsed = extractBriefingPartEnvelope(`> [!abstract] 一分钟速览
+> 本段讨论团队协作。
+>
+> lexvoice-people
+> lexvoice-tags
+> lexvoice-part-summary
+>
+> 团队确认先建立共同目标。
+
+## 一、协作问题
+正文`);
+
+    expect(parsed.summary).toBe("团队确认先建立共同目标。");
+    expect(parsed.body).not.toContain("lexvoice-");
+  });
+
+  it("多部分组装移除各自摘要与重启编号，只保留连续议题正文", () => {
+    const segments = [segment(0, 2600), segment(1, 2600)];
+    const parts = planBriefingParts(segments, 4000);
+    const identity = createBriefingJobId({ segments, mode: "meeting", model: "model-a", optionsKey: "balanced" });
+    const checkpoint = createBriefingCheckpoint({ ...identity, mode: "meeting", model: "model-a", parts });
+    checkpoint.parts[0].status = "complete";
+    checkpoint.parts[0].text = "> [!abstract] 一分钟速览\n> 第一段摘要\n\n## 一、产品目标\n前半段讨论\n\n> [!success] 行动\n> - [ ] 保留这项行动\n\nlexvoice-part-summary";
+    checkpoint.parts[1].status = "complete";
+    checkpoint.parts[1].text = "> [!abstract] 摘要\n> 第二段摘要\n\n## 一、落地路径\n后半段讨论\n\nlexvoice-tags";
+
+    const assembled = assembleBriefingParts(checkpoint.parts);
+    expect(assembled).toBe("## 产品目标\n前半段讨论\n\n> [!success] 行动\n> - [ ] 保留这项行动\n\n## 落地路径\n后半段讨论");
+    expect(assembled).not.toMatch(/\[!abstract\]|lexvoice-|## 一、/);
+  });
+
+  it("协议正文与机器信息严格分离", () => {
+    const parsed = extractBriefingPartEnvelope(`<!-- lexvoice-part-body-start -->
+## 议题
+完整正文
+<!-- lexvoice-part-body-end -->
+<!-- lexvoice-people: 张三 -->
+<!-- lexvoice-tags: 项目/推进 -->
+<!-- lexvoice-part-summary: 已明确推进路径 -->`);
+
+    expect(parsed.body).toBe("## 议题\n完整正文");
+    expect(parsed.summary).toBe("已明确推进路径");
   });
 
   it("长会议分段拼装后仍是一篇连续纪要", () => {
