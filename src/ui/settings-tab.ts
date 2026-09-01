@@ -12,6 +12,7 @@ import { LLM_SERVICE_PRESETS, ONE_CARD_PROVIDERS, applyLlmProfileToWorkingConfig
 import { fetchLlmModelList, getLlmConfigIssue, testLlmConnection } from '../llm/core';
 import { snapshotActiveAsr, syncWorkingAsrToActiveScheme } from '../llm/asr-scheme';
 import { normalizeAsrConcurrency, resolveTranscribeProvider, transcribeAudio } from '../asr/transcribe';
+import { isStreamingTranscribeProfile, testStreamingTranscribeConnectivity } from '../asr/clients';
 import { countVocabularyGroups, formatVocabularyMarkdown, isStructuredVocabularyMarkdown, parseVocabularyGroups, summarizeVocabularyGroups } from '../vocabulary';
 import { hasPeopleHotwordsConsent, loadPeopleDirectory, normalizePeopleContextMode, normalizePeopleSuggestionCache, normalizePeopleSuggestionIgnores } from '../people';
 import { isRecruitFeatureUnlocked } from '../recruit';
@@ -1130,6 +1131,15 @@ export class LexVoiceSettingTab extends obsidian.PluginSettingTab {
 
   // 用一段 1 秒静音音频走完整转写链路，验证当前转写服务连通性。返回识别文本（可能为空字符串），失败抛错。
   async runAsrConnectivityTest() {
+    const activeId = this.plugin.settings.activeTranscribeProvider || "siliconflow";
+    const activeProvider = (this.plugin.settings.transcribeProviders || {})[activeId] || {};
+    const activeProfile = this.getTranscribeProviderProfile(activeId, activeProvider);
+    // 流式服务（OpenAI Realtime、百炼 Paraformer 等）的端点是 wss://，喂给 transcribeAudio()
+    // 只会撞上 HTTP 端点校验、报「转写服务地址协议不受支持」——那条 1 秒切片上传的路它根本走不通。
+    // 改用录音时同一套流式客户端自检，报错也才会落在「实时转写服务地址」这个正确的标签上。
+    if (isStreamingTranscribeProfile(activeProfile)) {
+      return await testStreamingTranscribeConnectivity(activeProfile, activeProvider);
+    }
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     try {
       const buf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
