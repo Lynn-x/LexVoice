@@ -258,7 +258,7 @@ export class OpenAIRealtimeTranscriptionClient {
         this.closed = true;
         // 连接在 task-started 之前就被关闭（密钥无效 / 模型未开通 / 地址错误等）→ 让 connect() 拒绝，
         // 否则 Promise 既不 resolve 也不 reject，start() 会永久挂起、按钮彻底失灵。
-        if (!resolved) { resolved = true; reject(new Error("连接被服务端关闭：请检查 OpenAI API Key 是否有效、账户是否有 Realtime 权限、地址是否为 wss://api.openai.com/v1/realtime")); }
+        if (!resolved) { resolved = true; reject(new Error("连接被服务端关闭：请检查访问密钥是否有效、账户是否有 Realtime 权限；官方地址为 wss://api.openai.com/v1/realtime，自建或中转服务请填完整路径，很多实现还要求带上 ?model=<模型名>")); }
         this.onClosed({ finalText: this.getFullText() });
       };
       if (typeof this.ws.on === "function") {
@@ -450,6 +450,74 @@ export class OpenAIRealtimeTranslationClient {
     });
   }
   _safeClose() { try { if (this.ws) this.ws.close(); } catch { /* intentionally empty */ } }
+}
+
+// ============================================================
+// 流式转写客户端工厂：根据 profile.streamProtocol 返回对应实现
+// 所有客户端遵守相同接口：connect / sendAudioFrame / finish / getFullText
+// 回调：onPartial(text, isFinal) / onError(err) / onClosed(info)
+// ============================================================
+export function createStreamingTranscriptionClient(profile, provider, callbacks) {
+  const opts = Object.assign({}, callbacks || {}, {
+    endpoint: provider.endpoint,
+    apiKey: provider.apiKey,
+    model: provider.model,
+    language: provider.language,
+    targetLanguage: provider.targetLanguage,
+  });
+  switch (profile.streamProtocol) {
+    case "openai-realtime-transcription":
+      return new OpenAIRealtimeTranscriptionClient(opts);
+    case "openai-realtime-translation":
+      return new OpenAIRealtimeTranslationClient(opts);
+    case "dashscope-ws":
+    default:
+      return new DashScopeStreamingClient(opts);
+  }
+}
+
+export function isStreamingTranscribeProfile(profile) {
+  return !!(profile && profile.transcribeMode === "streaming");
+}
+
+// 静音探针节奏：10 帧 × 100ms = 1 秒音频，与切片路径的 1 秒静音自检等价。
+const STREAMING_PROBE_FRAME_MS = 100;
+const STREAMING_PROBE_FRAMES = 10;
+// 模型名写错、账号无权限这类拒绝，服务端通常要等收到首帧音频之后才回 error 事件，送完还得再等一会儿。
+const STREAMING_PROBE_GRACE_MS = 1200;
+
+// 流式服务的连通性自检。这类服务端点是 wss://，走不了 transcribeAudio() 的 HTTP 上传
+// （会被 assertSafeServiceEndpoint 挡成「转写服务地址协议不受支持」），必须用录音时同一套
+// 客户端建连，才能真正验证握手、鉴权与会话协商。送进去的是静音，VAD 不会出字，
+// 返回空文本属于正常结果——这里要的是「连得上」，不是「认得出」。
+export async function testStreamingTranscribeConnectivity(profile, provider, deps?) {
+  const createClient = (deps && deps.createClient) || createStreamingTranscriptionClient;
+  const wait = (deps && deps.wait) || ((ms) => new Promise((resolve) => window.setTimeout(resolve, ms)));
+  const errors = [];
+  const client = createClient(profile, provider, {
+    onPartial: () => { /* intentionally empty */ },
+    onError: (e) => { errors.push(e instanceof Error ? e : new Error(String((e && e.message) || e))); },
+    onClosed: () => { /* intentionally empty */ },
+  });
+  let connected = false;
+  try {
+    await client.connect();
+    connected = true;
+    const sampleRate = Number(client.sampleRate) || 16000;
+    // 16-bit 单声道全 0 = 静音；每次 slice(0) 交出独立副本，避免客户端持有同一段 buffer。
+    const silence = new ArrayBuffer(Math.round(sampleRate * 2 * STREAMING_PROBE_FRAME_MS / 1000));
+    for (let i = 0; i < STREAMING_PROBE_FRAMES && !errors.length; i++) {
+      client.sendAudioFrame(silence.slice(0));
+      await wait(STREAMING_PROBE_FRAME_MS);
+    }
+    if (!errors.length) await wait(STREAMING_PROBE_GRACE_MS);
+    if (errors.length) throw errors[0];
+    return client.getFullText();
+  } finally {
+    // connect() 失败时底层 socket 已被 ws 关掉，再 await finish() 只会白等它 5 秒的收网超时。
+    if (connected) { try { await client.finish(); } catch { /* intentionally empty */ } }
+    else if (typeof client._safeClose === "function") { try { client._safeClose(); } catch { /* intentionally empty */ } }
+  }
 }
 
 export class PcmStreamEncoder {

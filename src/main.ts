@@ -39,7 +39,7 @@ declare const LEXVOICE_BUILD_VERSION: string;
 import { applyLlmProfileToWorkingConfig, getBriefingMergeMaxTokens, classifyBriefingLength } from "./llm/config";
 import { getLearnedLlmOutputCeiling } from "./llm/output-budget";
 import { getThinkingControl } from "./llm/thinking";
-import { DashScopeStreamingClient, OpenAIRealtimeTranscriptionClient, OpenAIRealtimeTranslationClient, PcmStreamEncoder } from "./asr/clients";
+import { PcmStreamEncoder, createStreamingTranscriptionClient } from "./asr/clients";
 import { MODE_META, FRONTMATTER_SCHEMA, MODE_PREFIX_TO_KEY } from "./shared/catalog-modes";
 import { SEDIMENT_GROUP_CONFIG, SEDIMENT_GROUP_ORDER, VOCABULARY_SECTIONS } from "./shared/catalog-sediment";
 import { AUDIO_EXT, TEXT_IMPORT_EXT } from "./shared/catalog-import";
@@ -3219,30 +3219,6 @@ function buildTextImportSourceDetails(session) {
 //       → session.output_transcript.delta / .completed（译文）
 //       output_audio.delta 直接丢弃
 // ============================================================
-
-// ============================================================
-// 流式转写客户端工厂：根据 profile.streamProtocol 返回对应实现
-// 所有客户端遵守相同接口：connect / sendAudioFrame / finish / getFullText
-// 回调：onPartial(text, isFinal) / onError(err) / onClosed(info)
-// ============================================================
-function createStreamingTranscriptionClient(profile, provider, callbacks) {
-  const opts = Object.assign({}, callbacks || {}, {
-    endpoint: provider.endpoint,
-    apiKey: provider.apiKey,
-    model: provider.model,
-    language: provider.language,
-    targetLanguage: provider.targetLanguage,
-  });
-  switch (profile.streamProtocol) {
-    case "openai-realtime-transcription":
-      return new OpenAIRealtimeTranscriptionClient(opts);
-    case "openai-realtime-translation":
-      return new OpenAIRealtimeTranslationClient(opts);
-    case "dashscope-ws":
-    default:
-      return new DashScopeStreamingClient(opts);
-  }
-}
 
 // ============================================================
 // PCM 实时编码器：MediaStream → PCM 16-bit mono 帧（默认 16kHz，可设 24kHz）
@@ -15422,7 +15398,7 @@ class LexVoicePlugin extends obsidian.Plugin {
         endpointPlaceholder: "wss://api.openai.com/v1/realtime",
         modelPlaceholder: "gpt-realtime-whisper",
         languagePlaceholder: "（可留空，自动检测）",
-        endpointHelp: "OpenAI Realtime 的 WebSocket 地址。保持默认即可。",
+        endpointHelp: "OpenAI Realtime 的 WebSocket 地址。用官方服务保持默认即可；自建或中转的 OpenAI 兼容服务要填完整路径，很多实现还要求带上 ?model=<模型名>（地址原样使用，不会自动补参数）。",
         keyHelp: "OpenAI 项目的访问密钥（与切片转写共用同一把 Key）。",
         modelHelp: "推荐 gpt-realtime-whisper（流式 ASR，专为实时字幕/会议记录设计）。",
         description: "流式转写，边说边出文字。LexVoice 跳过分段切片，整场录音与服务保持一条实时连线，延迟约半秒以内。",
