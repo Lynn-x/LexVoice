@@ -1,21 +1,114 @@
-MIT License
+LexVoice Proprietary Software License
+Version 1.1 - September 7, 2026
 
-Copyright (c) 2026 Lynnx
+Copyright (c) 2026 Lynnx. All rights reserved, except as expressly granted below.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+1. Scope, effective material, and existing rights
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+This is a proprietary software license, not an open-source license. It applies
+to original LexVoice material first distributed by the copyright holder with
+the 2.2.0 release line or later (the "Software"), only to the extent the
+copyright holder has the right to license that material.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+It does not revoke, replace, or restrict rights already granted for material
+previously released under the MIT License, including LexVoice 2.1.2 and earlier
+MIT-licensed releases. Those rights remain available under their original terms,
+including for previously MIT-licensed portions present in a later release.
+Adding this license to a later release or changing a repository's visibility
+does not withdraw an earlier MIT grant, or rights in copies, forks, and
+derivative works lawfully made under that grant.
+The original notice is preserved in licenses/LEXVOICE-LEGACY-MIT.txt.
+
+Third-party components retain their own licenses. See THIRD_PARTY_NOTICES.md
+and the notices embedded in the distributed files. Where this license conflicts
+with a third-party license for that component, the third-party license controls.
+
+2. Permitted use
+
+Subject to this license, the copyright holder grants you a non-exclusive,
+royalty-free license to install and use this version of the Software for your
+personal purposes or your organization's internal business purposes. You may
+make backup copies and distribute unmodified official copies internally to
+members of your organization for those purposes, retaining all license and
+copyright notices. This is not a promise of free future versions or services.
+
+You may inspect the delivered code and make local adjustments solely for your
+own permitted use, including configuration, accessibility, interoperability,
+and troubleshooting. This does not authorize external distribution of modified
+copies, removal of origin notices, or presentation as another software product.
+
+Third-party ASR, AI, hosting, and other services are subject to their own terms
+and fees. No access to those services is granted by this license.
+
+3. Restrictions on redistribution, rebranding, and sale
+
+Except for the prior rights and third-party rights preserved in section 1,
+rights required by applicable law, or express written permission from the
+copyright holder, you must not:
+
+(a) redistribute, publish, sublicense, upload for public download, or otherwise
+    supply the Software or modified versions to third parties outside the
+    permitted internal use in section 2, whether free of charge or for payment,
+    including through a public repository, package registry, download mirror,
+    marketplace listing, or file-sharing service;
+(b) rename, rebrand, white-label, or repackage the Software or modified versions
+    as another product, or claim to be its original author or official provider;
+(c) sell, rent, license for a fee, or bundle the Software or modified versions
+    for redistribution as part of another software product or service;
+(d) use the Software or its protected implementation to provide a hosted,
+    white-label, or API-access software product to third parties;
+(e) copy protected portions of the Software into another distributed product,
+    or disclose non-public development source code without authorization; or
+(f) remove, replace, or obscure copyright, license, or origin notices.
+
+These restrictions concern the Software, not independent implementations of
+ideas, general techniques, public APIs, or functionality as such. They do not
+claim exclusive rights over material that is not protected by applicable law.
+
+4. User content and outputs
+
+This license does not give the copyright holder ownership of your recordings,
+transcripts, notes, indexes, reports, slides, or other user content and outputs.
+You may edit, export, share, and commercially use that content, subject to rights
+in the source material and any applicable third-party service terms. This
+permission includes markup, styles, and scripts intentionally embedded by the
+Software in those exported documents, as part of sharing or selling the documents.
+Selling a report you created is not selling the Software. This permission does
+not cover redistribution of the plugin itself or extraction of its protected
+implementation for a rebranded software product.
+
+5. Distribution and branding
+
+Development source code for releases under this license is not publicly offered
+under an open-source license. Delivery of JavaScript runtime files, including
+files that are technically readable, does not grant source-code redistribution
+rights or any rights beyond this license and the exceptions in section 1.
+
+Obsidian's official community directory and the delivery infrastructure used by
+the copyright holder's official release links may deliver unmodified official
+release artifacts with their notices intact. This limited permission does not
+authorize independent mirrors, modified releases, repackaging, or resale.
+Other distribution arrangements require express written authorization.
+
+No trademark or branding rights are granted other than truthful identification
+of the Software. Do not imply endorsement, affiliation, or official status.
+
+6. Mandatory rights and warranty
+
+Nothing in this license limits rights that cannot lawfully be excluded,
+including any mandatory rights concerning inspection, interoperability, security
+research, or consumer protection. No obligation to disclose private source code
+is created, except where required by applicable law or a component's license.
+
+TO THE EXTENT PERMITTED BY APPLICABLE LAW, THE SOFTWARE IS PROVIDED "AS IS",
+WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. TO THAT SAME EXTENT,
+THE COPYRIGHT HOLDER IS NOT LIABLE FOR DAMAGES ARISING FROM THE SOFTWARE OR
+ITS USE. NON-EXCLUDABLE RIGHTS AND LIABILITIES ARE NOT AFFECTED.
+
+7. Separate permission
+
+For redistribution, commercial packaging, or other uses outside this license,
+request written permission from the copyright holder through the official
+LexVoice contact channels. Silence is not authorization. Any separate written
+agreement applies only to its stated parties and scope.

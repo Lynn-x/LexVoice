@@ -1,18 +1,28 @@
 # LexVoice
 
-[English](README.md) | 简体中文 · [中文文档站](https://lexvoice.cn/zh/)
+[English](README.md) | 简体中文 · [版本说明](RELEASE_NOTES.md) · [中文文档站](https://lexvoice.cn/zh/)
 
 <p align="center">
-  <img width="1280" alt="LexVoice 介绍图" src="docs/images/lexvoice-intro.png">
+  <img width="720" alt="LexVoice Obsidian 侧边栏" src="https://github.com/user-attachments/assets/f29b528a-f219-4404-92b4-0639e354d17e">
 </p>
 
 LexVoice 是一款 Obsidian 插件，用于录音、语音转写、录音中的实时大纲，以及把会议内容整理成可复用的 Markdown：待办、学习卡片、人员档案和 ASR 热词。
 
-LexVoice **不是云服务**，也不内置任何 API Key。你需要连接自己的语音转写服务（ASR），并可选连接自己的大语言模型服务（LLM）。录音保存在你的知识库中；LexVoice 没有自己的服务器，也不会把内容上传到所谓的 LexVoice 云端。
+录音和纪要保存在你的知识库中。使用前需配置自己的语音转写服务；实时大纲、纪要整理和会议主题关联需要 AI 整理服务。使用云端服务时，相应的音频或文本会发送至你选择的服务商。
 
-LexVoice 最初只是一个“录音 → 转写 → 总结”工具。但会议真正值得留下的，通常不是一篇很少再打开的转写稿，而是谁说了什么、接下来要做什么、学到了什么，以及以后还会反复遇到哪些术语。因此，LexVoice 逐步变成了一个**会议工作台**：录音是入口，实时大纲、沉淀工作流和对象库才是会议结束后继续发挥价值的部分。
+**官方安装与更新：[Lynn-x/LexVoice Releases](https://github.com/Lynn-x/LexVoice/releases/latest)。** 自 2.2.0 起公开安装文件和用户文档，后续开发源码不再公开。新增内容适用 [LexVoice 专有软件许可](LICENSE)，历史 MIT 内容保留原有授权。
 
 LexVoice 支持 Obsidian 桌面端和移动端。移动端录音使用设备麦克风，录制后可使用分段转写或整段音频转写；电脑音频、虚拟声卡、多声道采集、桌面设备检测，以及需要自定义鉴权请求头的实时流式 ASR，需要使用桌面端。
+
+## 2.2.0 更新重点
+
+- **会议主题**：自动关联同一事项的多篇纪要，汇总讨论、决定和未决问题，保留来源链接。
+- **长音频转写**：按服务上传限制规划切片，降低支持格式的解码内存占用，保留已完成的转写结果。
+- **说话人编辑**：转写结束后填写姓名、合并编号或逐句修正归属，修改范围限定为正文说话人标签。
+- **任务恢复**：支持停止、继续和重试未完成部分，可复制当前任务的诊断信息。
+- **设置页面**：集中管理服务商，分别选择实时转写、会后转写和 AI 整理模型。
+
+数据、费用和兼容性边界见 [2.2.0 版本说明](RELEASE_NOTES.md)。
 
 ## 功能
 
@@ -51,6 +61,10 @@ LexVoice 支持 Obsidian 桌面端和移动端。移动端录音使用设备麦�
 
 处理进度面板会区分语音转写、AI 整理和 Markdown 写入，显示当前阶段、最近活动、失败原因以及重试或取消入口。语音转写失败和 AI 整理失败会分别记录，可以从真正失败的步骤继续，而不必重新执行整条链路。
 
+### 说话人核对
+
+开启会后说话人分离后，LexVoice 会先使用临时编号完成转写，不等待人工填写姓名。转写完成后，可在侧边栏为编号命名、把多个编号归到同一人名下，或修正某一句的归属。系统不会只凭会议文字猜测真实身份；未确认的内容会继续保留为编号。
+
 ### 沉淀工作流
 
 每篇纪要可以由 AI 拆成四组候选内容，通过流水线方式逐组确认、合并或忽略：
@@ -63,6 +77,10 @@ LexVoice 支持 Obsidian 桌面端和移动端。移动端录音使用设备麦�
 ### 对象库
 
 LexVoice 可以把会议中值得复用的内容保存为独立的 Obsidian 对象，包括人员档案、待办卡片、学习卡片和 ASR 热词，并生成概念墙、待办墙和学习卡片墙。所有内容都保存在你自己的知识库中；下次会议再次提到同一个人时，可以关联已有档案，而不是重复创建。
+
+### 会议主题
+
+主题记忆会自动关联围绕同一主题的多篇纪要，不需要每次录完都手工归档。主题页会为每条聚合内容保留原文入口，并把已记录的决定与仍未解决的问题分开呈现。它采用保守规则：较晚的讨论不会自动关闭旧问题，不会自动合并两个主题，也不会自动把待办标为完成。可在“资料库”设置中暂停后台处理、排除文件夹，或把单篇纪要排除在自动关联之外。
 
 <p align="center">
   <img width="220" alt="LexVoice 信息对象" src="https://github.com/user-attachments/assets/df4c5d5f-cb92-4578-a09a-466e8d866b19" />
@@ -160,6 +178,8 @@ LexVoice 没有广告、行为分析或遥测。设置保存在 `.obsidian/plugi
 
 如果你配置的是**云端** ASR 或 LLM 服务，相关音频、转写文本和 Prompt 上下文会发送给你选择的服务商。涉及客户资料、医疗、法律、人力资源、招聘或内部战略等敏感内容时，建议使用本地转写和本地模型，并在录音前取得相关人员同意。详情见 [`PRIVACY.md`](PRIVACY.md)。
 
+“资料库 → 自动整理会议主题”缺省为开启，已有关闭设置会保留。启用后会向你配置的 AI 整理服务发送标题、日期、梗概、最多十个议题标题和有限正文摘录；不发送音频、知识库路径或完整逐字稿。服务商可能按用量收费，可在“资料库”中关闭。
+
 ## 安装
 
 从 Obsidian 社区插件目录安装：
@@ -170,12 +190,20 @@ LexVoice 没有广告、行为分析或遥测。设置保存在 `.obsidian/plugi
 
 手动安装：
 
-1. 从同一个 GitHub Release 下载 `main.js`、`manifest.json` 和 `styles.css`。
+1. 从同一个[官方 GitHub Release](https://github.com/Lynn-x/LexVoice/releases/latest) 下载 `main.js`、`manifest.json` 和 `styles.css`。
 2. 将三个文件放入 `<你的知识库>/.obsidian/plugins/lexvoice/`。
 3. 重新加载 Obsidian，并在第三方插件中启用 **LexVoice**。
 
+更新时保留原有 `data.json` 和知识库文件，仅替换上述三个安装文件。
+
 ## 许可证与致谢
 
-LexVoice 使用 MIT License 开源，详见 [`LICENSE`](LICENSE)。
+自 2.2.0 版本线起，新增的 LexVoice 内容采用 [LexVoice 专有软件许可](LICENSE)，后续开发源码不再公开。安装所需的 JavaScript 运行文件仍可查看；这不属于开源发布，也不授予对运行文件或源码的再发布权。
+
+允许个人和企业内部正常使用。用户自己的录音、纪要和导出报告可以继续编辑、分享和商用，但需遵守内容本身的权利及第三方服务条款。未经书面授权，不得将插件改名包装、对外重新发布（包括免费发布）、售卖或作为贴牌软件提供。本地自用调整不受禁止，对外分发修改版则需要授权。
+
+包括 2.1.2 在内的既有 MIT 版本，以及新版中沿用的既有 MIT 部分，保留原有授权，见 [历史 MIT 声明](licenses/LEXVOICE-LEGACY-MIT.txt)。第三方组件继续适用各自的许可证，见 [第三方声明](THIRD_PARTY_NOTICES.md)。新许可不限制法律强制保留的权利，也不禁止独立实现一般思路或功能。
+
+闭源版本通过 Obsidian 社区目录分发需遵守其[个案审核政策](https://docs.obsidian.md/community-directory/developer-policies)；更换许可本身不代表这种分发方式已经获得认可。
 
 HTML 幻灯片功能受到 [alchaincyf/huashu-design](https://github.com/alchaincyf/huashu-design) 的启发，其 HTML-first 工作流和设计原则影响了本功能的实现。根据上游许可证说明：Derived from alchaincyf/huashu-design.

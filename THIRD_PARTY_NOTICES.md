@@ -1,6 +1,31 @@
 # Third-Party Notices
 
-LexVoice does not bundle third-party library source code or third-party media assets in this plugin folder. The plugin is shipped as a single `main.js` file plus stylesheet and manifest. No `node_modules` is included or required at runtime.
+## mux.js
+
+- Source: https://github.com/videojs/mux.js
+- Version: 7.1.0
+- Use: streaming ADTS AAC frame parsing without audio decoding; only the parser and its local utilities are bundled.
+- Copyright (c) Brightcove, Inc.
+- License: Apache-2.0; full text is preserved in [`licenses/mux-js-Apache-2.0.txt`](licenses/mux-js-Apache-2.0.txt) and embedded in `main.js`.
+
+LexVoice is shipped as `main.js`, a stylesheet, and a manifest. The JavaScript bundle includes the libraries listed below; not shipping a `node_modules` directory does not remove their license obligations. Third-party licenses apply to their respective components independently of the LexVoice Proprietary License.
+
+## Bundled library: ws
+
+- Project: https://github.com/websockets/ws
+- License: MIT; full upstream copyright and permission text is preserved in [`licenses/ws-MIT.txt`](licenses/ws-MIT.txt) and embedded in `main.js`.
+- Usage: the Node implementation is bundled and loaded lazily for desktop WebSocket authentication. Optional native accelerators are not bundled.
+- The build checks the preserved notice against the installed dependency's license. Dependency changes require a new license review before distribution.
+
+## Bundled library: mp3-parser
+
+- Project: https://github.com/biril/mp3-parser (version 0.3.0).
+- License: MIT; the upstream notice is preserved in [`licenses/mp3-parser-MIT.txt`](licenses/mp3-parser-MIT.txt) and embedded in `main.js`.
+- Usage: reads MPEG audio frame headers for local, bounded-memory MP3 slicing. No external program or service is used by this parser.
+
+## Previously MIT-licensed LexVoice material
+
+LexVoice 2.1.2 and earlier MIT-licensed releases retain their original terms. The original notice is preserved in [`licenses/LEXVOICE-LEGACY-MIT.txt`](licenses/LEXVOICE-LEGACY-MIT.txt) and embedded in `main.js`. Its presence preserves rights in previously licensed material; it does not grant an MIT license to new proprietary material. The new license does not restrict MIT rights in old portions reused in newer versions.
 
 ## Runtime platform
 
@@ -34,7 +59,7 @@ LexVoice's HTML PPT feature was inspired by the HTML-first slide-deck workflow a
 
 LexVoice does not bundle, copy, or redistribute Huashu Design or Guizang PPT Skill source code, scripts, assets, demos, generated media, templates, or starter components. The LexVoice HTML/PPTX renderer and prompt workflow are implemented independently for this plugin.
 
-Huashu Design is distributed under its own Personal Use License. That license applies to Huashu Design itself and any use of its protected work; LexVoice's MIT License does not grant rights to Huashu Design. If future LexVoice changes copy or adapt Huashu Design code, assets, scripts, demos, or other protected materials, those changes must be reviewed separately, carry the required notices, and obtain any authorization required by Huashu Design's license before publication.
+Huashu Design is distributed under its own Personal Use License. That license applies to Huashu Design itself and any use of its protected work; the LexVoice license does not grant rights to Huashu Design. If future LexVoice changes copy or adapt Huashu Design code, assets, scripts, demos, or other protected materials, those changes must be reviewed separately, carry the required notices, and obtain any authorization required by Huashu Design's license before publication.
 
 Guizang PPT Skill is distributed under the MIT License. LexVoice references its publicly documented design workflow ideas, including slide rhythm, fixed layout discipline, and visual checklist thinking, but does not copy its implementation.
 

@@ -2,17 +2,28 @@
 
 
 
-English | [简体中文](README.zh-CN.md) · [中文文档站](https://lexvoice.cn/zh/)
+English | [简体中文](README.zh-CN.md) · [Release notes](RELEASE_NOTES.md) · [中文文档站](https://lexvoice.cn/zh/)
 
-
+欢迎加入微信群交流
+<img width="897" height="923" alt="770bdaa5d79907b957e851c2901f30ec" src="https://github.com/user-attachments/assets/43971425-2bdd-4bcb-b9bf-d4e0e037b776" />
 
 LexVoice is an Obsidian plugin for recording audio, transcribing speech, building a live outline while you record, and turning meetings into reusable Markdown — todos, learning cards, people records, and ASR hotwords.
 
 It is **not** a hosted cloud service and ships **no API keys**. You connect your own speech-to-text (ASR) service and, optionally, your own large language model (LLM). Recordings stay in your vault; nothing is uploaded to any LexVoice server (there is none).
 
-LexVoice started as a plain record → transcribe → summarize plugin. But the valuable part of a meeting is rarely the raw transcript — it is *who said what, what to do next, what you learned, and the terms you will hear again*. So LexVoice was rebuilt from a transcription tool into a **meeting workbench**: recording is just the entry point; the live outline, the sediment review, and the object library are the point.
+**Official downloads and updates: [Lynn-x/LexVoice Releases](https://github.com/Lynn-x/LexVoice/releases/latest).** From 2.2.0 onward, public releases contain installation files and user documentation. Development source remains private. New material uses the [LexVoice Proprietary Software License](LICENSE); historical MIT material retains its original license.
 
 LexVoice supports desktop and mobile Obsidian workflows. Mobile recording uses the device microphone and supports segmented or whole-audio transcription after capture. System audio, virtual audio devices, multichannel capture, desktop device diagnostics, and realtime streaming ASR providers that require custom authentication headers require the desktop app.
+
+## What's new in 2.2.0
+
+- **Meeting topics:** connect related minutes, collect discussions, decisions, and open questions, and follow links back to their sources.
+- **Long-audio transcription:** plan chunks around provider upload limits, reduce decoding memory for supported formats, and reuse saved results when retrying.
+- **Speaker editing:** assign names after transcription, map multiple labels to one person, and correct individual turns. Label changes apply to the note body.
+- **Task recovery:** stop, resume, or retry unfinished work and copy diagnostics for the current task.
+- **Settings:** manage providers together and choose models separately for live transcription, post-meeting transcription, and AI organization.
+
+See the [2.2.0 release notes](RELEASE_NOTES.md) for data, cost, and compatibility boundaries.
 
 ## Features
 
@@ -44,6 +55,9 @@ If a request is interrupted or a model reaches its output limit, completed work 
 ### Task progress
 The processing panel separates transcription, AI organization, and Markdown writing. It shows the active stage, recent activity, failures, and retry or cancel actions. Failed transcription and failed AI organization remain distinct so you can resume from the step that actually failed.
 
+### Speaker review
+When post-meeting diarization is enabled, LexVoice keeps provisional speaker labels through transcription so the meeting does not stop for identity confirmation. Afterwards, use the side panel to give labels a name, merge labels that refer to the same person, or correct a specific turn. The system does not infer a real identity from the meeting text alone.
+
 ### Sediment workflow
 After each note, AI splits the content into four candidate groups you review assembly-line style — keep / merge / ignore:
 - **People** — adjudicated one by one
@@ -53,6 +67,9 @@ After each note, AI splits the content into four candidate groups you review ass
 
 ### Object library
 LexVoice turns reusable meeting content into standalone Obsidian objects — people profiles, todo cards, learning cards, ASR hotwords, and concept / todo / learning-card walls. Everything lives in your own vault; the next time the same person comes up, it links to the existing profile.
+
+### Meeting topics
+Topic memory can connect multiple minutes about the same subject without asking you to sort every new note. Topic pages keep a source link for each summarized item and separate recorded decisions from unanswered questions. It is deliberately conservative: a later discussion does not automatically close an earlier question, merge two topics, or mark a task complete. You can pause the background work, exclude folders, or exclude an individual note in **Library** settings.
 
 <p align="center">
   <img width="220" alt="LexVoice object" src="https://github.com/user-attachments/assets/df4c5d5f-cb92-4578-a09a-466e8d866b19" />
@@ -118,15 +135,17 @@ Required:
 
 Recommended:
 - An LLM service — powers the live outline, summarization, sediment, export, and template tuning
-- A virtual audio device — to record system / online-meeting audio
+- A virtual audio device on macOS / Linux, or as a Windows fallback — to record system / online-meeting audio
 - A real microphone — to mix in your own voice
 - A domain glossary — greatly improves recognition of names, products, organizations, and terms
 
 ## Audio input & real microphone
 
-Capturing system audio cross-platform from the Obsidian desktop app is unreliable, so recording online meetings, web video, courses, or anything played by the computer usually needs a **virtual audio device**:
+LexVoice can capture the Windows default playback device directly through Electron Loopback. Choose **Microphone + Windows system audio** for meetings, or **Windows system audio only** for video and courses. The capture request temporarily obtains a display stream as Electron requires, immediately discards its video track, and records audio only.
 
-- Windows: VB-Cable
+Other desktop platforms, and Windows installations where the direct test fails, can use a **virtual audio device**:
+
+- Windows fallback: VB-Cable
 - macOS: BlackHole
 - Linux: PulseAudio / PipeWire monitor source
 
@@ -135,13 +154,15 @@ On Windows with VB-Cable, mind the naming:
 - LexVoice reads **CABLE Output** (a recording device)
 - To also record yourself, the **real microphone must be your physical mic** — not CABLE Output, BlackHole, VoiceMeeter, or Stereo Mix
 
-If the level meter does not move, run the device check before starting a long recording.
+Run **Test device** before a long recording. A Windows Loopback track can be valid while silent, so play a short piece of audio during the test if you also want to verify the level meter.
 
 ## Privacy
 
 No ads, no analytics, no telemetry. Settings are stored locally in `.obsidian/plugins/lexvoice/data.json`. Recordings are saved to the local vault path you choose; LexVoice has no cloud storage and uploads nothing to any LexVoice server.
 
 However, if you use a **cloud** ASR or LLM provider, the relevant audio, transcript text, and prompt context are sent to that provider you configured. For sensitive content (client data, medical, legal, HR, recruiting, internal strategy), prefer local transcription + a local model, and obtain consent before recording. See [`PRIVACY.md`](PRIVACY.md).
+
+Automatic meeting topics default to enabled, including upgrades without a saved value for this setting; an existing disabled setting is preserved. The feature sends the configured AI service the title, date, summary, up to ten topic headings, and limited body excerpts. It does not send audio, vault paths, or the full raw transcript. Provider charges may apply. Disable it in **Library** settings to stop new background requests.
 
 ## Installation
 
@@ -153,12 +174,20 @@ From the Obsidian Community plugins directory:
 
 Manual install:
 
-1. Download `main.js`, `manifest.json`, and `styles.css` from the same GitHub Release.
+1. Download `main.js`, `manifest.json`, and `styles.css` from the same [official GitHub Release](https://github.com/Lynn-x/LexVoice/releases/latest).
 2. Copy them into `<your vault>/.obsidian/plugins/lexvoice/`.
 3. Reload Obsidian and enable **LexVoice** under Community plugins.
 
+When updating, keep your existing `data.json` and vault files. Replace only the three installation files above.
+
 ## License & credits
 
-LexVoice is released under the MIT License — see [`LICENSE`](LICENSE).
+Beginning with the 2.2.0 release line, new LexVoice material is distributed under the [LexVoice Proprietary Software License](LICENSE). Development source code is no longer publicly released. Official JavaScript runtime files remain inspectable; that does not make this an open-source release or grant a right to redistribute the runtime or source code.
+
+Personal and internal business use is permitted. Your recordings, notes, and exported reports may still be edited, shared, and commercially used, subject to rights in their contents. Unauthorized rebranding, repackaging, external redistribution (free or paid), resale, and white-label software offerings are prohibited. Local adjustments for your own permitted use are allowed; distributing a modified plugin is not.
+
+Previously MIT-licensed releases, including 2.1.2, and previously MIT-licensed portions reused in later releases retain their original rights. See [the preserved MIT notice](licenses/LEXVOICE-LEGACY-MIT.txt). Third-party components retain their own licenses; see [Third-Party Notices](THIRD_PARTY_NOTICES.md). Nothing here restricts mandatory legal rights or independent implementations of general ideas.
+
+Closed-source distribution through the Obsidian community directory is subject to [Obsidian's case-by-case review](https://docs.obsidian.md/community-directory/developer-policies). This license change does not itself establish approval for the new distribution model.
 
 The HTML slide-deck feature was inspired by [alchaincyf/huashu-design](https://github.com/alchaincyf/huashu-design); its HTML-first slide workflow and design principles influenced this work. Per the upstream license: Derived from alchaincyf/huashu-design.
