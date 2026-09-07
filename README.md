@@ -4,8 +4,7 @@
 
 English | [简体中文](README.zh-CN.md) · [Release notes](RELEASE_NOTES.md) · [中文文档站](https://lexvoice.cn/zh/)
 
-欢迎加入微信群交流
-<img width="897" height="923" alt="770bdaa5d79907b957e851c2901f30ec" src="https://github.com/user-attachments/assets/43971425-2bdd-4bcb-b9bf-d4e0e037b776" />
+
 
 LexVoice is an Obsidian plugin for recording audio, transcribing speech, building a live outline while you record, and turning meetings into reusable Markdown — todos, learning cards, people records, and ASR hotwords.
 
