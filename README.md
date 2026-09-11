@@ -1,10 +1,6 @@
 # LexVoice
 
-
-
 English | [简体中文](README.zh-CN.md) · [Release notes](RELEASE_NOTES.md) · [中文文档站](https://lexvoice.cn/zh/)
-
-
 
 LexVoice is an Obsidian plugin for recording audio, transcribing speech, building a live outline while you record, and turning meetings into reusable Markdown — todos, learning cards, people records, and ASR hotwords.
 
@@ -14,17 +10,25 @@ It is **not** a hosted cloud service and ships **no API keys**. You connect your
 
 LexVoice supports desktop and mobile Obsidian workflows. Mobile recording uses the device microphone and supports segmented or whole-audio transcription after capture. System audio, virtual audio devices, multichannel capture, desktop device diagnostics, and realtime streaming ASR providers that require custom authentication headers require the desktop app.
 
-## What's new in 2.2.0
+## What's new in 2.3.0
 
-- **Meeting topics:** connect related minutes, collect discussions, decisions, and open questions, and follow links back to their sources.
-- **Long-audio transcription:** plan chunks around provider upload limits, reduce decoding memory for supported formats, and reuse saved results when retrying.
-- **Speaker editing:** assign names after transcription, map multiple labels to one person, and correct individual turns. Label changes apply to the note body.
-- **Task recovery:** stop, resume, or retry unfinished work and copy diagnostics for the current task.
-- **Settings:** manage providers together and choose models separately for live transcription, post-meeting transcription, and AI organization.
+- **Meeting preparation:** create the meeting note before recording, paste text or import images and PDFs, and write attendees, the topic and the agenda into the same Markdown file.
+- **Responses to concerns:** check questions or explicitly listed agenda items against transcript evidence, while preserving the full recorded discussion.
+- **Speakers tab:** select names from the attendee list and review speaker labels in one place.
+- **Copy and drag:** select live-outline text; drag a note file or its path from the desktop sidebar.
+- **Provider compatibility:** fixes for some M4A diarization failures, streaming connection tests and Bailian model-list retrieval.
 
-See the [2.2.0 release notes](RELEASE_NOTES.md) for data, cost, and compatibility boundaries.
+See the [2.3.0 release notes](RELEASE_NOTES.md) for data, cost, and compatibility boundaries.
 
 ## Features
+
+### Meeting preparation
+
+The collapsible preparation area at the top of the sidebar accepts pasted text and Markdown, TXT, PDF, PNG, JPEG or WebP attachments. Export Word documents to PDF first. Images and scanned PDFs require an AI organization model with image-input support.
+
+Attendees are written to YAML properties. The topic, agenda and manually entered questions stay in the note body. The live outline and final minutes are written into the same meeting note, preserving preparation content and attachment links. You can edit the preparation directly in Markdown.
+
+Using preparation for transcription and organization is off by default. When enabled, names and background can guide interpretation, and final responses include verifiable transcript excerpts. Items without evidence remain pending review. Important unplanned discussion remains part of the minutes.
 
 ### Live outline
 Chapters grow as you record, so you can glance at "what was just discussed" mid-meeting instead of waiting until the end. After recording, chapters link to the player — click a chapter to jump to that position in the audio. When recording stops, AI completes the chapters into a full set of meeting notes.
@@ -55,7 +59,7 @@ If a request is interrupted or a model reaches its output limit, completed work 
 The processing panel separates transcription, AI organization, and Markdown writing. It shows the active stage, recent activity, failures, and retry or cancel actions. Failed transcription and failed AI organization remain distinct so you can resume from the step that actually failed.
 
 ### Speaker review
-When post-meeting diarization is enabled, LexVoice keeps provisional speaker labels through transcription so the meeting does not stop for identity confirmation. Afterwards, use the side panel to give labels a name, merge labels that refer to the same person, or correct a specific turn. The system does not infer a real identity from the meeting text alone.
+When post-meeting diarization is enabled, LexVoice keeps provisional speaker labels through transcription so the meeting does not stop for identity confirmation. Afterwards, use the dedicated Speakers tab to select a name from the preparation attendee list, enter a new name, merge labels that refer to the same person, or correct a specific turn. The system does not infer a real identity from the meeting text alone.
 
 ### Sediment workflow
 After each note, AI splits the content into four candidate groups you review assembly-line style — keep / merge / ignore:
@@ -70,17 +74,12 @@ LexVoice turns reusable meeting content into standalone Obsidian objects — peo
 ### Meeting topics
 Topic memory can connect multiple minutes about the same subject without asking you to sort every new note. Topic pages keep a source link for each summarized item and separate recorded decisions from unanswered questions. It is deliberately conservative: a later discussion does not automatically close an earlier question, merge two topics, or mark a task complete. You can pause the background work, exclude folders, or exclude an individual note in **Library** settings.
 
-<p align="center">
-  <img width="220" alt="LexVoice object" src="https://github.com/user-attachments/assets/df4c5d5f-cb92-4578-a09a-466e8d866b19" />
-  <img width="220" alt="Generated people profile" src="https://github.com/user-attachments/assets/fbff01f2-04b4-4995-abcd-794fc37925ea" />
-</p>
-
 ### Todo enhancements
 Edit owner, due date and sub-tasks inline at the candidate stage — no dialogs. Stored todos use standard Markdown task syntax (recognized by plugins like Tasks). Source information is preserved on delete / redo for traceability.
 
 ### Recording reliability
 - Level meters before and after recording show whether the mic and system audio are actually working.
-- Audio inputs remain user-selectable; virtual or remote device names are shown as guidance rather than being selected or rejected automatically.
+- Audio inputs remain user-selectable. Device names are displayed without speculative virtual or remote-device labels.
 - A device check in settings diagnoses "recorded but silent" problems.
 - Compatible independent multichannel input can be detected and transcribed by channel, with speaker labels that can be mapped to names. Separation stays off when independent channels cannot be verified.
 - Deleting a transcript offers to delete its audio file too.
@@ -88,12 +87,10 @@ Edit owner, due date and sub-tasks inline at the candidate stage — no dialogs.
 ### Export
 From one set of notes you can generate an HTML report, an HTML slide deck, an editable `.pptx`, or an `.eml` email draft — same content, different skins.
 
-<p align="center">
-  <img width="720" alt="LexVoice export" src="https://github.com/user-attachments/assets/c1d54d4e-a95b-400f-a7f3-9e41ad81c633" />
-</p>
-
 ### Note list
 The sidebar can organize recent notes by folder or by time. Folder groups can be collapsed, the open note is highlighted, and search and template filters remain available in either view.
+
+Live-outline text can be selected and copied. On desktop, drag a Markdown file from the note list, or hold Alt to drag its path. File acceptance depends on the target application; older hosts may support path dragging only.
 
 ## Basic usage
 
@@ -105,10 +102,6 @@ The sidebar can organize recent notes by folder or by time. Folder groups can be
 6. Ask follow-up questions from **Ask this note**, or retry only the failed stage if processing was interrupted.
 7. Open **Sediment** and review people, todos, learning cards, and hotwords.
 8. If you need to share, generate an HTML report, slides, PPTX, or an email draft.
-
-<p align="center">
-  <img width="720" alt="LexVoice in the Obsidian sidebar" src="https://github.com/user-attachments/assets/f29b528a-f219-4404-92b4-0639e354d17e" />
-</p>
 
 Default folders (all configurable in settings):
 
