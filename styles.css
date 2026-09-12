@@ -4816,6 +4816,8 @@ body .lexvoice-menu .menu-item.selected .menu-item-icon {
 }
 
 .lexvoice-speaker-map {
+  --lv-sediment-line: var(--background-modifier-border);
+  --lv-sediment-text: var(--text-normal);
   display: flex;
   flex-direction: column;
   gap: var(--size-4-2);
@@ -4825,20 +4827,16 @@ body .lexvoice-menu .menu-item.selected .menu-item-icon {
   background: var(--background-primary);
 }
 
-.lexvoice-speakers-panel {
-  --lv-sediment-line: var(--background-modifier-border);
-  --lv-sediment-text: var(--text-normal);
-}
-
-.lexvoice-speakers-summary {
-  margin-bottom: 8px;
-  color: var(--text-muted);
-  font-size: var(--font-ui-smaller);
+.lexvoice-speaker-map.is-collapsed {
+  padding: 6px 0;
+  border: 0;
+  background: transparent;
+  gap: 0;
 }
 
 .lexvoice-speaker-map-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: var(--size-4-2);
 }
@@ -16405,4 +16403,102 @@ select.lexvoice-rcx-in.dropdown {
   .lexvoice-outline .lexvoice-preparation-region,
   .lexvoice-outline .lexvoice-preparation-chevron,
   .lexvoice-outline .lexvoice-preparation-field { transition: none; }
+}
+/* Recording outline in note bodies, including older raw-HTML details blocks. */
+.lexvoice-recording-outline {
+  margin-block: 1em;
+  color: var(--text-normal);
+}
+
+.lexvoice-recording-outline > summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding-block: 0.4em;
+}
+
+.lexvoice-recording-outline-draft {
+  margin-inline-start: 0.7em;
+  font-size: var(--font-ui-smaller, 12px);
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.lexvoice-recording-outline-body {
+  margin-block-start: 0.8em;
+  min-width: 0;
+  line-height: 1.65;
+  user-select: text;
+  -webkit-user-select: text;
+  overflow-wrap: anywhere;
+}
+
+.lexvoice-recording-outline-body > .lexvoice-recording-timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lexvoice-recording-timeline > .lexvoice-recording-entry {
+  position: relative;
+  display: grid;
+  grid-template-columns: 4.75rem minmax(0, 1fr);
+  column-gap: 20px;
+  margin: 0;
+  padding: 0 0 1.2em;
+  list-style: none;
+}
+
+.lexvoice-recording-entry::before {
+  content: "";
+  position: absolute;
+  left: calc(4.75rem + 7px);
+  top: 0.9em;
+  bottom: -0.9em;
+  border-left: 1px solid var(--background-modifier-border);
+}
+
+.lexvoice-recording-entry:last-child::before { display: none; }
+
+.lexvoice-recording-entry::after {
+  content: "";
+  position: absolute;
+  left: calc(4.75rem + 4px);
+  top: 0.65em;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.lexvoice-recording-entry > .lexvoice-recording-entry-time {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: start;
+  font-family: var(--font-monospace);
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-decoration: none;
+  padding: 0.15em 0;
+  background: none;
+  box-shadow: none;
+}
+
+.lexvoice-recording-entry-time:hover { text-decoration: underline; }
+.lexvoice-recording-entry-time:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: 3px; }
+
+.lexvoice-recording-entry-content { grid-column: 2; grid-row: 1; min-width: 0; }
+.lexvoice-recording-entry-content > p:first-child { margin-top: 0; font-weight: 600; }
+.lexvoice-recording-outline .lexvoice-recording-entry-content ul,
+.lexvoice-recording-outline .lexvoice-recording-entry-content ol { margin-block: 0.35em 0; padding-inline-start: 1.2em; }
+.lexvoice-recording-outline .lexvoice-recording-entry-content li { margin-block: 0.3em; margin-inline: 0; }
+.lexvoice-recording-entry-content p { margin-block: 0.3em; }
+
+.lexvoice-recording-outline-body > .lexvoice-recording-outline-status {
+  margin: 0 0 1em;
+  padding: 0.15em 0.8em;
+  color: var(--text-muted);
+  font-size: 0.85em;
+  border-inline-start: 2px solid var(--text-warning, var(--text-muted));
+  background: none;
 }

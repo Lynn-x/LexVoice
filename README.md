@@ -10,15 +10,14 @@ It is **not** a hosted cloud service and ships **no API keys**. You connect your
 
 LexVoice supports desktop and mobile Obsidian workflows. Mobile recording uses the device microphone and supports segmented or whole-audio transcription after capture. System audio, virtual audio devices, multichannel capture, desktop device diagnostics, and realtime streaming ASR providers that require custom authentication headers require the desktop app.
 
-## What's new in 2.3.0
+## What's new in 2.3.1
 
-- **Meeting preparation:** create the meeting note before recording, paste text or import images and PDFs, and write attendees, the topic and the agenda into the same Markdown file.
-- **Responses to concerns:** check questions or explicitly listed agenda items against transcript evidence, while preserving the full recorded discussion.
-- **Speakers tab:** select names from the attendee list and review speaker labels in one place.
-- **Copy and drag:** select live-outline text; drag a note file or its path from the desktop sidebar.
-- **Provider compatibility:** fixes for some M4A diarization failures, streaming connection tests and Bailian model-list retrieval.
+- **Folded source material:** newly organized notes keep the minutes visible and put recording information, live drafts, audio and full transcripts in native collapsed Obsidian callouts. Empty draft segments are summarized instead of repeated.
+- **Readable outline:** expand the recording outline to see timestamps and nested points in separate columns. Older HTML outline blocks remain supported.
+- **Speakers in Outline:** the speaker panel returns to Outline, where it can be folded or closed. Confirmed transcripts take precedence over live-draft labels.
+- **Editing compatibility:** folded transcripts remain available for reorganization, retries, speaker naming and turn corrections.
 
-See the [2.3.0 release notes](RELEASE_NOTES.md) for data, cost, and compatibility boundaries.
+See the [2.3.1 release notes](RELEASE_NOTES.md) for upgrade details. Existing notes are not automatically rewritten.
 
 ## Features
 
@@ -59,7 +58,7 @@ If a request is interrupted or a model reaches its output limit, completed work 
 The processing panel separates transcription, AI organization, and Markdown writing. It shows the active stage, recent activity, failures, and retry or cancel actions. Failed transcription and failed AI organization remain distinct so you can resume from the step that actually failed.
 
 ### Speaker review
-When post-meeting diarization is enabled, LexVoice keeps provisional speaker labels through transcription so the meeting does not stop for identity confirmation. Afterwards, use the dedicated Speakers tab to select a name from the preparation attendee list, enter a new name, merge labels that refer to the same person, or correct a specific turn. The system does not infer a real identity from the meeting text alone.
+When post-meeting diarization is enabled, LexVoice keeps provisional speaker labels through transcription so the meeting does not stop for identity confirmation. Afterwards, use the collapsible speaker panel in Outline to select a name from the preparation attendee list, enter a new name, merge labels that refer to the same person, or correct a specific turn. The system does not infer a real identity from the meeting text alone.
 
 ### Sediment workflow
 After each note, AI splits the content into four candidate groups you review assembly-line style — keep / merge / ignore:
