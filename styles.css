@@ -16496,9 +16496,33 @@ select.lexvoice-rcx-in.dropdown {
 
 .lexvoice-recording-outline-body > .lexvoice-recording-outline-status {
   margin: 0 0 1em;
-  padding: 0.15em 0.8em;
-  color: var(--text-muted);
-  font-size: 0.85em;
-  border-inline-start: 2px solid var(--text-warning, var(--text-muted));
-  background: none;
+  padding: 0 !important;
+  color: var(--text-normal) !important;
+  font-size: var(--font-text-size, 16px) !important;
+  font-style: normal !important;
+  line-height: var(--line-height-normal, 1.5);
+  border: 0 !important;
+  border-inline: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  overflow-wrap: anywhere;
+}
+
+/* Coverage is status text, not a quotation. Neutralize theme quote ornaments locally. */
+.lexvoice-recording-outline-body > .lexvoice-recording-outline-status > p {
+  margin: 0;
+  color: inherit !important;
+  font-size: inherit !important;
+  font-style: normal !important;
+  opacity: 1 !important;
+}
+
+.lexvoice-recording-outline-body > .lexvoice-recording-outline-status::before,
+.lexvoice-recording-outline-body > .lexvoice-recording-outline-status::after,
+.lexvoice-recording-outline-body > .lexvoice-recording-outline-status > p::before,
+.lexvoice-recording-outline-body > .lexvoice-recording-outline-status > p::after {
+  content: none !important;
+  display: none !important;
 }

@@ -10,14 +10,20 @@ It is **not** a hosted cloud service and ships **no API keys**. You connect your
 
 LexVoice supports desktop and mobile Obsidian workflows. Mobile recording uses the device microphone and supports segmented or whole-audio transcription after capture. System audio, virtual audio devices, multichannel capture, desktop device diagnostics, and realtime streaming ASR providers that require custom authentication headers require the desktop app.
 
-## What's new in 2.3.1
+## What's new in 2.3.2
+
+The recording outline's coverage notice now uses normal body-text size and color. Italics, decorative borders and quote ornaments are removed from this notice, including when a theme applies them to blockquotes. Coverage counts, timestamps and folding are unchanged.
+
+See the [2.3.2 release notes](RELEASE_NOTES.md). This patch does not change ASR behavior or rewrite existing notes.
+
+### Also included from 2.3.1
 
 - **Folded source material:** newly organized notes keep the minutes visible and put recording information, live drafts, audio and full transcripts in native collapsed Obsidian callouts. Empty draft segments are summarized instead of repeated.
 - **Readable outline:** expand the recording outline to see timestamps and nested points in separate columns. Older HTML outline blocks remain supported.
 - **Speakers in Outline:** the speaker panel returns to Outline, where it can be folded or closed. Confirmed transcripts take precedence over live-draft labels.
 - **Editing compatibility:** folded transcripts remain available for reorganization, retries, speaker naming and turn corrections.
 
-See the [2.3.1 release notes](RELEASE_NOTES.md) for upgrade details. Existing notes are not automatically rewritten.
+See the [2.3.1 release notes](https://github.com/Lynn-x/LexVoice/releases/tag/2.3.1) for the earlier update.
 
 ## Features
 
