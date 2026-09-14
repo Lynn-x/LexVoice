@@ -37,6 +37,14 @@ Preparation is reference material, not evidence that a meeting decision occurred
 
 Dragging a note from the desktop sidebar exposes the file or its path to the target application chosen by the user.
 
+## Automatic links and meeting topics
+
+The Library setting for automatic links and meeting topics retains the previous topic-aggregation switch: enabled by default, with an existing disabled setting preserved. When enabled, organization requests can also extract relationships and include up to 40 existing topic names as candidates. They do not include other notes' paths or bodies as candidates.
+
+Older notes, edited bodies or missing/invalid relationship results may require background analysis using the configured AI organization service. That topic-analysis request contains note IDs, titles, dates, summaries, up to ten topic headings and bounded body excerpts, plus up to 24 existing topics with their IDs, names and descriptions. These descriptions may contain information derived from earlier meetings; they are additional cross-meeting context, distinct from the 40-name-only catalog used during organization. Topic analysis does not additionally send audio, vault paths or a full verbatim transcript. Ordinary transcription and organization still send the audio or text needed for those features. Provider usage charges may apply.
+
+Validated relationships can update body wikilinks, the managed `lexvoice_links` property, MOC topic pages and topic canvases locally. Canvas generation reuses these relationships without an additional model request. Excluded folders and notes are skipped. Turning the setting off stops subsequent automatic processing; it does not undo links/files already written or recall previous provider requests. Ambiguous person matches are skipped rather than used to invent identities.
+
 ## Sensitive content
 
 Recordings and transcripts may contain personal, confidential, or regulated information. Users are responsible for obtaining consent where required and for choosing appropriate API providers and retention practices.

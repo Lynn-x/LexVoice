@@ -1,5 +1,12 @@
 # Third-Party Notices
 
+## mp4box
+
+- Source: https://github.com/gpac/mp4box.js
+- Version: 2.4.1
+- Use: local ISO-BMFF metadata parsing for bounded-memory M4A slicing; no external service or decoder is bundled.
+- License: BSD-3-Clause; the full upstream notice is preserved in [`licenses/mp4box-BSD-3-Clause.txt`](licenses/mp4box-BSD-3-Clause.txt) and embedded in `main.js`.
+
 ## mux.js
 
 - Source: https://github.com/videojs/mux.js
@@ -22,6 +29,13 @@ LexVoice is shipped as `main.js`, a stylesheet, and a manifest. The JavaScript b
 - Project: https://github.com/biril/mp3-parser (version 0.3.0).
 - License: MIT; the upstream notice is preserved in [`licenses/mp3-parser-MIT.txt`](licenses/mp3-parser-MIT.txt) and embedded in `main.js`.
 - Usage: reads MPEG audio frame headers for local, bounded-memory MP3 slicing. No external program or service is used by this parser.
+
+## Bundled library: Markdown parser
+
+- Project: https://github.com/syntax-tree/mdast-util-from-markdown (version 2.0.3).
+- Usage: locates ordinary Markdown text before adding knowledge links, preserving code, existing links, images and HTML.
+- Licenses: MIT and ISC across the parser and its dependency tree. Full installed notices are preserved in [`licenses/markdown-parser-notices.txt`](licenses/markdown-parser-notices.txt) and embedded in `main.js`.
+- `scripts/markdown-licenses.mjs` collects the notices. The build checks them against the installed dependencies.
 
 ## Previously MIT-licensed LexVoice material
 

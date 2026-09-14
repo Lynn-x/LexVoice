@@ -10,11 +10,16 @@ It is **not** a hosted cloud service and ships **no API keys**. You connect your
 
 LexVoice supports desktop and mobile Obsidian workflows. Mobile recording uses the device microphone and supports segmented or whole-audio transcription after capture. System audio, virtual audio devices, multichannel capture, desktop device diagnostics, and realtime streaming ASR providers that require custom authentication headers require the desktop app.
 
-## What's new in 2.3.2
+## What's new in 2.4.0
 
-The recording outline's coverage notice now uses normal body-text size and color. Italics, decorative borders and quote ornaments are removed from this notice, including when a theme applies them to blockquotes. Coverage counts, timestamps and folding are unchanged.
+- **Automatic links and MOCs:** extract evidence-backed relationships during organization, link existing notes and collect related meetings in topic pages without manual classification or guessed identities.
+- **Persistent topic canvases:** add related meetings incrementally, preserving source links and manual layout.
+- **One meeting interval:** the sidebar and settings share a 0.5–30 minute cadence. Upgrades retain the previous outline/segment interval; streaming transcription remains continuous.
+- **Task panel:** keep details, saved results, stop, resume and retry actions with their meeting.
+- **Long-audio recovery:** with XingChen speaker diarization enabled, try whole compressed audio first, then use a bounded coarse fallback when needed. Common single-track AAC/Opus M4A can be split without decoding the whole recording; completed results are reused.
+- **Speaker attribution:** keep chunk-local labels separate from meeting participants, with playback, roster selection and batch assignment for unresolved fragments.
 
-See the [2.3.2 release notes](RELEASE_NOTES.md). This patch does not change ASR behavior or rewrite existing notes.
+See the [2.4.0 release notes](RELEASE_NOTES.md). Automatic linking retains the existing topic setting and may process older notes when enabled. Empty ASR responses remain unfinished, not automatically confirmed as silence.
 
 ### Also included from 2.3.1
 
@@ -38,6 +43,8 @@ Using preparation for transcription and organization is off by default. When ena
 ### Live outline
 Chapters grow as you record, so you can glance at "what was just discussed" mid-meeting instead of waiting until the end. After recording, chapters link to the player — click a chapter to jump to that position in the audio. When recording stops, AI completes the chapters into a full set of meeting notes.
 
+The sidebar and settings share one meeting update interval, from 0.5 to 30 minutes. Segmented transcription and outline updates use this cadence; streaming services keep transcribing continuously. Changes during a recording apply to the next recording.
+
 ### In-meeting notes
 While recording, jot live notes under the outline. The first character can trigger different handling:
 
@@ -60,11 +67,17 @@ In standard meeting and learning-note modes, long recordings are organized in re
 
 If a request is interrupted or a model reaches its output limit, completed work is reused and only unfinished parts are retried. The raw transcript remains available, and an incomplete result is shown as **partially completed** rather than being saved as an empty note.
 
+With SiliconFlow `XingChenASR-Diarize-V3.0` and speaker diarization enabled, LexVoice tries whole compressed audio first. Explicit size/duration rejection or a large-file HTTP 500 can trigger one coarse fallback of at most eight parts, never recursive splitting. This recovery policy does not apply to ordinary transcription with diarization disabled. Common single-track AAC/Opus M4A can be split without full PCM decoding. Completed parts are retained; empty responses remain unfinished. Complex containers may still be unsupported, and provider success is not guaranteed.
+
 ### Task progress
 The processing panel separates transcription, AI organization, and Markdown writing. It shows the active stage, recent activity, failures, and retry or cancel actions. Failed transcription and failed AI organization remain distinct so you can resume from the step that actually failed.
 
+Details and saved results stay with their current meeting. Recent completions can be collapsed or opened directly. Closing the panel does not stop processing; stop and resume apply to the corresponding meeting.
+
 ### Speaker review
 When post-meeting diarization is enabled, LexVoice keeps provisional speaker labels through transcription so the meeting does not stop for identity confirmation. Afterwards, use the collapsible speaker panel in Outline to select a name from the preparation attendee list, enter a new name, merge labels that refer to the same person, or correct a specific turn. The system does not infer a real identity from the meeting text alone.
+
+Chunk-local labels retain their provenance instead of counting as new meeting participants. Unresolved fragments support playback and batch assignment, without forcing a match based on the expected speaker count.
 
 ### Sediment workflow
 After each note, AI splits the content into four candidate groups you review assembly-line style — keep / merge / ignore:
@@ -78,6 +91,10 @@ LexVoice turns reusable meeting content into standalone Obsidian objects — peo
 
 ### Meeting topics
 Topic memory can connect multiple minutes about the same subject without asking you to sort every new note. Topic pages keep a source link for each summarized item and separate recorded decisions from unanswered questions. It is deliberately conservative: a later discussion does not automatically close an earlier question, merge two topics, or mark a task complete. You can pause the background work, exclude folders, or exclude an individual note in **Library** settings.
+
+Organization can produce validated relationships for inline wikilinks, the managed `lexvoice_links` property and MOCs. People only link to unambiguous existing notes. Original material, code, existing links and custom properties are preserved.
+
+Each topic maintains a Canvas with dates, brief contributions and source links for the latest 12 related notes; its MOC provides all sources. Updates preserve manual layout, annotations and connections while handling new meetings and renamed or moved files. Topic pages link to their canvases, which do not make additional model requests.
 
 ### Todo enhancements
 Edit owner, due date and sub-tasks inline at the candidate stage — no dialogs. Stored todos use standard Markdown task syntax (recognized by plugins like Tasks). Source information is preserved on delete / redo for traceability.
@@ -159,7 +176,7 @@ No ads, no analytics, no telemetry. Settings are stored locally in `.obsidian/pl
 
 However, if you use a **cloud** ASR or LLM provider, the relevant audio, transcript text, and prompt context are sent to that provider you configured. For sensitive content (client data, medical, legal, HR, recruiting, internal strategy), prefer local transcription + a local model, and obtain consent before recording. See [`PRIVACY.md`](PRIVACY.md).
 
-Automatic meeting topics default to enabled, including upgrades without a saved value for this setting; an existing disabled setting is preserved. The feature sends the configured AI service the title, date, summary, up to ten topic headings, and limited body excerpts. It does not send audio, vault paths, or the full raw transcript. Provider charges may apply. Disable it in **Library** settings to stop new background requests.
+Automatic links and meeting topics retain the existing setting: enabled by default, with a saved disabled setting preserved. New notes reuse organization requests for relationship extraction and may include up to 40 existing topic names. Background analysis of older/edited notes or missing results sends note IDs, titles, dates, summaries, up to ten topic headings and bounded excerpts, plus up to 24 existing topics with their IDs, names and descriptions. Descriptions may contain information derived from earlier meetings. Topic analysis does not additionally send audio, vault paths or full verbatim transcripts. Provider charges may apply. Enabling the feature allows wikilink, property, MOC and Canvas updates. Disabling it in **Library** stops subsequent processing but does not undo previously written content.
 
 ## Installation
 
