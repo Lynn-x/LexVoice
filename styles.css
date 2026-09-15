@@ -1510,15 +1510,15 @@ body .lexvoice-bubble-wrap .lexvoice-bubble button.lexvoice-bubble-btn.is-stop-i
 .lexvoice-import-speaker-plan {
   display: grid;
   grid-column: 1 / -1;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
   gap: var(--size-2-3) var(--size-4-3);
   padding-top: var(--size-3-1);
   border-top: 1px solid var(--background-modifier-border);
 }
 
 .lexvoice-import-speaker-plan-row {
-  display: flex;
-  align-items: center;
+  display: grid;
+  align-content: start;
   gap: var(--size-2-3);
   min-width: 0;
 }
@@ -1527,6 +1527,17 @@ body .lexvoice-bubble-wrap .lexvoice-bubble button.lexvoice-bubble-btn.is-stop-i
   flex: 0 0 auto;
   color: var(--text-muted);
   font-size: var(--font-ui-smaller);
+  overflow-wrap: anywhere;
+}
+
+.lexvoice-import-speaker-plan .lexvoice-import-number-control {
+  justify-self: start;
+  max-width: 100%;
+}
+
+.lexvoice-import-speaker-plan .lexvoice-import-number-input.is-compact {
+  flex: 0 0 64px;
+  width: 64px;
 }
 
 .lexvoice-import-speaker-roster-input {
@@ -1952,7 +1963,7 @@ body .lexvoice-bubble-wrap .lexvoice-bubble button.lexvoice-bubble-btn.is-stop-i
 
 .lexvoice-input-meter {
   display: grid;
-  grid-template-columns: 22px minmax(72px, 1fr) 42px 92px;
+  grid-template-columns: 22px minmax(0, 1fr) minmax(0, max-content) 72px;
   align-items: center;
   gap: var(--size-2-2);
   min-width: 0;
@@ -1975,7 +1986,9 @@ body .lexvoice-bubble-wrap .lexvoice-bubble button.lexvoice-bubble-btn.is-stop-i
 }
 
 .lexvoice-input-meter-state {
-  white-space: nowrap;
+  min-width: 0;
+  max-width: 110px;
+  overflow-wrap: anywhere;
   text-align: right;
   color: var(--text-muted);
 }
@@ -3314,11 +3327,30 @@ body .lexvoice-bubble-wrap .lexvoice-bubble button.lexvoice-bubble-btn.is-stop-i
    ① 无图标——隐藏左侧图标占位槽，让文本左对齐、左右留白对称；
    ② 当前项不用色点，只把文字变成主题色来区分，所有项文本起点一致、不被色点顶偏。 */
 /* LexVoice context menus use Obsidian Menu. Keep icons readable across themes. */
+body .menu.lexvoice-menu {
+  box-sizing: border-box;
+  max-width: min(360px, calc(100vw - 16px));
+}
+
+body .menu.lexvoice-menu .menu-item {
+  height: auto;
+  min-height: 30px;
+  align-items: center;
+}
+
+body .menu.lexvoice-menu .menu-item-title {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+
 body .menu.lexvoice-menu .menu-item-icon,
 body .lexvoice-menu .menu-item-icon {
   --icon-size: 16px;
   width: 22px;
   min-width: 22px;
+  flex-shrink: 0;
   height: 22px;
   display: inline-flex;
   align-items: center;
@@ -7329,6 +7361,7 @@ body .lexvoice-menu .menu-item.selected .menu-item-icon {
   position: relative;
   z-index: 1;
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--size-2-2);
@@ -7336,6 +7369,8 @@ body .lexvoice-menu .menu-item.selected .menu-item-icon {
 }
 
 .lexvoice-object-overview-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: var(--font-ui-small);
   font-weight: var(--font-semibold);
   line-height: var(--line-height-tight);
@@ -9246,8 +9281,9 @@ select.lexvoice-rcx-in.dropdown {
   align-self: flex-start;
   gap: 0;
   margin-top: 16px;
-  width: 118px;
-  height: 32px;
+  width: max-content;
+  max-width: 100%;
+  min-height: 32px;
   padding: 2px;
   border: 1px solid var(--background-modifier-border);
   border-radius: 7px;
@@ -9293,11 +9329,11 @@ select.lexvoice-rcx-in.dropdown {
   position: relative;
   z-index: 1;
   display: grid;
-  min-width: 0;
+  min-width: max-content;
   min-height: 26px;
   place-items: center;
   margin: 0;
-  padding: 0 6px;
+  padding: 4px 10px;
   color: var(--text-faint);
   cursor: pointer;
   font-size: 12px;
@@ -9491,7 +9527,7 @@ select.lexvoice-rcx-in.dropdown {
 
 @media (max-width: 760px) {
   .lexvoice-input-meter {
-    grid-template-columns: 22px minmax(0, 1fr) 36px 76px;
+    grid-template-columns: 22px minmax(0, 1fr) minmax(0, max-content) 60px;
   }
 
   .lexvoice-input-meter-bars {
@@ -11956,7 +11992,7 @@ select.lexvoice-rcx-in.dropdown {
 }
 
 .lexvoice-outline-head.is-active-session .lexvoice-input-meter {
-  grid-template-columns: 18px minmax(66px, 1fr) 38px minmax(72px, 96px);
+  grid-template-columns: 18px minmax(0, 1fr) minmax(0, max-content) 60px;
 }
 
 .lexvoice-outline-head.is-active-session .lexvoice-input-meter-icon {
@@ -15902,6 +15938,20 @@ select.lexvoice-rcx-in.dropdown {
 
 .lexvoice-outline.is-idle-view .lexvoice-outline-scheme-cell {
   grid-column: 1 / 2;
+  height: auto;
+  min-height: 30px;
+  flex-wrap: wrap;
+  padding-block: 4px;
+  gap: 4px 7px;
+}
+
+.lexvoice-outline.is-idle-view .lexvoice-outline-scheme-cell button.lexvoice-outline-segment-value {
+  min-width: 0;
+  height: auto;
+  min-height: 20px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.3;
 }
 
 .lexvoice-outline.is-idle-view .lexvoice-outline-segment-inline {

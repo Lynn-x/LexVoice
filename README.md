@@ -10,7 +10,16 @@ It is **not** a hosted cloud service and ships **no API keys**. You connect your
 
 LexVoice supports desktop and mobile Obsidian workflows. Mobile recording uses the device microphone and supports segmented or whole-audio transcription after capture. System audio, virtual audio devices, multichannel capture, desktop device diagnostics, and realtime streaming ASR providers that require custom authentication headers require the desktop app.
 
-## What's new in 2.4.0
+## What's new in 2.5.0
+
+- **English and Japanese:** the interface follows your Obsidian language, alongside Chinese. No separate plugin language setting is needed.
+- **Localized built-in AI templates:** built-in note templates and the default AI output language follow Obsidian. Existing explicit output-language preferences and custom prompts are preserved. Raw transcripts retain the spoken language.
+- **Layout fixes:** long menu labels wrap, recording level meters no longer overlap status text, and speaker inputs remain usable in narrow dialogs.
+- Existing notes and custom templates are not automatically translated. Unchanged built-in daily-note templates follow the host language.
+
+See the [2.5.0 release notes](RELEASE_NOTES.md).
+
+### Included from 2.4.0
 
 - **Automatic links and MOCs:** extract evidence-backed relationships during organization, link existing notes and collect related meetings in topic pages without manual classification or guessed identities.
 - **Persistent topic canvases:** add related meetings incrementally, preserving source links and manual layout.
@@ -19,7 +28,7 @@ LexVoice supports desktop and mobile Obsidian workflows. Mobile recording uses t
 - **Long-audio recovery:** with XingChen speaker diarization enabled, try whole compressed audio first, then use a bounded coarse fallback when needed. Common single-track AAC/Opus M4A can be split without decoding the whole recording; completed results are reused.
 - **Speaker attribution:** keep chunk-local labels separate from meeting participants, with playback, roster selection and batch assignment for unresolved fragments.
 
-See the [2.4.0 release notes](RELEASE_NOTES.md). Automatic linking retains the existing topic setting and may process older notes when enabled. Empty ASR responses remain unfinished, not automatically confirmed as silence.
+See the [2.4.0 release notes](https://github.com/Lynn-x/LexVoice/releases/tag/2.4.0). Automatic linking retains the existing topic setting and may process older notes when enabled. Empty ASR responses remain unfinished, not automatically confirmed as silence.
 
 ### Also included from 2.3.1
 

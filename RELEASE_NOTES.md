@@ -1,34 +1,35 @@
-# LexVoice 2.4.0
+# LexVoice 2.5.0
 
-发布日期：2026-09-14
+Released: 2026-09-15
 
-本版汇总自公开版 **2.3.2** 以来的更新：自动双链、主题页与持续画板，以及会中更新、处理进度、长音频恢复和说话人归属改进。
+Changes since **2.4.0**.
 
-## 自动双链、MOC 与持续画板
+## English and Japanese support
 
-- 开启“资料库 → 自动双链与会议主题”后，AI 在整理纪要时提取项目、主题和人物关联。本地校验正文依据后，添加双链并写入 `lexvoice_links`，无需先手工分类。人物只关联能明确匹配的已有笔记，不猜身份。
-- 同一主题或项目的纪要汇入 MOC 主题页，保留每次讨论的贡献和原文入口。同一篇纪要可关联多个主题；正文、会前材料、原始转写和已有链接不会被整体重写。
-- 每个主题持续维护一张 Canvas，默认显示最近 12 篇关联纪要，全部来源可从 MOC 查看。新增纪要补入画板，改名或移动刷新链接；保留手工布局、说明和连线，不自动恢复用户主动删除的卡片。
-- 发现关联歧义或人工修改冲突时保留原文件并提示，不强行覆盖。画板复用关联结果，不额外调用模型。
+- One plugin with Chinese, English, and Japanese interfaces. LexVoice follows the language selected in Obsidian, including settings, menus, suggested questions, knowledge actions, and processing controls.
+- Built-in AI note templates follow Obsidian's language. The default AI output policy also follows the host; existing explicit language preferences and custom prompts are preserved.
+- Newly generated recording headings, segment labels, and unchanged built-in daily-note templates follow the host language. Known built-in labels on older derived notes are localized for display without rewriting their files.
+- Existing notes, raw transcripts, custom template names, paths, and historical error messages are not automatically translated. Speech recognition retains the spoken language rather than translating audio to the interface language.
 
-## 会中更新与处理进度
+## Layout fixes
 
-- 主页和设置页统一为“会中更新间隔”，转写与大纲共用同一设置，范围为 0.5–30 分钟。升级沿用原“大纲/分段间隔”；原独立转写秒数不再单独生效。流式服务仍持续转写，此设置只控制其大纲更新；录音中修改从下一次录音生效。
-- 处理面板按一场会议连续显示当前任务、转写/整理/保存阶段、已保存结果及操作，处理详情归在对应任务下，不再与正在处理的任务分离。
-- 最近完成可折叠并直接打开纪要。关闭面板不停止任务；停止、继续和重试分别作用于对应任务，保留已有结果。
+- Long menu labels wrap and stay within the window, including audio-input choices.
+- Recording input status and level bars have separate space, preventing text overlap.
+- Speaker-count and name inputs remain readable in narrow import dialogs.
+- Fixed overlapping setup-state buttons, processing controls, and crowded library labels.
 
-## 长音频与说话人
+## Updating
 
-- 使用硅基流动 `XingChenASR-Diarize-V3.0` 并开启说话人分离时，优先提交完整压缩音频。明确大小/时长拒绝，或大文件整段请求返回 HTTP 500 时，可回退一次少量大段处理，最多 8 段；失败后不递归细切。关闭说话人分离的普通转写不适用这条恢复策略。
-- 普通常见的单音轨 AAC/Opus M4A 可按压缩数据切分并重新封装，避免整份录音解码成 PCM 后触发内存限制，无需额外安装转码工具。不支持的复杂容器结构仍会明确停止并保留原音频。
-- 保存已完成的大段和恢复进度，重试只处理未完成部分。空文字响应仍标记为未完成，不会自动当作静音或编造转写。
-- 音频分段不再等于新增会议人物。保留每段编号与来源，将跨段未确认身份放入“待确认片段”；支持回听、从会前名单选择以及批量归属。不会只凭名字、发言内容或预设人数强行合并。
+Update through LexVoice's update settings, or download `main.js`, `manifest.json`, and `styles.css` from this release. Finish any active recording or processing first, then reload the plugin. Keep `data.json`, recordings, and notes.
 
-## 更新与注意事项
+Only distribution artifacts and user documentation are public. GitHub's automatically generated "Source code" archives contain the public distribution snapshot, not private development source.
 
-- 自动关联沿用原“自动整理会议主题”的开关，缺省开启，已有关闭设置保留。历史纪要、修改后的正文或无有效关联结果时可能进行后台补充分析，并写入关联字段、双链及主题文件；不需要时可在资料库关闭或排除指定笔记。
-- 使用云端服务时，相应音频或文本仍发送至用户配置的服务商，可能产生费用。后台主题分析还可携带最多 24 个已有主题的名称、标识和描述，描述可能来自过往会议；画板更新在本地完成。详见 [隐私说明](PRIVACY.md)。
-- 大段处理不保证云端服务一定成功，也不保证自动识别实际人数；仍需核对空返回、漏字及说话人归属。本版未加入本地 ASR 安装或整段音频压缩功能。
-- 手动更新：从本 Release 下载 `main.js`、`manifest.json`、`styles.css` 替换插件安装文件，再重新加载 LexVoice。保留 `data.json`、任务恢复数据、录音和笔记。
+---
 
-公开仓库只包含安装产物、用户文档和必要许可声明；开发源码与内部记录仍在私有库。GitHub 自动显示的“Source code”下载是公开发行文件的快照，不含私有开发源码。
+## 中文说明
+
+相对 **2.4.0**，本版新增中英日界面及内置 AI 模板语言跟随，覆盖设置、菜单、建议问题、知识整理及处理控件。默认 AI 输出语言跟随 Obsidian，已有明确语言偏好和自定义提示词保留。
+
+新录音标题、分段标签和未修改的内置日记模板随宿主语言生成；已知内置派生标签只转换显示，不改写文件。旧笔记、原始转写、自定义名称、路径和历史错误不自动翻译，原始转写保留实际发言语言。
+
+修复长菜单截断、状态按钮重叠、录音电平条遮挡文字、说话人输入框挤压和资料卡布局。更新前请先完成录音和处理任务，保留配置、录音及笔记，再重载插件。
