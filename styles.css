@@ -16808,3 +16808,10 @@ select.lexvoice-rcx-in.dropdown {
   content: none !important;
   display: none !important;
 }
+.lexvoice-overview-render-host {
+  position: fixed;
+  left: -20000px;
+  top: 0;
+  width: 1200px;
+  visibility: hidden;
+}

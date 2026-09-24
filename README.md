@@ -10,14 +10,27 @@ It is **not** a hosted cloud service and ships **no API keys**. You connect your
 
 LexVoice supports desktop and mobile Obsidian workflows. Mobile recording uses the device microphone and supports segmented or whole-audio transcription after capture. System audio, virtual audio devices, multichannel capture, desktop device diagnostics, and realtime streaming ASR providers that require custom authentication headers require the desktop app.
 
-## What's new in 2.5.0
+## What's new in 2.6.0
+
+- **Meeting overviews:** generate a Mermaid overview from the available meeting transcript, update it separately, and include it in HTML/PDF exports. Diagram failures preserve the text; oversized report PDFs use pagination.
+- **Recoverable notes:** deliver from usable saved live transcription while post-meeting recognition is pending or unavailable, with source and coverage labeled. Recover successful parts, relink moved original notes, or create a separate task using current settings.
+- **Speaker revision history:** undo batch assignments and individual corrections without rolling back unrelated note edits. This does not add automatic cross-chunk voice identification.
+- **Independent delivery:** pending outline and Q&A backlogs no longer delay final organization. Reorganization creates and opens a separate version instead of overwriting an earlier output.
+- **Recording and services:** restore early non-streaming cuts, prevent filename collisions, improve XingChen local-memory fallback and Bailian upload compatibility, and distinguish pay-as-you-go from Token Plan connections.
+- **Sidebar and materials:** default to all notes grouped by time; improve agenda submission during recording, processing progress, and tooltip placement.
+
+Automatic meeting overviews are enabled by default for organized notes and can be disabled in settings. Generation may incur additional AI service charges; rendering an already saved overview does not itself call AI. Existing notes are not rewritten merely by updating.
+
+See the [2.6.0 release notes](RELEASE_NOTES.md).
+
+### Included from 2.5.0
 
 - **English and Japanese:** the interface follows your Obsidian language, alongside Chinese. No separate plugin language setting is needed.
 - **Localized built-in AI templates:** built-in note templates and the default AI output language follow Obsidian. Existing explicit output-language preferences and custom prompts are preserved. Raw transcripts retain the spoken language.
 - **Layout fixes:** long menu labels wrap, recording level meters no longer overlap status text, and speaker inputs remain usable in narrow dialogs.
 - Existing notes and custom templates are not automatically translated. Unchanged built-in daily-note templates follow the host language.
 
-See the [2.5.0 release notes](RELEASE_NOTES.md).
+See the [2.5.0 release notes](https://github.com/Lynn-x/LexVoice/releases/tag/2.5.0).
 
 ### Included from 2.4.0
 
@@ -50,7 +63,7 @@ Attendees are written to YAML properties. The topic, agenda and manually entered
 Using preparation for transcription and organization is off by default. When enabled, names and background can guide interpretation, and final responses include verifiable transcript excerpts. Items without evidence remain pending review. Important unplanned discussion remains part of the minutes.
 
 ### Live outline
-Chapters grow as you record, so you can glance at "what was just discussed" mid-meeting instead of waiting until the end. After recording, chapters link to the player — click a chapter to jump to that position in the audio. When recording stops, AI completes the chapters into a full set of meeting notes.
+Chapters grow as you record, so you can glance at "what was just discussed" mid-meeting instead of waiting until the end. After recording, chapters link to the player — click a chapter to jump to that position in the audio. When recording stops, saved transcripts feed the final minutes; unfinished outline updates do not delay note delivery.
 
 The sidebar and settings share one meeting update interval, from 0.5 to 30 minutes. Segmented transcription and outline updates use this cadence; streaming services keep transcribing continuously. Changes during a recording apply to the next recording.
 
