@@ -10,7 +10,20 @@ It is **not** a hosted cloud service and ships **no API keys**. You connect your
 
 LexVoice supports desktop and mobile Obsidian workflows. Mobile recording uses the device microphone and supports segmented or whole-audio transcription after capture. System audio, virtual audio devices, multichannel capture, desktop device diagnostics, and realtime streaming ASR providers that require custom authentication headers require the desktop app.
 
-## What's new in 2.6.0
+## What's new in 2.7.0
+
+- **Model providers dialog:** add and edit connections in one dialog with billing, region, API key, Base URL and connection test. Status labels are the same across the plugin, and a connection shows the latest result for the tasks it serves.
+- **Bailian regions:** Singapore pay-as-you-go and Token Plan presets, plus Hong Kong and US presets for AI organization only. SiliconFlow adds an international preset. New connections preselect endpoints by interface language; existing connections are not migrated.
+- **Bailian transcription:** original files are still submitted whole by default. Diarized recordings over two hours are split losslessly into parts of at most two hours; waits scale with audio length, and recovery continues submitted cloud tasks without submitting again. Realtime transcription adds heartbeats, automatic reconnection and model-based sample rates.
+- **Clearer service errors:** Bailian error codes are explained, permission errors are no longer shown as invalid keys, quota exhaustion is not retried, and rate-limit waits can be cancelled.
+- **Task progress:** one main action per row, plus Remove, Retry all and Clear all. Recordings and notes already written are not affected.
+- **Overview layout:** topics and details run left to right, so diagram width no longer grows with the number of topics; A4 printing paginates by topic. Updating a 2.6.0 overview whose transcript and output language are unchanged switches its layout locally without another AI request.
+
+Pausing a recording now sends silence to streaming transcription, so speech during a pause is not uploaded. Existing notes and connection addresses are not rewritten merely by updating.
+
+See the [2.7.0 release notes](RELEASE_NOTES.md).
+
+### Included from 2.6.0
 
 - **Meeting overviews:** generate a Mermaid overview from the available meeting transcript, update it separately, and include it in HTML/PDF exports. Diagram failures preserve the text; oversized report PDFs use pagination.
 - **Recoverable notes:** deliver from usable saved live transcription while post-meeting recognition is pending or unavailable, with source and coverage labeled. Recover successful parts, relink moved original notes, or create a separate task using current settings.
@@ -21,7 +34,7 @@ LexVoice supports desktop and mobile Obsidian workflows. Mobile recording uses t
 
 Automatic meeting overviews are enabled by default for organized notes and can be disabled in settings. Generation may incur additional AI service charges; rendering an already saved overview does not itself call AI. Existing notes are not rewritten merely by updating.
 
-See the [2.6.0 release notes](RELEASE_NOTES.md).
+See the [2.6.0 release notes](https://github.com/Lynn-x/LexVoice/releases/tag/2.6.0).
 
 ### Included from 2.5.0
 
