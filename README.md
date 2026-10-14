@@ -10,7 +10,14 @@ It is **not** a hosted cloud service and ships **no API keys**. You connect your
 
 LexVoice supports desktop and mobile Obsidian workflows. Mobile recording uses the device microphone and supports segmented or whole-audio transcription after capture. System audio, virtual audio devices, multichannel capture, desktop device diagnostics, and realtime streaming ASR providers that require custom authentication headers require the desktop app.
 
-## What's new in 2.7.0
+## What's new in 2.7.1
+
+- **Setup outside mainland China:** in English and Japanese, new installations use international endpoints, and Quick setup recommends Alibaba Cloud Bailian (Singapore), where one API key covers live transcription, post-meeting transcription with speaker separation, and AI organization. Unmodified built-in connections switch to the international site when enabled from Quick setup; connections you have edited keep their site. The Chinese interface is unchanged.
+- **Translated setup messages:** reasons for blocked recording, Quick setup and connection test results, and related settings hints are shown in English and Japanese.
+
+See the [2.7.1 release notes](RELEASE_NOTES.md).
+
+### Included from 2.7.0
 
 - **Model providers dialog:** add and edit connections in one dialog with billing, region, API key, Base URL and connection test. Status labels are the same across the plugin, and a connection shows the latest result for the tasks it serves.
 - **Bailian regions:** Singapore pay-as-you-go and Token Plan presets, plus Hong Kong and US presets for AI organization only. SiliconFlow adds an international preset. New connections preselect endpoints by interface language; existing connections are not migrated.
@@ -21,7 +28,7 @@ LexVoice supports desktop and mobile Obsidian workflows. Mobile recording uses t
 
 Pausing a recording now sends silence to streaming transcription, so speech during a pause is not uploaded. Existing notes and connection addresses are not rewritten merely by updating.
 
-See the [2.7.0 release notes](RELEASE_NOTES.md).
+See the [2.7.0 release notes](https://github.com/Lynn-x/LexVoice/releases/tag/2.7.0).
 
 ### Included from 2.6.0
 
