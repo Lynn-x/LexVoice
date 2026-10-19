@@ -933,8 +933,8 @@ body .lexvoice-bubble-wrap .lexvoice-bubble button.lexvoice-bubble-btn.is-stop-i
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--color-green, #3d9970) 15%, transparent);
-  color: var(--color-green, #3d9970);
+  background: color-mix(in srgb, var(--text-success) 15%, transparent);
+  color: var(--text-success);
   animation: lexvoice-progress-pop 0.3s ease-out;
 }
 .lexvoice-progress-check svg { width: 12px; height: 12px; stroke-width: 3; }
@@ -1181,13 +1181,16 @@ body .lexvoice-bubble-wrap .lexvoice-bubble button.lexvoice-bubble-btn.is-stop-i
   border-radius: var(--radius-s);
   background: var(--background-primary);
 }
+/* 状态用整圈细边 + 浅底；inset 画边不改行高。 */
 .lexvoice-progress-request.is-failed {
-  box-shadow: inset 2px 0 0 var(--text-error);
+  background: color-mix(in srgb, var(--text-error) 10%, var(--background-primary));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-error) 28%, transparent);
 }
 .lexvoice-progress-request.is-slow,
 .lexvoice-progress-request.is-stalled,
 .lexvoice-progress-request.is-retrying {
-  box-shadow: inset 2px 0 0 var(--text-warning, var(--color-orange));
+  background: color-mix(in srgb, var(--text-warning, var(--color-orange)) 10%, var(--background-primary));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-warning, var(--color-orange)) 28%, transparent);
 }
 .lexvoice-progress-request-head {
   display: flex;
@@ -2090,9 +2093,9 @@ body .lexvoice-bubble-wrap .lexvoice-bubble button.lexvoice-bubble-btn.is-stop-i
   font-style: italic;
 }
 
+/* 出错只换文字色，缩进线保持中性。 */
 .lexvoice-outline-annotation-ai.is-error {
   color: var(--text-error);
-  border-left-color: color-mix(in srgb, var(--text-error) 36%, transparent);
 }
 
 /* @指派 / /待办 元数据型注解 —— 结构化展示，不渲染原始符号前缀 */
@@ -2227,13 +2230,6 @@ body .lexvoice-bubble-wrap .lexvoice-bubble button.lexvoice-bubble-btn.is-stop-i
   border-color: color-mix(in srgb, var(--text-accent) 28%, var(--background-modifier-border));
   background: color-mix(in srgb, var(--text-accent) 10%, var(--background-primary));
   color: var(--text-accent);
-}
-
-.lexvoice-meeting-entry-time.is-image,
-.lexvoice-meeting-entry-time.is-material {
-  border-color: color-mix(in srgb, var(--color-orange) 30%, var(--background-modifier-border));
-  background: color-mix(in srgb, var(--color-orange) 12%, var(--background-primary));
-  color: color-mix(in srgb, var(--color-orange) 72%, var(--text-normal));
 }
 
 .lexvoice-meeting-entry-body {
@@ -2528,9 +2524,9 @@ body .lexvoice-bubble-wrap .lexvoice-bubble button.lexvoice-bubble-btn.is-stop-i
   flex-shrink: 0;
 }
 
-.lexvoice-outline-seg-dot.is-done    { background: var(--color-green); }
+.lexvoice-outline-seg-dot.is-done    { background: var(--text-success); }
 .lexvoice-outline-seg-dot.is-pending { background: var(--text-faint); }
-.lexvoice-outline-seg-dot.is-failed  { background: var(--color-red); }
+.lexvoice-outline-seg-dot.is-failed  { background: var(--text-error); }
 
 .lexvoice-outline-seg-body {
   flex: 1;
@@ -2594,46 +2590,6 @@ body .lexvoice-bubble-wrap .lexvoice-bubble button.lexvoice-bubble-btn.is-stop-i
 .lexvoice-outline-ai-body ul ol li::marker,
 .lexvoice-outline-ai-body ol ul li::marker {
   color: color-mix(in srgb, var(--text-faint) 72%, transparent);
-}
-
-/* 大纲音源标记：图标挂在标题段落（li > p）末尾，靠右浮在主题色上 */
-.lexvoice-outline-ai-body li.lexvoice-outline-source-tagged > p {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.lexvoice-outline-source-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-  margin-left: 6px;
-  flex: 0 0 auto;
-  border-radius: 0;
-  background: transparent;    /* 不再用实色方框 */
-  color: var(--text-accent);  /* 主题色图标 */
-  opacity: 0.78;
-  transition: opacity 0.15s ease, color 0.15s ease;
-}
-
-.lexvoice-outline-source-chip:hover {
-  opacity: 1;
-  color: var(--interactive-accent);
-}
-
-.lexvoice-outline-source-chip svg {
-  width: 14px;
-  height: 14px;
-  stroke-width: 1.9;
-}
-
-/* 麦克风路径基本被源代码 continue 掉了；这里保留兜底样式 */
-.lexvoice-outline-source-chip.is-mic,
-.lexvoice-outline-source-chip.is-computer {
-  color: var(--text-accent);
 }
 
 .lexvoice-outline-ai-body > ul > li {
@@ -2906,7 +2862,8 @@ body .lexvoice-bubble-wrap .lexvoice-bubble button.lexvoice-bubble-btn.is-stop-i
   margin-right: 8px;
   margin-bottom: 1px;
   transform: translateY(-1px);
-  background: color-mix(in srgb, var(--background-secondary) 86%, transparent);
+  /* 不垫底色，免得像按钮 */
+  background: transparent;
 }
 
 .lexvoice-outline-ai-body li.lexvoice-outline-has-leading-time {
@@ -3608,7 +3565,7 @@ body .lexvoice-menu .menu-item.selected .menu-item-icon {
   font-style: italic;
 }
 /* 三态色：图标走主题语义色，整行 missing 弱化 */
-.lexvoice-outline-dim-status-covered .lexvoice-outline-marker-icon { color: var(--color-green); }
+.lexvoice-outline-dim-status-covered .lexvoice-outline-marker-icon { color: var(--text-success); }
 .lexvoice-outline-dim-status-partial .lexvoice-outline-marker-icon { color: var(--color-yellow); }
 .lexvoice-outline-dim-status-missing .lexvoice-outline-marker-icon { color: var(--text-faint); }
 .lexvoice-outline-dim-status-missing .lexvoice-outline-dim-name { color: var(--text-muted); }
@@ -3646,10 +3603,12 @@ body .lexvoice-menu .menu-item.selected .menu-item-icon {
   margin-bottom: var(--size-4-2);
   border-radius: var(--radius-m);
   background: var(--background-secondary);
-  border-left: 2px solid var(--background-modifier-border);
+  border: 1px solid var(--background-modifier-border);
 }
-.lexvoice-outline-followup-card.lexvoice-followup-status-missing { border-left-color: var(--text-faint); }
-.lexvoice-outline-followup-card.lexvoice-followup-status-partial { border-left-color: var(--color-yellow); }
+.lexvoice-outline-followup-card.lexvoice-followup-status-partial {
+  border-color: color-mix(in srgb, var(--color-yellow) 28%, transparent);
+  background: color-mix(in srgb, var(--color-yellow) 10%, var(--background-secondary));
+}
 .lexvoice-outline-followup-card .lexvoice-followup-card-head {
   display: flex;
   align-items: center;
@@ -4859,8 +4818,9 @@ body .lexvoice-menu .menu-item.selected .menu-item-icon {
   flex-direction: column;
   gap: var(--size-2-1);
   padding: var(--size-2-3);
-  border-left: 2px solid var(--interactive-accent);
-  background: var(--background-secondary);
+  border: 1px solid color-mix(in srgb, var(--interactive-accent) 28%, transparent);
+  border-radius: var(--radius-s);
+  background: color-mix(in srgb, var(--interactive-accent) 10%, var(--background-secondary));
   color: var(--text-muted);
   font-size: var(--font-ui-smaller);
   line-height: var(--line-height-tight);
@@ -7986,9 +7946,9 @@ body .lexvoice-menu .menu-item.selected .menu-item-icon {
   flex-shrink: 0;
 }
 
-.lexvoice-diag-dot.is-ok   { background: var(--color-green); }
-.lexvoice-diag-dot.is-warn { background: var(--color-orange); }
-.lexvoice-diag-dot.is-fail { background: var(--color-red); }
+.lexvoice-diag-dot.is-ok   { background: var(--text-success); }
+.lexvoice-diag-dot.is-warn { background: var(--text-warning); }
+.lexvoice-diag-dot.is-fail { background: var(--text-error); }
 
 .lexvoice-diag-text {
   flex: 1;
@@ -8025,8 +7985,8 @@ body .lexvoice-menu .menu-item.selected .menu-item-icon {
   margin-top: var(--size-2-1);
 }
 
-.lexvoice-diag-summary-status.is-ok   { color: var(--color-green); }
-.lexvoice-diag-summary-status.is-warn { color: var(--color-orange); }
+.lexvoice-diag-summary-status.is-ok   { color: var(--text-success); }
+.lexvoice-diag-summary-status.is-warn { color: var(--text-warning); }
 
 .lexvoice-diag-edit-hint {
   margin-top: var(--size-2-3);
@@ -8154,7 +8114,7 @@ body .lexvoice-menu .menu-item.selected .menu-item-icon {
 }
 
 .lexvoice-vcable-warn {
-  color: var(--color-orange);
+  color: var(--text-warning);
   font-size: var(--font-ui-smaller);
 }
 
@@ -8208,7 +8168,7 @@ body .lexvoice-menu .menu-item.selected .menu-item-icon {
 }
 
 .lexvoice-device-status-row.is-warn {
-  color: var(--color-orange);
+  color: var(--text-warning);
 }
 
 .lexvoice-device-status-row > span:first-child {
@@ -8493,17 +8453,17 @@ body .lexvoice-menu .menu-item.selected .menu-item-icon {
   font-size: var(--font-ui-smaller);
   color: var(--text-muted);
   padding: var(--size-2-2) var(--size-2-3);
-  border-left: 2px solid var(--color-accent);
-  border-radius: 0 var(--radius-s) var(--radius-s) 0;
-  background: var(--background-secondary);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 28%, transparent);
+  border-radius: var(--radius-s);
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--background-secondary));
 }
 .lexvoice-recruit-quality-warn {
   font-size: var(--font-ui-smaller);
   color: var(--text-muted);
   padding: var(--size-2-2) var(--size-2-3);
-  border-left: 2px solid var(--color-yellow);
-  border-radius: 0 var(--radius-s) var(--radius-s) 0;
-  background: color-mix(in srgb, var(--color-yellow) 10%, var(--background-secondary));
+  border: 1px solid color-mix(in srgb, var(--text-warning) 28%, transparent);
+  border-radius: var(--radius-s);
+  background: color-mix(in srgb, var(--text-warning) 10%, var(--background-secondary));
 }
 
 .lexvoice-recruit-meta-cell {
@@ -8616,8 +8576,8 @@ select.lexvoice-recruit-input.dropdown {
   height: 8px;
 }
 
-.lexvoice-recruit-card-dot.is-ok   { background: var(--color-green); }
-.lexvoice-recruit-card-dot.is-warn { background: var(--color-orange); }
+.lexvoice-recruit-card-dot.is-ok   { background: var(--text-success); }
+.lexvoice-recruit-card-dot.is-warn { background: var(--text-warning); }
 
 .lexvoice-recruit-card-title {
   flex: 1;
@@ -8682,12 +8642,12 @@ select.lexvoice-recruit-input.dropdown {
   color: color-mix(in srgb, var(--text-muted) 88%, var(--text-normal));
 }
 .lexvoice-recruit-chip.is-ok {
-  background: color-mix(in srgb, var(--color-green) 15%, transparent);
-  color: color-mix(in srgb, var(--color-green) 72%, var(--text-normal));
+  background: color-mix(in srgb, var(--text-success) 15%, transparent);
+  color: color-mix(in srgb, var(--text-success) 72%, var(--text-normal));
 }
 .lexvoice-recruit-chip.is-warn {
-  background: color-mix(in srgb, var(--color-orange) 15%, transparent);
-  color: color-mix(in srgb, var(--color-orange) 75%, var(--text-normal));
+  background: color-mix(in srgb, var(--text-warning) 15%, transparent);
+  color: color-mix(in srgb, var(--text-warning) 75%, var(--text-normal));
 }
 .lexvoice-recruit-chip-icon { display: inline-flex; align-items: center; }
 .lexvoice-recruit-chip-icon svg { width: 12px; height: 12px; }
@@ -9265,9 +9225,9 @@ select.lexvoice-rcx-in.dropdown {
 .lexvoice-risk-body {
   margin-top: var(--size-2-2);
   padding: var(--size-2-3) var(--size-4-2);
-  border: 1px solid color-mix(in srgb, var(--color-orange) 28%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text-warning) 28%, transparent);
   border-radius: var(--radius-s);
-  background: color-mix(in srgb, var(--color-orange) 7%, transparent);
+  background: color-mix(in srgb, var(--text-warning) 7%, transparent);
   color: var(--text-muted);
   font-size: var(--font-ui-smaller);
   line-height: var(--line-height-normal);
@@ -9463,12 +9423,12 @@ select.lexvoice-rcx-in.dropdown {
 
 .lexvoice-provider-status.is-ready {
   color: var(--text-success);
-  border-color: rgba(var(--color-green-rgb), 0.35);
+  border-color: color-mix(in srgb, var(--text-success) 35%, transparent);
 }
 
 .lexvoice-provider-status.is-missing {
   color: var(--text-warning);
-  border-color: rgba(var(--color-orange-rgb), 0.35);
+  border-color: color-mix(in srgb, var(--text-warning) 35%, transparent);
 }
 
 .lexvoice-provider-body {
@@ -9496,7 +9456,7 @@ select.lexvoice-rcx-in.dropdown {
 
 .lexvoice-provider-missing {
   color: var(--text-warning);
-  background: rgba(var(--color-orange-rgb), 0.08);
+  background: color-mix(in srgb, var(--text-warning) 8%, transparent);
 }
 
 .lexvoice-provider-note {
@@ -9513,8 +9473,8 @@ select.lexvoice-rcx-in.dropdown {
 .lexvoice-provider-streaming-tip {
   margin: var(--size-2-2) 0 0;
   color: var(--text-muted);
-  background: var(--background-secondary);
-  border-left: 2px solid var(--color-accent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 28%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--background-secondary));
 }
 
 .lexvoice-provider-links {
@@ -9770,9 +9730,9 @@ select.lexvoice-rcx-in.dropdown {
   background: transparent;
 }
 
+/* 选中态靠底色和「已默认」表达，不加左侧竖条。 */
 .lexvoice-tpl-row.is-active {
   border-color: var(--background-modifier-border);
-  box-shadow: inset 2px 0 0 var(--interactive-accent);
   background: var(--background-modifier-hover);
 }
 
@@ -11184,24 +11144,11 @@ select.lexvoice-rcx-in.dropdown {
 }
 
 /* 连续重复时间戳（同段内多个 L1 共用一个段起点）：
-   隐藏文字，用 ↘ 暗示是上一时间段的延续；rail 圆点和点击仍正常 */
+   原位照常显示时间，只是颜色更淡；rail 圆点和点击仍正常 */
 .lexvoice-outline-ai-body ul.lexvoice-outline-time-rail > li > .lexvoice-time-link.lexvoice-outline-leading-time.is-duplicate-time,
 .lexvoice-outline-ai-body ul.lexvoice-outline-time-rail > li > p > .lexvoice-time-link.lexvoice-outline-leading-time.is-duplicate-time {
-  color: transparent;
-  position: absolute;
-}
-.lexvoice-outline-ai-body ul.lexvoice-outline-time-rail > li > .lexvoice-time-link.lexvoice-outline-leading-time.is-duplicate-time::after,
-.lexvoice-outline-ai-body ul.lexvoice-outline-time-rail > li > p > .lexvoice-time-link.lexvoice-outline-leading-time.is-duplicate-time::after {
-  content: "↘";
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding-right: 10px;
   color: var(--text-faint);
-  font-size: 11px;
-  pointer-events: none;
+  position: absolute;
 }
 
 .lexvoice-outline-ai-body ul.lexvoice-outline-time-rail > li {
@@ -11280,18 +11227,6 @@ select.lexvoice-rcx-in.dropdown {
   background: var(--lex-bg-playing);
 }
 
-.lexvoice-outline-chapter.is-viewing::after,
-.lexvoice-outline-chapter.is-playing::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 12px;
-  bottom: 12px;
-  width: 2px;
-  border-radius: 0 1px 1px 0;
-  background: var(--lex-primary-soft);
-}
-
 .lexvoice-outline-chapter.is-viewing > .lexvoice-time-link.lexvoice-outline-leading-time::before,
 .lexvoice-outline-chapter.is-viewing > p > .lexvoice-time-link.lexvoice-outline-leading-time::before {
   border-color: var(--lex-primary-soft);
@@ -11308,22 +11243,28 @@ select.lexvoice-rcx-in.dropdown {
   animation: lexvoice-pulse-strong 2s ease-in-out infinite;
 }
 
-.lexvoice-outline-chapter.is-viewing > .lexvoice-time-link.lexvoice-outline-leading-time,
-.lexvoice-outline-chapter.is-playing > .lexvoice-time-link.lexvoice-outline-leading-time,
-.lexvoice-outline-chapter.is-viewing > p > .lexvoice-time-link.lexvoice-outline-leading-time,
-.lexvoice-outline-chapter.is-playing > p > .lexvoice-time-link.lexvoice-outline-leading-time {
-  color: var(--lex-primary-soft);
+/* 当前项（回放中 / 录音中查看）：时间戳与标题同色；重复时间保持淡色。
+   选择器须高于时间轴里的时间戳颜色规则，否则不生效 */
+.lexvoice-outline-ai-body ul.lexvoice-outline-time-rail > li.lexvoice-outline-chapter.is-viewing > .lexvoice-time-link.lexvoice-outline-leading-time:not(.is-duplicate-time),
+.lexvoice-outline-ai-body ul.lexvoice-outline-time-rail > li.lexvoice-outline-chapter.is-playing > .lexvoice-time-link.lexvoice-outline-leading-time:not(.is-duplicate-time),
+.lexvoice-outline-ai-body ul.lexvoice-outline-time-rail > li.lexvoice-outline-chapter.is-viewing > p > .lexvoice-time-link.lexvoice-outline-leading-time:not(.is-duplicate-time),
+.lexvoice-outline-ai-body ul.lexvoice-outline-time-rail > li.lexvoice-outline-chapter.is-playing > p > .lexvoice-time-link.lexvoice-outline-leading-time:not(.is-duplicate-time) {
+  color: color-mix(in srgb, var(--text-accent) 60%, var(--text-normal));
   font-weight: 500;
 }
 
-.lexvoice-outline-chapter.is-viewing > p,
-.lexvoice-outline-chapter.is-playing > p {
-  color: var(--lex-primary-soft);
-  font-weight: 600;
+/* 紧凑列表的标题是 li 里的文字，没有 p，所以着色挂在 li 上；招聘标题自带颜色，单独列出 */
+.lexvoice-outline-ai-body ul.lexvoice-outline-time-rail > li.lexvoice-outline-chapter.is-viewing,
+.lexvoice-outline-ai-body ul.lexvoice-outline-time-rail > li.lexvoice-outline-chapter.is-playing,
+.lexvoice-outline-ai-body ul.lexvoice-outline-time-rail > li.lexvoice-outline-chapter.is-viewing > .lexvoice-recruit-topic,
+.lexvoice-outline-ai-body ul.lexvoice-outline-time-rail > li.lexvoice-outline-chapter.is-playing > .lexvoice-recruit-topic {
+  color: color-mix(in srgb, var(--text-accent) 60%, var(--text-normal));
 }
 
-.lexvoice-outline-chapter.is-played {
-  opacity: 0.65;
+/* 要点保持正文色 */
+.lexvoice-outline-ai-body ul.lexvoice-outline-time-rail > li.lexvoice-outline-chapter.is-viewing > :is(ul, ol),
+.lexvoice-outline-ai-body ul.lexvoice-outline-time-rail > li.lexvoice-outline-chapter.is-playing > :is(ul, ol) {
+  color: var(--text-normal);
 }
 
 .lexvoice-outline-viewing-icon {
@@ -12509,9 +12450,9 @@ select.lexvoice-rcx-in.dropdown {
   padding: var(--size-2-2) var(--size-2-3);
   font-size: var(--font-ui-smaller);
   color: var(--text-muted);
-  background: color-mix(in srgb, var(--color-yellow) 10%, var(--background-secondary));
-  border-left: 2px solid var(--color-yellow);
-  border-radius: 0 var(--radius-s) var(--radius-s) 0;
+  background: color-mix(in srgb, var(--text-warning) 10%, var(--background-secondary));
+  border: 1px solid color-mix(in srgb, var(--text-warning) 28%, transparent);
+  border-radius: var(--radius-s);
 }
 .lexvoice-settings-hint {
   margin: 0 0 var(--size-4-3);
@@ -13074,8 +13015,8 @@ select.lexvoice-rcx-in.dropdown {
 .lexvoice-outline-empty .lexvoice-outline-legend { display: inline-flex; align-items: center; gap: 3px; font-weight: 560; white-space: nowrap; }
 .lexvoice-outline-empty .lexvoice-outline-legend .lexvoice-outline-marker-icon { display: inline-flex; }
 .lexvoice-outline-empty .lexvoice-outline-legend .lexvoice-outline-marker-icon svg { width: 0.95em; height: 0.95em; vertical-align: -0.14em; }
-.lexvoice-outline-empty .lexvoice-ai-eval .lexvoice-outline-marker-icon { color: var(--text-accent); }
-.lexvoice-outline-empty .lexvoice-ai-followup .lexvoice-outline-marker-icon { color: var(--color-orange, var(--text-muted)); }
+.lexvoice-outline-empty .lexvoice-ai-eval .lexvoice-outline-marker-icon { color: var(--interactive-accent); }
+.lexvoice-outline-empty .lexvoice-ai-followup .lexvoice-outline-marker-icon { color: var(--text-accent); }
 
 /* Sidebar quick control: keep scheme and segment interval on one compact row. */
 .lexvoice-outline-more-body .lexvoice-outline-scheme-row {
@@ -13941,15 +13882,15 @@ select.lexvoice-rcx-in.dropdown {
 }
 
 .lexvoice-st.is-ok {
-  color: var(--color-green);
+  color: var(--text-success);
 }
 
 .lexvoice-st.is-warn {
-  color: var(--color-orange);
+  color: var(--text-warning);
 }
 
 .lexvoice-st.is-bad {
-  color: var(--color-red);
+  color: var(--text-error);
 }
 
 .lexvoice-st.is-idle {
@@ -14002,7 +13943,7 @@ select.lexvoice-rcx-in.dropdown {
 
 /* 免费标记只换文字色，底色沿用普通标签：稿子里 .tag.free 也只覆盖 color。 */
 .lexvoice-tag.is-free {
-  color: var(--color-green);
+  color: var(--text-success);
 }
 
 .lexvoice-note {
@@ -14111,6 +14052,11 @@ select.lexvoice-rcx-in.dropdown {
   line-height: 1.45;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+/* 摘要开头的计费方式：右侧标签已写明，平时不显示；窄屏、移动端标签让位隐藏时才显示。 */
+.lexvoice-conn-caps-billing {
+  display: none;
 }
 
 /* 二级折叠（浮窗的高级设置、各功能 Base URL / API Key）：日常不看，需要时才展开。 */
@@ -14348,9 +14294,9 @@ body:not(.is-phone) .modal.lexvoice-provider-modal {
   background: currentColor;
 }
 
-.lexvoice-pm-dot.is-ok { color: var(--color-green); }
-.lexvoice-pm-dot.is-warn { color: var(--color-orange); }
-.lexvoice-pm-dot.is-bad { color: var(--color-red); }
+.lexvoice-pm-dot.is-ok { color: var(--text-success); }
+.lexvoice-pm-dot.is-warn { color: var(--text-warning); }
+.lexvoice-pm-dot.is-bad { color: var(--text-error); }
 .lexvoice-pm-dot.is-idle { color: var(--text-faint); }
 
 /* 右栏目录：分组标题 + 卡片。卡片是可点的条目，悬停只换底色。 */
@@ -14500,7 +14446,8 @@ body:not(.is-phone) .modal.lexvoice-provider-modal {
   text-decoration: underline;
 }
 
-.lexvoice-pm-key-hint {
+/* 密钥与计费方式不符才用错误色；还没填 Key 时的专属 Key 说明沿用普通说明色。 */
+.lexvoice-pm-key-hint.is-mismatch {
   color: var(--text-error);
 }
 
@@ -14649,6 +14596,7 @@ body:not(.is-phone) .modal.lexvoice-provider-modal {
   .lexvoice-route-control.is-model { flex: 0 0 auto; width: 100%; }
   .lexvoice-conn-head { flex-wrap: wrap; }
   .lexvoice-conn-head > .lexvoice-tag { display: none; }
+  .lexvoice-conn-caps-billing { display: inline; }
 }
 
 @media (max-width: 620px) {
@@ -14687,10 +14635,18 @@ body:not(.is-phone) .modal.lexvoice-provider-modal {
   .lexvoice-conn-head > .lexvoice-tag {
     display: none;
   }
+
+  .lexvoice-conn-caps-billing {
+    display: inline;
+  }
 }
 
 .lexvoice-settings-content.is-mobile .lexvoice-conn-head > .lexvoice-tag {
   display: none;
+}
+
+.lexvoice-settings-content.is-mobile .lexvoice-conn-caps-billing {
+  display: inline;
 }
 
 .lexvoice-settings-content.is-mobile .lexvoice-si {
@@ -14904,24 +14860,16 @@ body:not(.is-phone) .modal.lexvoice-provider-modal {
 
 /* Task-local progress: one scroll region, native theme colors, no shared action footer. */
 .modal.lexvoice-task-panel {
-  --interactive-accent: #e07a5f;
-  --interactive-accent-hover: #d3684c;
-  --text-accent: #d3684c;
-  --text-error: #b4483a;
-  --text-success: #3d9970;
   width: min(560px, calc(100vw - 24px));
   max-width: min(560px, calc(100vw - 24px));
   max-height: min(800px, calc(100dvh - 32px));
   padding: 0;
   letter-spacing: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
   border-radius: 16px;
   /* 移动端 Obsidian 把这两个变量改成随文字大小缩放，面板里写死的 18/13/12/11px 不跟着变，层级会反转；在面板内锁成桌面值。 */
   --font-ui-smaller: 12px;
   --font-ui-small: 13px;
 }
-.theme-light .modal.lexvoice-task-panel { --background-primary: #fff; --background-secondary: #f6f5f2; --background-modifier-border: #e7e4de; --text-normal: #2b2a27; --text-muted: #7c7970; --text-faint: #aba69c; }
-.theme-dark .modal.lexvoice-task-panel { --text-error: #ec9789; --text-success: #76bb9c; }
 /* 面板正文基准 12px / 1.5，未单独声明字号的文字都从这里继承。 */
 .modal.lexvoice-task-panel .modal-content {
   margin: 0;
@@ -14946,7 +14894,8 @@ body:not(.is-phone) .modal.lexvoice-provider-modal {
 .modal.lexvoice-task-panel .lexvoice-progress-title { font-size: 18px; font-weight: 700; }
 .modal.lexvoice-task-panel .lexvoice-task-attention-count {
   font-size: 11px; font-weight: var(--font-semibold); line-height: 18px; height: 18px; padding: 0 7px; border-radius: 9px;
-  color: #fff; background: #b4483a; border: 0; white-space: nowrap;
+  /* 11px 半粗体要 4.5:1：文字往正文色压一点，浅色主题下纯错误色压在 12% 底上不够。 */
+  color: color-mix(in srgb, var(--text-error) 75%, var(--text-normal)); background: color-mix(in srgb, var(--text-error) 12%, transparent); border: 0; white-space: nowrap;
 }
 .modal.lexvoice-task-panel .lexvoice-task-header-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 5px; grid-column: 1 / -1; margin-top: 4px; font-size: var(--font-ui-smaller); color: var(--text-muted); line-height: 1.5; }
 .modal.lexvoice-task-panel .lexvoice-task-header-meta .lexvoice-meeting-name { flex: 0 1 auto; font-size: inherit; font-weight: normal; color: inherit; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
@@ -14980,9 +14929,9 @@ body:not(.is-phone) .modal.lexvoice-provider-modal {
   border: 2px solid var(--background-modifier-border); border-radius: 50%; background: var(--background-primary);
 }
 .modal.lexvoice-task-panel .lexvoice-meeting-stage-marker svg { width: 13px; height: 13px; }
-.modal.lexvoice-task-panel .lexvoice-meeting-stage.is-current .lexvoice-meeting-stage-marker { border-color: var(--interactive-accent); background: var(--interactive-accent); color: white; }
+.modal.lexvoice-task-panel .lexvoice-meeting-stage.is-current .lexvoice-meeting-stage-marker { border-color: var(--interactive-accent); background: var(--interactive-accent); color: var(--text-on-accent); }
 .modal.lexvoice-task-panel .is-running .lexvoice-meeting-stage.is-current .lexvoice-meeting-stage-marker:empty::after {
-  content: ""; width: 7px; height: 7px; background: #fff; border-radius: 50%;
+  content: ""; width: 7px; height: 7px; background: var(--text-on-accent); border-radius: 50%;
 }
 .modal.lexvoice-task-panel .lexvoice-meeting-stage.is-done .lexvoice-meeting-stage-marker { background: var(--interactive-accent); border-color: var(--interactive-accent); color: var(--text-on-accent); }
 .modal.lexvoice-task-panel .is-failed .lexvoice-meeting-stage.is-current .lexvoice-meeting-stage-marker { color: var(--text-error); border-color: var(--text-error); background: var(--background-primary); }
@@ -15100,8 +15049,9 @@ body:not(.is-phone) .modal.lexvoice-provider-modal {
 .lexvoice-speaker-confirm-warning {
   margin-top: 12px;
   padding: 10px 12px;
-  border-left: 3px solid var(--text-warning);
-  background: var(--background-modifier-hover);
+  border: 1px solid color-mix(in srgb, var(--text-warning) 28%, transparent);
+  border-radius: var(--radius-s);
+  background: color-mix(in srgb, var(--text-warning) 10%, transparent);
   color: var(--text-muted);
   font-size: var(--font-ui-smaller);
   line-height: var(--line-height-normal);
@@ -16180,22 +16130,9 @@ body:not(.is-phone) .modal.lexvoice-provider-modal {
   background: var(--background-primary);
 }
 
+/* 处理单元只定列位置，高度与内边距沿用 pair-cell，与偏好、思考一致 */
 .lexvoice-outline.is-idle-view .lexvoice-outline-scheme-cell {
   grid-column: 1 / 2;
-  height: auto;
-  min-height: 30px;
-  flex-wrap: wrap;
-  padding-block: 4px;
-  gap: 4px 7px;
-}
-
-.lexvoice-outline.is-idle-view .lexvoice-outline-scheme-cell button.lexvoice-outline-segment-value {
-  min-width: 0;
-  height: auto;
-  min-height: 20px;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  line-height: 1.3;
 }
 
 .lexvoice-outline.is-idle-view .lexvoice-outline-segment-inline {

@@ -10,25 +10,22 @@ It is **not** a hosted cloud service and ships **no API keys**. You connect your
 
 LexVoice supports desktop and mobile Obsidian workflows. Mobile recording uses the device microphone and supports segmented or whole-audio transcription after capture. System audio, virtual audio devices, multichannel capture, desktop device diagnostics, and realtime streaming ASR providers that require custom authentication headers require the desktop app.
 
-## What's new in 2.7.1
+## What's new in 2.8.0
+
+- **Coding Plan and Token Plan presets:** Alibaba Cloud Bailian, Zhipu GLM, Moonshot / Kimi and Volcengine Ark add Coding Plan on their China and International sites, and nine providers are added for AI organization only. Connections show their billing method, and the API key field says which key a plan needs. The terms of many plans prohibit use from apps like LexVoice; check yours before using it.
+- **Connection tests confirm the key:** services whose model list does not check the key, such as OpenRouter, no longer test as available with any key.
+- **Note names:** organized notes are named "date · topic", the template and source are kept in note properties, and file names you change are no longer renamed. The notes list shows only the final title.
+- **Mind-map overview:** the meeting overview puts the title in the center with topics on both sides, scales down to fit the note, and asks the AI for shorter keywords.
+- **Outline:** the AI no longer guesses whether an item came from the microphone or system audio.
+
+Update every device that syncs the same vault: 2.7.1 cannot export mind-map overviews and renames "date · topic" notes the old way. See the [2.8.0 release notes](RELEASE_NOTES.md).
+
+### Included from 2.7.1
 
 - **Setup outside mainland China:** in English and Japanese, new installations use international endpoints, and Quick setup recommends Alibaba Cloud Bailian (Singapore), where one API key covers live transcription, post-meeting transcription with speaker separation, and AI organization. Unmodified built-in connections switch to the international site when enabled from Quick setup; connections you have edited keep their site. The Chinese interface is unchanged.
 - **Translated setup messages:** reasons for blocked recording, Quick setup and connection test results, and related settings hints are shown in English and Japanese.
 
-See the [2.7.1 release notes](RELEASE_NOTES.md).
-
-### Included from 2.7.0
-
-- **Model providers dialog:** add and edit connections in one dialog with billing, region, API key, Base URL and connection test. Status labels are the same across the plugin, and a connection shows the latest result for the tasks it serves.
-- **Bailian regions:** Singapore pay-as-you-go and Token Plan presets, plus Hong Kong and US presets for AI organization only. SiliconFlow adds an international preset. New connections preselect endpoints by interface language; existing connections are not migrated.
-- **Bailian transcription:** original files are still submitted whole by default. Diarized recordings over two hours are split losslessly into parts of at most two hours; waits scale with audio length, and recovery continues submitted cloud tasks without submitting again. Realtime transcription adds heartbeats, automatic reconnection and model-based sample rates.
-- **Clearer service errors:** Bailian error codes are explained, permission errors are no longer shown as invalid keys, quota exhaustion is not retried, and rate-limit waits can be cancelled.
-- **Task progress:** one main action per row, plus Remove, Retry all and Clear all. Recordings and notes already written are not affected.
-- **Overview layout:** topics and details run left to right, so diagram width no longer grows with the number of topics; A4 printing paginates by topic. Updating a 2.6.0 overview whose transcript and output language are unchanged switches its layout locally without another AI request.
-
-Pausing a recording now sends silence to streaming transcription, so speech during a pause is not uploaded. Existing notes and connection addresses are not rewritten merely by updating.
-
-See the [2.7.0 release notes](https://github.com/Lynn-x/LexVoice/releases/tag/2.7.0).
+See the [2.7.1 release notes](https://github.com/Lynn-x/LexVoice/releases/tag/2.7.1) and the [2.7.0 release notes](https://github.com/Lynn-x/LexVoice/releases/tag/2.7.0).
 
 ### Included from 2.6.0
 
