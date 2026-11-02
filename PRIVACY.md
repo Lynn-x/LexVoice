@@ -33,6 +33,8 @@ Preparation stays in the meeting Markdown file: attendees in YAML, and topics, a
 
 The per-note `lexvoice_context_use` option is off by default. Enabling it allows material extraction and lets the configured transcription and organization services use relevant names and background. Image and scanned-PDF extraction requires a model that accepts images. Turning the option off stops future material use through this workflow; it does not recall requests already sent to a provider.
 
+The Meeting info box in a recording note is separate from that option: the name, speaker and outline you fill in are sent to the configured transcription and organization services. Leave it empty to send nothing from it. Text typed outside the transcript is kept in a collapsed Handwritten notes callout: it is left out of notes, overview and report generation, but Sediment scans and whole-note polishing read the note, including that callout.
+
 Preparation is reference material, not evidence that a meeting decision occurred. Final responses use transcript excerpts, and sediment extraction excludes the preparation block. Explicitly asking other note-based features to process a note may send the text included in that request; the preparation option is not a general content-level access control for every plugin or external tool.
 
 Dragging a note from the desktop sidebar exposes the file or its path to the target application chosen by the user.
