@@ -17413,6 +17413,10 @@ body:not(.is-phone) .modal.lexvoice-provider-modal {
 .lexvoice-sb .lexvoice-sb-actions button.lexvoice-sb-icon { flex: none; width: 36px; height: var(--lv-row); }
 .lexvoice-sb .lexvoice-sb-actions button.lexvoice-sb-icon:last-child { margin-right: -12px; }
 
+/* 首页设置卡里的主按钮和旁边的图标降到 36px，不压过上面的设置行 */
+.lexvoice-sb .lexvoice-sb-setup .lexvoice-sb-actions button.lexvoice-sb-primary,
+.lexvoice-sb .lexvoice-sb-setup .lexvoice-sb-actions button.lexvoice-sb-icon { height: 36px; }
+
 /* ---- status line under the card ---- */
 .lexvoice-sb-status-line {
   display: flex;
@@ -17473,6 +17477,9 @@ body:not(.is-phone) .modal.lexvoice-provider-modal {
 .lexvoice-sb-rec-wave {
   display: flex;
   flex: 1;
+  /* 同时带有 .lexvoice-input-meters（竖排各路输入），这里要横排，否则 28 根条叠成一根 */
+  flex-direction: row;
+  justify-content: center;
   align-items: center;
   gap: 3px;
   min-width: 0;
@@ -17659,7 +17666,8 @@ body:not(.is-phone) .modal.lexvoice-provider-modal {
 .lexvoice-sb-page.is-import-text {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  /* Visible so the back control can sit in the pane padding. The list below clips itself. */
+  overflow: visible;
 }
 
 .lexvoice-sb-page.is-import-audio > .lexvoice-sb-files,
@@ -17683,6 +17691,17 @@ body:not(.is-phone) .modal.lexvoice-provider-modal {
   flex: 1;
   min-height: 0;
   overflow: hidden;
+}
+
+/* The dialog form caps itself at 760px. In the sidebar that leaves the pane empty underneath. */
+.lexvoice-sb .lexvoice-sb-embedded.lexvoice-import-modal {
+  max-height: none;
+}
+
+.lexvoice-sb .lexvoice-sb-embedded .lexvoice-import-list {
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: none;
 }
 
 :is(.mod-left-split, .mod-right-split) .workspace-leaf-content > .view-content.lexvoice-outline.lexvoice-sb:has(> .lexvoice-sb-page.is-import-audio),

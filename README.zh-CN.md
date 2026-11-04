@@ -1,10 +1,27 @@
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./assets/brand/logo-mark-reverse.svg">
+  <source media="(prefers-color-scheme: light)" srcset="./assets/brand/logo-mark.svg">
+  <img alt="LexVoice" src="./assets/brand/logo-mark.svg" width="96" height="96">
+</picture>
+
 # LexVoice
 
 在 Obsidian 里录会议，边录边看实时大纲，会后得到纪要和思维导图概览；转写和 AI 用你自己的服务，录音和纪要存在你的知识库。
 
-[![Latest release](https://img.shields.io/github/v/release/Lynn-x/LexVoice?style=flat-square)](https://github.com/Lynn-x/LexVoice/releases/latest) [![Downloads](https://img.shields.io/github/downloads/Lynn-x/LexVoice/total?style=flat-square)](https://github.com/Lynn-x/LexVoice/releases)
+[English](README.md) | **简体中文** · [版本说明](RELEASE_NOTES.md)
 
-[English](README.md) | 简体中文 · [用户手册](https://lexvoice.cn/zh/manual.html) · [版本说明](RELEASE_NOTES.md) · [中文文档站](https://lexvoice.cn/zh/)
+[![手册](https://img.shields.io/badge/手册-用户手册-d3923c)](https://lexvoice.cn/zh/manual.html)
+[![文档](https://img.shields.io/badge/文档-lexvoice.cn-7c3aed)](https://lexvoice.cn/zh/)
+
+[![GitHub release](https://img.shields.io/github/v/release/Lynn-x/LexVoice)](https://github.com/Lynn-x/LexVoice/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/Lynn-x/LexVoice/total)](https://github.com/Lynn-x/LexVoice/releases)
+[![Stars](https://img.shields.io/github/stars/Lynn-x/LexVoice)](https://github.com/Lynn-x/LexVoice/stargazers)
+[![Obsidian](https://img.shields.io/badge/Obsidian-plugin-7e6cef)](https://obsidian.md/plugins?id=lexvoice)
+[![License](https://img.shields.io/badge/license-Proprietary-blue)](LICENSE)
+
+</div>
 
 ```mermaid
 %%{init: {"themeVariables":{"fontSize":"14px"},"flowchart":{"nodeSpacing":8,"rankSpacing":24,"padding":8,"useMaxWidth":true,"wrappingWidth":150}}}%%
@@ -113,17 +130,14 @@ flowchart LR
 
 录音默认存在 `LexVoice/录音`，纪要存在 `LexVoice/转写纪要`，都可以在设置中修改。
 
-## 3.0.0 更新重点
+## 3.0.1 更新重点
 
-- 侧栏：重做。首页、大纲、纪要、问一问、沉淀和导入共用一套字号和间距，子页有返回。
-- 任务中心：取代待处理队列弹窗。会议可以在这里停止、继续、重试、放弃和恢复，已完成的历史可以清除。
-- 会议信息：新建录音笔记最前面有「会议信息」框，填的内容决定文件名和纪要的二级标题。
-- 手写笔记：录音时写在转写区上方或下方的文字，定稿时收进原始材料里的折叠块。写在转写段落之间的文字和续录时新写的文字会被覆盖。
-- 会议概览：一级主题跟着纪要章节走，每个主题一种颜色，有内容的章节至少一个要点。「生成概览」在右键一级菜单。
-- 快速模型：大纲和概览可以用同一条连接下更轻的模型，纪要和报告继续用主模型。
-- 长录音与大文件：几个小时的录音分块处理，小米 MiMo 单个文件最长接受 8 小时。桌面端导入 MP4 视频只取音轨。
+- 录音时的电平条恢复跳动。
+- 转写有失败片段时，先重试再整理，不再带着缺口写纪要。
+- 「补做会中问答」回到已完成纪要的右键菜单。
+- 侧栏更利落：去掉大纲上方的空行、输入条的拍照按钮和「记下来」，「新建录音」变矮。
 
-同步同一个库的设备，请都更新后再继续未完成的转写。详情见[版本说明](RELEASE_NOTES.md)。
+3.0 的侧栏改版、任务中心、会议信息框等变化见[版本说明](https://github.com/Lynn-x/LexVoice/releases/tag/3.0.0)。同步同一个库的设备，请都更新后再继续未完成的转写。
 
 ## 使用要求
 

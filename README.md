@@ -1,10 +1,27 @@
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./assets/brand/logo-mark-reverse.svg">
+  <source media="(prefers-color-scheme: light)" srcset="./assets/brand/logo-mark.svg">
+  <img alt="LexVoice" src="./assets/brand/logo-mark.svg" width="96" height="96">
+</picture>
+
 # LexVoice
 
 Record meetings in Obsidian, follow a live outline, and get organized notes and a mind-map overview, using your own transcription and AI services, with recordings and notes saved in your vault.
 
-[![Latest release](https://img.shields.io/github/v/release/Lynn-x/LexVoice?style=flat-square)](https://github.com/Lynn-x/LexVoice/releases/latest) [![Downloads](https://img.shields.io/github/downloads/Lynn-x/LexVoice/total?style=flat-square)](https://github.com/Lynn-x/LexVoice/releases)
+**English** | [简体中文](README.zh-CN.md) · [Release notes](RELEASE_NOTES.md)
 
-English | [简体中文](README.zh-CN.md) · [User manual](https://lexvoice.cn/en/manual.html) · [Release notes](RELEASE_NOTES.md) · [中文文档站](https://lexvoice.cn/zh/)
+[![Manual](https://img.shields.io/badge/Manual-user%20guide-d3923c)](https://lexvoice.cn/en/manual.html)
+[![Docs](https://img.shields.io/badge/Docs-lexvoice.cn-7c3aed)](https://lexvoice.cn/en/)
+
+[![GitHub release](https://img.shields.io/github/v/release/Lynn-x/LexVoice)](https://github.com/Lynn-x/LexVoice/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/Lynn-x/LexVoice/total)](https://github.com/Lynn-x/LexVoice/releases)
+[![Stars](https://img.shields.io/github/stars/Lynn-x/LexVoice)](https://github.com/Lynn-x/LexVoice/stargazers)
+[![Obsidian](https://img.shields.io/badge/Obsidian-plugin-7e6cef)](https://obsidian.md/plugins?id=lexvoice)
+[![License](https://img.shields.io/badge/license-Proprietary-blue)](LICENSE)
+
+</div>
 
 ```mermaid
 %%{init: {"themeVariables":{"fontSize":"14px"},"flowchart":{"nodeSpacing":8,"rankSpacing":24,"padding":8,"useMaxWidth":true,"wrappingWidth":150}}}%%
@@ -113,17 +130,14 @@ When updating manually, replace only these three files and keep `data.json` and 
 
 Recordings go to `LexVoice/录音` and notes to `LexVoice/转写纪要` by default. Both can be changed in settings.
 
-## What's new in 3.0.0
+## What's new in 3.0.1
 
-- Sidebar: rebuilt. The home view, outline, notes list, Ask, Knowledge and import share one type scale and spacing, and sub-pages have a back control.
-- Task center: replaces the pending queue window. Meetings can be stopped, continued, retried, abandoned and restored there, and finished history can be cleared.
-- Meeting info: new recording notes start with a **Meeting info** box. What you fill in sets the file name and the second-level headings of the notes.
-- Handwritten notes: text you type above or below the transcript area while recording is kept in a collapsed callout in the raw materials. Text written between transcript segments, or while continuing a recording, is overwritten.
-- Meeting overview: top-level topics follow the sections of the notes, each topic has its own color, and every section with content gets at least one point. **Generate overview** is at the top level of the right-click menu.
-- Fast model: outlines and overviews can use a lighter model on the same connection, while notes and reports keep the main one.
-- Long recordings and large files: multi-hour recordings are processed in blocks, and Xiaomi MiMo accepts files of up to 8 hours. On desktop, MP4 video imports use only the audio track.
+- The level meter moves again while recording.
+- Failed transcript parts are retried before organizing, so notes are not written with gaps.
+- **Complete pending Q&A** is back in the right-click menu of a finished note.
+- A tidier sidebar: no empty row above the outline, no camera button or "Take a note" in the note input, and a shorter **New recording** button.
 
-Update every device that syncs the same vault before resuming unfinished transcriptions. See the [release notes](RELEASE_NOTES.md).
+For the 3.0 sidebar, Tasks, Meeting info box and more, see the [3.0.0 release notes](https://github.com/Lynn-x/LexVoice/releases/tag/3.0.0). Update every device that syncs the same vault before resuming unfinished transcriptions.
 
 ## Requirements
 
