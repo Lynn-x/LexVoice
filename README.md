@@ -130,14 +130,15 @@ When updating manually, replace only these three files and keep `data.json` and 
 
 Recordings go to `LexVoice/录音` and notes to `LexVoice/转写纪要` by default. Both can be changed in settings.
 
-## What's new in 3.0.1
+## What's new in 3.1.0
 
-- The level meter moves again while recording.
-- Failed transcript parts are retried before organizing, so notes are not written with gaps.
-- **Complete pending Q&A** is back in the right-click menu of a finished note.
-- A tidier sidebar: no empty row above the outline, no camera button or "Take a note" in the note input, and a shorter **New recording** button.
-
-For the 3.0 sidebar, Tasks, Meeting info box and more, see the [3.0.0 release notes](https://github.com/Lynn-x/LexVoice/releases/tag/3.0.0). Update every device that syncs the same vault before resuming unfinished transcriptions.
+- Meeting tasks retain saved progress across interruptions. Manually paused tasks stay paused.
+- One card per meeting combines speech transcription and notes organization. Expand transcription to see the latest successful part and every failed part; retry only the unfinished work.
+- Keep automatic transcription with manual notes organization, or continue automatically according to the meeting's saved preference.
+- Abandoning moves a card to history. Clearing history removes it from the list while retaining source material and saved responses; abandoned work is excluded from retry counts.
+- Theme-aware status icons, a compact history stack and continuous card movement make state changes easier to follow.
+- Notes use context to clean up ASR and spoken-language noise, without asking the reader to check individual words.
+- Merge selected notes into a new organized note; the originals remain available. MiMo segment boundaries preserve overlapping speech, and the condensed sidebar follows its panel background.
 
 ## Requirements
 

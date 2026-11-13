@@ -1,31 +1,23 @@
-# LexVoice 3.0.1
+# LexVoice 3.1.0
 
-## Fixes
+## Changes
 
-- The level meter moves again while recording. In 3.0.0 its bars were stacked into a single line.
-- Failed transcript parts are retried before organizing. If they still fail, the notes wait for transcription instead of being written with gaps.
-- **Complete pending Q&A** is back, in the right-click menu of a finished note. 3.0.0 removed its only entry.
-- Notes no longer end with a "check these names" block or start with a "full transcript not finished yet" warning.
-
-## A tidier sidebar
-
-- No more empty row with only a refresh button above the outline. The outline still updates on its own.
-- The note input drops "Take a note" from its hint, and the camera button on desktop. Mobile keeps the camera.
-- **New recording** is shorter, and the import pages show Back and fill the sidebar.
+- Meeting tasks retain saved progress across interruptions. Manually paused tasks stay paused.
+- One card per meeting combines speech transcription and notes organization. Expand transcription to see the latest successful part and every failed part; retry only the unfinished work.
+- Keep automatic transcription with manual notes organization, or continue automatically according to the meeting's saved preference.
+- Abandoning moves a card to history. Clearing history removes it from the list while retaining source material and saved responses; abandoned work is excluded from retry counts.
+- Theme-aware status icons, a compact history stack and continuous card movement make state changes easier to follow.
+- Notes use context to clean up ASR and spoken-language noise, without asking the reader to check individual words.
+- Merge selected notes into a new organized note; the originals remain available. MiMo segment boundaries preserve overlapping speech, and the condensed sidebar follows its panel background.
 
 ---
 
 ## 中文说明
 
-### 修复
-
-- 录音时的电平条恢复跳动。3.0.0 里这些条叠成了一根。
-- 转写有失败片段时，先重试这些片段再整理；还是失败就等转写成功后再整理，不再带着缺口写纪要。
-- 「补做会中问答」回来了，在已完成纪要的右键菜单里。3.0.0 把它唯一的入口去掉了。
-- 纪要末尾不再附「人物指认核对」，开头不再写「会后完整转写尚未完成」。
-
-### 侧栏更利落
-
-- 大纲上方不再有一整行只放一个刷新按钮，大纲照常自动更新。
-- 输入条的提示去掉「记下来」，电脑上去掉拍照按钮，手机保留。
-- 「新建录音」按钮变矮；导入页露出「返回」，铺满侧栏。
+- 中断后保留已完成进度，下次打开继续未完成部分；手动暂停的任务保持暂停。
+- 一场会议一张任务卡，集中处理语音转写与纪要整理。点击转写主行，查看最近成功的一段及全部失败片段，只重试未完成内容。
+- 可以自动转写、手动整理，也可以按会议保存的设置自动衔接整理。
+- 放弃后进入历史；清除历史列表保留原材料和暂存结果，已放弃任务不再计入重试提示。
+- 状态图标跟随主题，历史可堆叠展开，卡片换组连续移动。
+- 整理时结合上下文消除 ASR 与口语噪声，不再要求逐词核对。
+- 支持多选纪要合并整理，原笔记保留；MiMo 分段衔接减少丢字，侧栏吸顶条跟随面板背景。
