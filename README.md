@@ -130,15 +130,11 @@ When updating manually, replace only these three files and keep `data.json` and 
 
 Recordings go to `LexVoice/录音` and notes to `LexVoice/转写纪要` by default. Both can be changed in settings.
 
-## What's new in 3.1.0
+## What's new in 3.1.1
 
-- Meeting tasks retain saved progress across interruptions. Manually paused tasks stay paused.
-- One card per meeting combines speech transcription and notes organization. Expand transcription to see the latest successful part and every failed part; retry only the unfinished work.
-- Keep automatic transcription with manual notes organization, or continue automatically according to the meeting's saved preference.
-- Abandoning moves a card to history. Clearing history removes it from the list while retaining source material and saved responses; abandoned work is excluded from retry counts.
-- Theme-aware status icons, a compact history stack and continuous card movement make state changes easier to follow.
-- Notes use context to clean up ASR and spoken-language noise, without asking the reader to check individual words.
-- Merge selected notes into a new organized note; the originals remain available. MiMo segment boundaries preserve overlapping speech, and the condensed sidebar follows its panel background.
+- Fix meeting task cards disappearing during recording.
+- Delivered notes move to history while optional naming and indexing finish, without incorrect saving or unfinished-task messages.
+- Move Abandon into each card's More menu. Abandoned tasks remain in history and can be restored.
 
 ## Requirements
 
