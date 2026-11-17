@@ -130,11 +130,12 @@ When updating manually, replace only these three files and keep `data.json` and 
 
 Recordings go to `LexVoice/录音` and notes to `LexVoice/转写纪要` by default. Both can be changed in settings.
 
-## What's new in 3.1.1
+## What's new in 3.1.2
 
-- Fix meeting task cards disappearing during recording.
-- Delivered notes move to history while optional naming and indexing finish, without incorrect saving or unfinished-task messages.
-- Move Abandon into each card's More menu. Abandoned tasks remain in history and can be restored.
+- Fix completed transcription being reported as failed or unfinished.
+- Fix note organization being blocked after recovered transcription and unresponsive retries on some older tasks.
+- Successful responses with no text no longer block other segments.
+- Improve recovery after network errors while preserving saved results and manual pauses.
 
 ## Requirements
 

@@ -1,15 +1,17 @@
-# LexVoice 3.1.1
+# LexVoice 3.1.2
 
 ## Changes
 
-- Fix meeting task cards disappearing during recording.
-- Delivered notes move to history while optional naming and indexing finish, without incorrect saving or unfinished-task messages.
-- Move Abandon into each card's More menu. Abandoned tasks remain in history and can be restored.
+- Fix completed transcription being reported as failed or unfinished.
+- Fix note organization being blocked after recovered transcription and unresponsive retries on some older tasks.
+- Successful responses with no text no longer block other segments.
+- Improve recovery after network errors while preserving saved results and manual pauses.
 
 ---
 
 ## 中文说明
 
-- 修复录音期间任务卡片空白、只显示进行中数量的问题。
-- 已交付纪要进入历史，可选改名、索引收尾不再导致错误的“保存中”或未完成任务提示。
-- “放弃”统一移入卡片右上角更多菜单，放弃后仍进入历史并可恢复。
+- 修复转写已完成却显示失败或未完成的问题。
+- 修复补转后纪要整理被错误拦截、部分旧任务重试没有反应的问题。
+- 正常无文字的转写结果不再阻断其他片段。
+- 改善网络异常后的任务续接，保留已有结果和手动暂停状态。
