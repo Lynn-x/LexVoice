@@ -1,17 +1,13 @@
-# LexVoice 3.1.2
+# LexVoice 3.1.3
 
 ## Changes
 
-- Fix completed transcription being reported as failed or unfinished.
-- Fix note organization being blocked after recovered transcription and unresponsive retries on some older tasks.
-- Successful responses with no text no longer block other segments.
-- Improve recovery after network errors while preserving saved results and manual pauses.
+- Built-in meeting notes can bring together remarks that answer the same question, even when they occur at different points in the discussion.
+- Notes may use a table when comparing items side by side makes a point clearer and the recording supports the comparison. They can use lists for parallel points and paragraphs for reasoning, context and exceptions. The prompts discourage filling gaps with guesses.
 
 ---
 
 ## 中文说明
 
-- 修复转写已完成却显示失败或未完成的问题。
-- 修复补转后纪要整理被错误拦截、部分旧任务重试没有反应的问题。
-- 正常无文字的转写结果不再阻断其他片段。
-- 改善网络异常后的任务续接，保留已有结果和手动暂停状态。
+- 使用内置模板整理纪要时，分散在录音不同位置、回答同一问题的发言可以放在一起，保留其中的条件、分歧和观点变化。
+- 原文提供共同维度、并排阅读更清楚时才考虑用表格。简单并列的要点可列成清单，背景和推理用段落讲清，不为填满表格补写内容。

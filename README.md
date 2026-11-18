@@ -130,12 +130,10 @@ When updating manually, replace only these three files and keep `data.json` and 
 
 Recordings go to `LexVoice/录音` and notes to `LexVoice/转写纪要` by default. Both can be changed in settings.
 
-## What's new in 3.1.2
+## What's new in 3.1.3
 
-- Fix completed transcription being reported as failed or unfinished.
-- Fix note organization being blocked after recovered transcription and unresponsive retries on some older tasks.
-- Successful responses with no text no longer block other segments.
-- Improve recovery after network errors while preserving saved results and manual pauses.
+- Built-in meeting notes can bring together remarks that answer the same question, even when they occur at different points in the discussion.
+- Notes may use a table when comparing items side by side makes a point clearer and the recording supports the comparison. They can use lists for parallel points and paragraphs for reasoning, context and exceptions. The prompts discourage filling gaps with guesses.
 
 ## Requirements
 
